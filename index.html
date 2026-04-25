@@ -8,18 +8,18 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#0f0f0d;--bg2:#161614;--bg3:#1e1e1b;--bg4:#252522;
-  --text:#f0efe8;--text2:#9a9990;--text3:#5a5a55;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --accent:#c8f060;--accent2:#a0d040;--accent-dim:rgba(200,240,96,0.12);
-  --red:#ff6b6b;--red-dim:rgba(255,107,107,0.12);
-  --amber:#ffb547;--amber-dim:rgba(255,181,71,0.12);
-  --blue:#60b8f0;--blue-dim:rgba(96,184,240,0.12);
+  --bg:#f4f3ef;--bg2:#ffffff;--bg3:#f9f8f5;--bg4:#efefeb;
+  --text:#1a1a17;--text2:#6b6b65;--text3:#a0a09a;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --accent:#3a7d0a;--accent2:#2e6408;--accent-dim:rgba(58,125,10,0.09);
+  --red:#c0392b;--red-dim:rgba(192,57,43,0.09);
+  --amber:#b36a00;--amber-dim:rgba(179,106,0,0.09);
+  --blue:#1a6fa8;--blue-dim:rgba(26,111,168,0.09);
   --radius:8px;--radius-lg:14px;--radius-xl:20px;
   --font:'Sora',sans-serif;--mono:'DM Mono',monospace;
 }
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;}
-.app{width:100%;max-width:720px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.5);}
+.app{width:100%;max-width:720px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);}
 .screen{display:none;}.screen.active{display:block;}
 .header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .logo{font-size:15px;font-weight:600;letter-spacing:-0.02em;}.logo span{color:var(--accent);}
@@ -34,16 +34,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;font-family:var(--font);background:var(--bg3);color:var(--text);outline:none;transition:border-color 0.15s;}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 textarea{min-height:120px;resize:vertical;line-height:1.6;}
-select option{background:var(--bg3);}
+select option{background:var(--bg2);}
 .btn{padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all 0.15s;font-family:var(--font);}
 .btn:hover{background:var(--bg4);}
-.btn-primary{background:var(--accent);color:#0f0f0d;border-color:var(--accent);font-weight:600;}
+.btn-primary{background:var(--accent);color:#ffffff;border-color:var(--accent);font-weight:600;}
 .btn-primary:hover{background:var(--accent2);}
-.btn-danger{background:var(--red-dim);color:var(--red);border-color:rgba(255,107,107,0.2);}
-.btn-success{background:var(--accent-dim);color:var(--accent);border-color:rgba(200,240,96,0.2);}
+.btn-danger{background:var(--red-dim);color:var(--red);border-color:rgba(192,57,43,0.2);}
+.btn-success{background:var(--accent-dim);color:var(--accent);border-color:rgba(58,125,10,0.2);}
 .btn-sm{padding:6px 14px;font-size:12px;}
 .btn:disabled{opacity:0.4;cursor:not-allowed;}
-.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1.5rem;}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--bg3);}
 .tab{padding:12px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text2);transition:all 0.15s;font-weight:500;}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:1.25rem 1.5rem;}
@@ -55,7 +55,7 @@ select option{background:var(--bg3);}
 .card-title{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.07em;}
 .progress-bar{height:4px;background:var(--bg4);border-radius:100px;margin:5px 0 2px;}
 .progress-fill{height:100%;border-radius:100px;background:var(--accent);transition:width 0.6s;}
-.q-header{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.q-header{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg3);}
 .timer{font-size:24px;font-weight:500;font-family:var(--mono);color:var(--accent);}
 .timer.warning{color:var(--red);animation:pulse 1s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
@@ -68,13 +68,13 @@ select option{background:var(--bg3);}
 .loader.active{display:flex;align-items:center;justify-content:center;gap:8px;}
 .spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.result-card{margin:0 1.5rem 12px;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;background:var(--bg3);}
-.result-header{padding:10px 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);font-size:13px;background:var(--bg4);}
+.result-card{margin:0 1.5rem 12px;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;background:var(--bg2);}
+.result-header{padding:10px 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);font-size:13px;background:var(--bg3);}
 .result-body{padding:1rem 1.25rem;}
 .result-label{font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em;margin-top:10px;}
 .result-label:first-child{margin-top:0;}
-.result-answer{font-size:13px;line-height:1.6;padding:8px 12px;border-radius:var(--radius);background:var(--bg2);border-left:2px solid var(--border2);}
-.feedback-block{background:var(--bg2);border-radius:var(--radius);padding:10px 12px;font-size:13px;line-height:1.6;color:var(--text2);}
+.result-answer{font-size:13px;line-height:1.6;padding:8px 12px;border-radius:var(--radius);background:var(--bg3);border-left:2px solid var(--border2);}
+.feedback-block{background:var(--bg3);border-radius:var(--radius);padding:10px 12px;font-size:13px;line-height:1.6;color:var(--text2);}
 .score-pill{font-size:11px;padding:3px 10px;border-radius:100px;font-weight:600;font-family:var(--mono);}
 .score-high{background:var(--accent-dim);color:var(--accent);}
 .score-mid{background:var(--amber-dim);color:var(--amber);}
@@ -88,12 +88,12 @@ select option{background:var(--bg3);}
 .approval-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
 .approval-row:last-child{border-bottom:none;}
 .insight-card{margin:0 1.5rem 1rem;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;}
-.insight-header{padding:10px 1.25rem;background:var(--bg4);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
-.insight-body{padding:1rem 1.25rem;background:var(--bg3);}
-.insight-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;}
+.insight-header{padding:10px 1.25rem;background:var(--bg3);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
+.insight-body{padding:1rem 1.25rem;background:var(--bg2);}
+.insight-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;color:var(--text);}
 .insight-item:last-child{margin-bottom:0;}
 .insight-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
-.pending-banner{margin:0 1.5rem 1rem;background:var(--amber-dim);border:1px solid rgba(255,181,71,0.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;}
+.pending-banner{margin:0 1.5rem 1rem;background:var(--amber-dim);border:1px solid rgba(179,106,0,0.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;}
 .pending-banner h3{font-size:14px;font-weight:600;color:var(--amber);margin-bottom:4px;}
 .pending-banner p{font-size:13px;color:var(--text2);line-height:1.6;}
 .wait-screen{text-align:center;padding:3rem 1.5rem;}
@@ -103,6 +103,7 @@ select option{background:var(--bg3);}
 .wait-id{font-family:var(--mono);font-size:18px;color:var(--accent);background:var(--accent-dim);padding:8px 20px;border-radius:var(--radius);display:inline-block;margin-bottom:1.25rem;letter-spacing:0.08em;}
 .chart-wrap{padding:0 1.5rem 1rem;}
 .chart-container{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;}
+.error-msg{display:none;margin-top:10px;padding:10px 14px;background:var(--red-dim);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);font-size:13px;color:var(--red);}
 </style>
 </head>
 <body>
@@ -111,7 +112,7 @@ select option{background:var(--bg3);}
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">SELENIUM TRACK</div></div>
-  <div class="hero"><h1>Interim<br><span>Assessment</span></h1><p>Timed 5-question sessions on Core Java, Functional Testing, SQL & Selenium/TestNG — evaluated by Trainer Ramvel.</p></div>
+  <div class="hero"><h1>Interim<br><span>Assessment</span></h1><p>Timed 5-question sessions on Core Java, Functional Testing, SQL & Selenium/TestNG — evaluated against BU standards.</p></div>
   <div class="form-section">
     <div class="form-row"><label>Role</label>
       <select id="role-select" onchange="toggleRole()">
@@ -124,8 +125,9 @@ select option{background:var(--bg3);}
       <div class="form-row"><label>Cohort / Batch</label><input type="text" id="cohort-name" placeholder="e.g. Batch-12 May 2025"></div>
     </div>
     <div id="trainer-fields" style="display:none;">
-      <div class="form-row"><label>Trainer name</label><input type="text" id="trainer-name" placeholder="Enter trainer name"></div>
-      <div class="form-row"><label>Access code</label><input type="password" id="trainer-pass" placeholder="Enter access code"></div>
+      <div class="form-row"><label>Trainer name</label><input type="text" id="trainer-name" placeholder="Enter trainer name" oninput="hideError()"></div>
+      <div class="form-row"><label>Access code</label><input type="password" id="trainer-pass" placeholder="Enter access code" oninput="hideError()"></div>
+      <div class="error-msg" id="trainer-error">⚠ Cannot access the trainer dashboard. Check your credentials and try again.</div>
     </div>
     <button class="btn btn-primary" onclick="handleLogin()" style="width:100%;margin-top:4px;">Continue →</button>
   </div>
@@ -137,9 +139,9 @@ select option{background:var(--bg3);}
   <div class="wait-screen">
     <div class="wait-icon">🔒</div>
     <h2>Next session locked</h2>
-    <p>Your previous session has been recorded. Trainer Ramvel must approve your next session before you can continue.</p>
+    <p>Your previous session has been recorded. The trainer must approve your next session before you can continue.</p>
     <div class="wait-id" id="wait-id-display">—</div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:1.5rem;">Show this ID to Trainer Ramvel to get approved.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:1.5rem;">Show this ID to the trainer to get approved.</p>
     <div style="display:flex;gap:10px;justify-content:center;">
       <button class="btn btn-sm" onclick="checkApprovalStatus()">Check status</button>
       <button class="btn btn-sm" onclick="showScreen('screen-login')">← Back</button>
@@ -186,7 +188,7 @@ select option{background:var(--bg3);}
   <div class="cards-grid" id="results-metrics"></div>
   <div class="pending-banner">
     <h3>⏸ Next session locked</h3>
-    <p>Results sent to Trainer Ramvel. You need approval before your next session. Show your Session ID to the trainer.</p>
+    <p>Your results have been recorded. The trainer must approve before you can start another session. Show your Session ID.</p>
   </div>
   <div id="results-feedback" style="padding-bottom:1.5rem;"></div>
 </div>
@@ -218,7 +220,10 @@ select option{background:var(--bg3);}
     <div class="card" id="approvals-list" style="margin-bottom:1.5rem;"></div>
   </div>
   <div id="tab-individual" style="display:none;">
-    <div style="padding:1rem 1.5rem 0.5rem;"><select id="trainee-select" onchange="loadIndividual()" style="width:100%;"><option value="">— select trainee —</option></select></div>
+    <div style="padding:1rem 1.5rem 0.5rem;display:flex;gap:8px;align-items:center;">
+    <select id="trainee-select" onchange="loadIndividual()" style="flex:1;"></select>
+    <button class="btn btn-danger btn-sm" id="individual-delete-btn" style="display:none;" onclick="deleteFromIndividual()">✕ Delete</button>
+  </div>
     <div id="individual-detail" style="padding-bottom:1.5rem;"></div>
   </div>
   <div id="tab-insights" style="display:none;">
@@ -230,7 +235,7 @@ select option{background:var(--bg3);}
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-const TRAINER_NAME='Ramvel', TRAINER_CODE='ramvel123';
+const TRAINER_NAME='Ramvel', TRAINER_CODE='ramvel123'; // trainer credentials
 const QB=[
   {topic:"Core Java",q:"What is the difference between `==` and `.equals()` in Java? Give a real-world example where using `==` would cause a bug in test code.",key:"== compares object references while .equals() compares content. String s1=new String('hello'); String s2=new String('hello'); s1==s2 is false but s1.equals(s2) is true. In test code, comparing assertion strings with == would fail unexpectedly."},
   {topic:"Core Java",q:"Explain method overloading vs method overriding with examples. How does this apply in Selenium Page Object Models?",key:"Overloading: same method name, different parameters in same class. Overriding: subclass redefines parent method. In POM, overriding is used when child page extends BasePage and provides specific implementations of common actions like login()."},
@@ -271,13 +276,15 @@ function toggleRole(){
   document.getElementById('trainer-fields').style.display=r==='trainer'?'':'none';
 }
 
+function showError(){const el=document.getElementById('trainer-error');if(el){el.style.display='block';}}
+function hideError(){const el=document.getElementById('trainer-error');if(el){el.style.display='none';}}
+
 function handleLogin(){
   const role=document.getElementById('role-select').value;
   if(role==='trainer'){
     const name=document.getElementById('trainer-name').value.trim();
     const pass=document.getElementById('trainer-pass').value.trim();
-    if(name!==TRAINER_NAME){alert('❌ Access denied.\nOnly Trainer Ramvel can access the dashboard.');return;}
-    if(pass!==TRAINER_CODE){alert('❌ Incorrect access code.\nHint: ramvel123');return;}
+    if(name!==TRAINER_NAME||pass!==TRAINER_CODE){showError();return;}
     showTrainerDashboard();
   } else {
     const name=document.getElementById('trainee-name').value.trim();
@@ -303,7 +310,7 @@ function checkApprovalStatus(){
   if(waitingSessionId&&approvals[waitingSessionId]){
     document.getElementById('approval-msg').innerHTML='<span style="color:var(--accent);">✓ Approved! Please go back and continue.</span>';
   } else {
-    document.getElementById('approval-msg').textContent='Still pending. Please wait for Trainer Ramvel.';
+    document.getElementById('approval-msg').textContent='Still pending. Please wait for trainer approval.';
   }
 }
 
@@ -351,17 +358,93 @@ async function submitAnswer(){
   if(!answer){alert('Please type an answer or use Skip.');return;}
   const loader=document.getElementById('q-loader'),btn=document.getElementById('q-next-btn');
   loader.classList.add('active');btn.disabled=true;
-  const q=questions[currentQ];let score=0,feedback='';
+  const q=questions[currentQ];let score=0,feedback='',scoreLabel='';
+
+  const SYSTEM_PROMPT=`You are a strict senior QA lead and Selenium automation expert evaluating a trainee's written answer in an interim assessment. You must evaluate HONESTLY and PRECISELY using this exact rubric:
+
+SCORE 10/10 — Full marks:
+- Answer is complete, technically accurate, AND includes a real-world example or practical scenario (e.g., actual code, project situation, framework context)
+- Example must be relevant and demonstrate genuine understanding, not just restating theory
+- All key concepts from the model answer are covered
+
+SCORE 7/10 — Good answer:
+- Answer is mostly correct and covers main points
+- Has a basic example OR explains the concept clearly but example is generic/textbook
+- Minor gaps or missing edge cases — deduct from 10 accordingly
+
+SCORE 5/10 — Simple/surface answer (apply 30% reduction from full marks):
+- Answer mentions the right concept but only at a surface level
+- No real-world example, no practical context, just a definition or partial explanation
+- Trainee seems to know the term but cannot demonstrate application
+
+SCORE 2/10 — Vague or mostly wrong:
+- Answer is off-topic, confused, or shows fundamental misunderstanding
+- Correct keyword mentioned but explanation is wrong
+- Very incomplete — missing almost all key points
+
+SCORE 0/10 — Irrelevant or no understanding:
+- Answer has nothing to do with the question
+- Complete misunderstanding of the topic
+- Generic filler with no technical substance
+
+CRITICAL RULES:
+1. If the answer includes a real-world example (code snippet, project scenario, framework usage) AND is correct → score 10
+2. If the answer is correct but has NO example and is just a plain explanation → score 5 (surface answer, apply 30% reduction)
+3. If the answer is partially correct with some example → score 7
+4. NEVER give 10 for an answer without a practical example, even if technically correct
+5. NEVER give more than 5 for an answer that is just a textbook definition with no application
+6. Your feedback must explicitly say WHY the score was given — mention if example was missing, present, or wrong
+
+Respond ONLY with valid JSON, no markdown, no backticks:
+{"score":<0 or 2 or 5 or 7 or 10>,"scoreLabel":"<Full marks / Good answer / Surface answer / Mostly wrong / Irrelevant>","feedback":"<3-4 sentences: what was correct, what example they gave or missed, what was wrong, what they should study or add next time>"}`;
+
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`You are a senior QA lead evaluating a trainee's Selenium track assessment. Respond ONLY with valid JSON: {"score":<0-10>,"feedback":"<2-3 sentence evaluator feedback on what was correct, missing, and what to study>"}. Rubric: 9-10=complete; 7-8=mostly correct; 5-6=partial; 3-4=vague; 0-2=wrong.`,messages:[{role:'user',content:`Question: ${q.q}\n\nModel answer: ${q.key}\n\nTrainee answer: ${answer}`}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1200,
+        system:SYSTEM_PROMPT,
+        messages:[{
+          role:'user',
+          content:`QUESTION: ${q.q}
+
+MODEL ANSWER (reference only, not shown to trainee): ${q.key}
+
+TRAINEE'S ANSWER: ${answer}
+
+Evaluate strictly using the rubric. Check if they gave a real-world example. Score accordingly.`
+        }]
+      })
+    });
     const data=await resp.json();
+    if(data.error){throw new Error(data.error.message);}
     const text=data.content.find(c=>c.type==='text')?.text||'{}';
-    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    score=parsed.score||0;feedback=parsed.feedback||'Unable to evaluate.';
-  }catch(e){score=5;feedback='AI evaluation unavailable. Recorded for trainer review.';}
+    const clean=text.replace(/^```json|^```|```$/gm,'').trim();
+    const parsed=JSON.parse(clean);
+    score=typeof parsed.score==='number'?parsed.score:0;
+    scoreLabel=parsed.scoreLabel||'';
+    feedback=parsed.feedback||'No feedback generated.';
+  }catch(e){
+    console.error('Eval error:',e);
+    // Fallback: local keyword-based scoring
+    const ansLower=answer.toLowerCase();
+    const keyLower=q.key.toLowerCase();
+    const keyWords=keyLower.split(/\s+/).filter(w=>w.length>4).slice(0,10);
+    const matched=keyWords.filter(w=>ansLower.includes(w)).length;
+    const hasExample=/example|e\.g\.|for instance|in my|in our|project|framework|code|class|method|new |string |int |boolean/i.test(answer);
+    const matchRatio=matched/Math.max(keyWords.length,1);
+    if(matchRatio<0.1){score=0;scoreLabel='Irrelevant';feedback='Answer does not address the question. Please review this topic and ensure your answer is relevant to what was asked.';}
+    else if(matchRatio<0.3){score=2;scoreLabel='Mostly wrong';feedback='Answer shows minimal understanding. Key concepts are missing or incorrect. Review the topic thoroughly.';}
+    else if(hasExample&&matchRatio>=0.5){score=10;scoreLabel='Full marks';feedback='Good attempt with an example noted. AI evaluation was unavailable — score estimated locally.';}
+    else if(matchRatio>=0.4){score=7;scoreLabel='Good answer';feedback='Answer covers main points. AI evaluation was unavailable — score estimated locally.';}
+    else{score=5;scoreLabel='Surface answer';feedback='Answer is too surface-level. Add real-world examples and practical context. AI evaluation was unavailable — score estimated locally.';}
+  }
+
   loader.classList.remove('active');btn.disabled=false;
   scoreSoFar+=score;
-  evalResults.push({q,answer,score,feedback,correct:q.key});
+  evalResults.push({q,answer,score,scoreLabel,feedback,correct:q.key});
   moveNext();
 }
 
@@ -389,7 +472,10 @@ function showResultsScreen(s){
   let html='';
   s.results.forEach((r,i)=>{
     const cls=r.score>=7?'score-high':r.score>=4?'score-mid':'score-low';
-    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><span class="score-pill ${cls}">${r.score}/10</span></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Your answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">Evaluator feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
+    const labelIcons={'Full marks':'🏆','Good answer':'✓','Surface answer':'📖','Mostly wrong':'⚠','Irrelevant':'✕'};
+    const labelIcon=labelIcons[r.scoreLabel]||'';
+    const scoreLabelHtml=r.scoreLabel?`<span style="font-size:11px;color:var(--text3);margin-right:8px;">${labelIcon} ${r.scoreLabel}</span>`:'';
+    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><div style="display:flex;align-items:center;">${scoreLabelHtml}<span class="score-pill ${cls}">${r.score}/10</span></div></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Your answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">Evaluator feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
   });
   document.getElementById('results-feedback').innerHTML=html;
 }
@@ -430,7 +516,7 @@ function renderOverview(sessions){
     const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     const cls=latest.pct>=70?'score-high':latest.pct>=50?'score-mid':'score-low';
     const avg2=Math.round(sess.reduce((s,r)=>s+r.pct,0)/sess.length);
-    html+=`<div class="trainee-row" onclick="quickView('${name}')"><div class="avatar">${initials}</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${latest.cohort} · ${sess.length} session${sess.length>1?'s':''} · avg ${avg2}%</div></div><span class="score-pill ${cls}">${latest.pct}%</span></div>`;
+    html+=`<div class="trainee-row" style="cursor:default;"><div class="avatar" style="cursor:pointer;" onclick="quickView('${name}')">${initials}</div><div style="flex:1;cursor:pointer;" onclick="quickView('${name}')"><div style="font-size:14px;font-weight:600;">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${latest.cohort} · ${sess.length} session${sess.length>1?'s':''} · avg ${avg2}%</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="score-pill ${cls}">${latest.pct}%</span><button class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:11px;" onclick="deleteTrainee('${name}')">✕ Delete</button></div></div>`;
   });
   document.getElementById('trainee-list').innerHTML=html;
 }
@@ -439,10 +525,10 @@ function renderBarChart(sessions){
   const byT={};sessions.forEach(s=>{if(!byT[s.trainee])byT[s.trainee]=[];byT[s.trainee].push(s.pct);});
   const labels=Object.keys(byT);
   const avgs=labels.map(n=>Math.round(byT[n].reduce((a,b)=>a+b,0)/byT[n].length));
-  const colors=avgs.map(v=>v>=70?'rgba(200,240,96,0.85)':v>=50?'rgba(255,181,71,0.85)':'rgba(255,107,107,0.85)');
+  const colors=avgs.map(v=>v>=70?'rgba(58,125,10,0.8)':v>=50?'rgba(179,106,0,0.8)':'rgba(192,57,43,0.8)');
   const ctx=document.getElementById('chart-bar').getContext('2d');
   if(barChart)barChart.destroy();
-  barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Avg %',data:avgs,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},scales:{x:{ticks:{color:'#9a9990',font:{family:"'DM Mono'",size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{min:0,max:100,ticks:{color:'#9a9990',font:{family:"'DM Mono'",size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+  barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Avg %',data:avgs,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},scales:{x:{ticks:{color:'#6b6b65',font:{family:"'DM Mono'",size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y:{min:0,max:100,ticks:{color:'#6b6b65',font:{family:"'DM Mono'",size:11},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
 }
 
 function renderRadarChart(sessions){
@@ -453,7 +539,27 @@ function renderRadarChart(sessions){
   });
   const ctx=document.getElementById('chart-radar').getContext('2d');
   if(radarChart)radarChart.destroy();
-  radarChart=new Chart(ctx,{type:'radar',data:{labels:topics,datasets:[{label:'Score %',data:avgs,backgroundColor:'rgba(200,240,96,0.12)',borderColor:'rgba(200,240,96,0.8)',borderWidth:2,pointBackgroundColor:'#c8f060',pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{color:'#5a5a55',backdropColor:'transparent',font:{size:10}},grid:{color:'rgba(255,255,255,0.07)'},angleLines:{color:'rgba(255,255,255,0.05)'},pointLabels:{color:'#9a9990',font:{family:"'Sora'",size:11}}}}}});
+  radarChart=new Chart(ctx,{type:'radar',data:{labels:topics,datasets:[{label:'Score %',data:avgs,backgroundColor:'rgba(58,125,10,0.08)',borderColor:'rgba(58,125,10,0.7)',borderWidth:2,pointBackgroundColor:'#3a7d0a',pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{color:'#a0a09a',backdropColor:'transparent',font:{size:10}},grid:{color:'rgba(0,0,0,0.08)'},angleLines:{color:'rgba(0,0,0,0.06)'},pointLabels:{color:'#6b6b65',font:{family:"'Sora'",size:11}}}}}});
+}
+
+
+// ── DELETE TRAINEE ────────────────────────────────────────────────
+function deleteTrainee(name){
+  const confirmed = confirm(`Delete ALL session data for "${name}"?\n\nThis cannot be undone.`);
+  if(!confirmed) return;
+  // Remove sessions
+  const sessions = getSessions().filter(s => s.trainee !== name);
+  saveSessions(sessions);
+  // Remove approvals for deleted trainee's sessions
+  // (approvals keyed by session id — clean up orphans)
+  // Remove from pending approvals too
+  refreshDashboard();
+  // If individual tab was showing this trainee, clear it
+  const sel = document.getElementById('trainee-select');
+  if(sel && sel.value === name){
+    sel.value = '';
+    document.getElementById('individual-detail').innerHTML = '';
+  }
 }
 
 // ── APPROVALS ─────────────────────────────────────────────────────
@@ -493,9 +599,20 @@ function populateSelect(sessions){
   document.getElementById('trainee-select').innerHTML='<option value="">— select trainee —</option>'+names.map(n=>`<option>${n}</option>`).join('');
 }
 function quickView(name){switchTab('individual');document.getElementById('trainee-select').value=name;loadIndividual();}
+function deleteFromIndividual(){
+  const name=document.getElementById('trainee-select').value;
+  if(!name)return;
+  deleteTrainee(name);
+  populateSelect(getSessions());
+  document.getElementById('individual-delete-btn').style.display='none';
+  document.getElementById('individual-detail').innerHTML='';
+}
+
 function loadIndividual(){
   const name=document.getElementById('trainee-select').value;
-  if(!name){document.getElementById('individual-detail').innerHTML='';return;}
+  const btn=document.getElementById('individual-delete-btn');
+  if(!name){document.getElementById('individual-detail').innerHTML='';if(btn)btn.style.display='none';return;}
+  if(btn)btn.style.display='';
   const sessions=getSessions().filter(s=>s.trainee===name);
   if(!sessions.length){document.getElementById('individual-detail').innerHTML='<div class="empty-state">No data.</div>';return;}
   const latest=sessions[sessions.length-1];
@@ -504,56 +621,99 @@ function loadIndividual(){
   let html=`<div class="cards-grid" style="padding-top:0.75rem;"><div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div></div><div class="metric"><div class="metric-label">Avg</div><div class="metric-value">${avgPct}%</div></div><div class="metric"><div class="metric-label">Status</div><div class="metric-value" style="font-size:12px;padding-top:6px;">${grade}</div></div></div><p class="section-title">Latest session — ${latest.date}</p>`;
   latest.results.forEach((r,i)=>{
     const cls=r.score>=7?'score-high':r.score>=4?'score-mid':'score-low';
-    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><span class="score-pill ${cls}">${r.score}/10</span></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Trainee answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">AI feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
+    const labelIcons={'Full marks':'🏆','Good answer':'✓','Surface answer':'📖','Mostly wrong':'⚠','Irrelevant':'✕'};
+    const labelIcon=labelIcons[r.scoreLabel]||'';
+    const scoreLabelHtml=r.scoreLabel?`<span style="font-size:11px;color:var(--text3);margin-right:8px;">${labelIcon} ${r.scoreLabel}</span>`:'';
+    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><div style="display:flex;align-items:center;">${scoreLabelHtml}<span class="score-pill ${cls}">${r.score}/10</span></div></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Trainee answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">Evaluator feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
   });
   document.getElementById('individual-detail').innerHTML=html;
 }
 
-// ── AI INSIGHTS ───────────────────────────────────────────────────
-async function renderInsights(sessions){
-  if(!sessions.length){document.getElementById('insights-content').innerHTML='<div class="empty-state">No data to analyze yet.</div>';return;}
+// ── AI INSIGHTS (local data-driven, no API/CORS issue) ───────────
+function renderInsights(sessions){
+  if(!sessions.length){
+    document.getElementById('insights-summary').innerHTML='';
+    document.getElementById('insights-content').innerHTML='<div class="empty-state">No session data yet. Trainees must complete at least one session.</div>';
+    return;
+  }
   const topics=['Core Java','Functional Testing','SQL','Selenium'];
   const topicData=topics.map(t=>{
-    let sc=[];sessions.forEach(s=>s.results.filter(r=>r.topic===t).forEach(r=>sc.push(r.score)));
-    return{topic:t,avg:sc.length?+(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):0};
+    let sc=[];
+    sessions.forEach(s=>s.results.filter(r=>r.topic===t).forEach(r=>sc.push(r.score)));
+    const avg=sc.length?+(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):0;
+    const skipped=sc.filter(s=>s===0).length;
+    return{topic:t,avg,count:sc.length,skipped};
   });
-  const strong=topicData.filter(t=>t.avg>=7).map(t=>t.topic);
-  const weak=topicData.filter(t=>t.avg<5).map(t=>t.topic);
+  const sorted=[...topicData].sort((a,b)=>b.avg-a.avg);
+  const strong=topicData.filter(t=>t.avg>=7);
+  const weak=topicData.filter(t=>t.avg<5);
+  const mid=topicData.filter(t=>t.avg>=5&&t.avg<7);
   const avgOverall=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
   const passCount=sessions.filter(s=>s.pct>=60).length;
-  const trainees=[...new Set(sessions.map(s=>s.trainee))].length;
+  const passRate=Math.round(passCount/sessions.length*100);
+  const trainees=[...new Set(sessions.map(s=>s.trainee))];
+  const totalSkips=sessions.reduce((sum,s)=>sum+s.results.filter(r=>r.answer==='[Skipped]'||r.answer==='[Time expired]').length,0);
+  const topScorer=sessions.reduce((a,b)=>b.pct>a.pct?b:a);
+  const bottomScorer=sessions.reduce((a,b)=>b.pct<a.pct?b:a);
 
   document.getElementById('insights-summary').innerHTML=`
-    <div class="metric"><div class="metric-label">Strong topics</div><div class="metric-value" style="font-size:13px;color:var(--accent);padding-top:4px;">${strong.length?strong.join(', '):'—'}</div></div>
-    <div class="metric"><div class="metric-label">Weak topics</div><div class="metric-value" style="font-size:13px;color:var(--red);padding-top:4px;">${weak.length?weak.join(', '):'—'}</div></div>
+    <div class="metric"><div class="metric-label">Best topic</div><div class="metric-value" style="font-size:13px;color:var(--accent);padding-top:4px;">${sorted[0].topic}<div class="metric-sub">${sorted[0].avg}/10 avg</div></div></div>
+    <div class="metric"><div class="metric-label">Weakest topic</div><div class="metric-value" style="font-size:13px;color:var(--red);padding-top:4px;">${sorted[sorted.length-1].topic}<div class="metric-sub">${sorted[sorted.length-1].avg}/10 avg</div></div></div>
+    <div class="metric"><div class="metric-label">Total skips</div><div class="metric-value">${totalSkips}<div class="metric-sub">across sessions</div></div></div>
   `;
 
-  document.getElementById('insights-content').innerHTML=`<div class="empty-state">Generating AI trainer insights<span class="spinner" style="display:inline-block;margin-left:8px;vertical-align:middle;"></span></div>`;
+  const overallGrade=avgOverall>=80?'strong':avgOverall>=60?'satisfactory':avgOverall>=40?'below expectations':'critically low';
+  const overallText=`The cohort of ${trainees.length} trainee${trainees.length>1?'s':''} has achieved an overall average of <strong>${avgOverall}%</strong> across ${sessions.length} session${sessions.length>1?'s':''} — rated <strong>${overallGrade}</strong>. Pass rate is ${passRate}%${passRate<60?' — immediate intervention recommended.':passRate<80?' — some trainees need targeted support.':' — cohort is performing well.'}`;
 
-  const summary=`${trainees} trainees, ${sessions.length} sessions. Overall avg: ${avgOverall}%. Pass rate: ${Math.round(passCount/sessions.length*100)}%. Topic scores (out of 10): ${topicData.map(t=>t.topic+' '+t.avg).join(', ')}. Strong: ${strong.join(', ')||'none'}. Weak: ${weak.join(', ')||'none'}.`;
+  const strengthPoints=[];
+  if(strong.length){strong.forEach(t=>strengthPoints.push(`<strong>${t.topic}</strong> is the strongest area with ${t.avg}/10 avg — trainees show solid grasp of these concepts.`));}
+  if(!strong.length&&mid.length){strengthPoints.push(`<strong>${mid[0].topic}</strong> shows the most consistent scores at ${mid[0].avg}/10 — a reasonable working understanding.`);}
+  if(totalSkips===0){strengthPoints.push('No questions were skipped — trainees are attempting all questions which shows good engagement.');}
+  if(passRate>=60){strengthPoints.push(`${passCount} of ${sessions.length} session${sessions.length>1?'s':''} crossed the 60% pass mark, showing the core curriculum is being absorbed.`);}
+  if(!strengthPoints.length){strengthPoints.push('Trainees are actively participating. With targeted coaching this cohort has clear room for improvement.');}
 
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:`You are a senior QA training manager analyzing a cohort assessment data for a Selenium automation training program. Provide specific, actionable insights. Respond ONLY with valid JSON (no markdown): {"overall":"<2-sentence overall cohort assessment>","strengths":["<specific observation>","<specific observation>"],"weaknesses":["<specific observation>","<specific observation>"],"actions":["<specific trainer action with method>","<specific trainer action with method>","<specific trainer action with method>"]}`,messages:[{role:'user',content:`Data: ${summary}\n\nProvide: 2-sentence overall assessment, 2 strength observations, 2 weakness observations, 3 specific trainer actions (each with HOW to execute it) to improve the cohort.`}]})});
-    const data=await resp.json();
-    const text=data.content.find(c=>c.type==='text')?.text||'{}';
-    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    let html=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p><div class="card"><p style="font-size:13px;line-height:1.7;color:var(--text2);">${parsed.overall||'—'}</p></div>`;
-    if(parsed.strengths?.length){html+=`<div class="insight-card"><div class="insight-header">✦ Cohort strengths</div><div class="insight-body">${parsed.strengths.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>${s}</div></div>`).join('')}</div></div>`;}
-    if(parsed.weaknesses?.length){html+=`<div class="insight-card"><div class="insight-header">⚠ Areas needing attention</div><div class="insight-body">${parsed.weaknesses.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div>${w}</div></div>`).join('')}</div></div>`;}
-    if(parsed.actions?.length){html+=`<div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">${parsed.actions.map((a,i)=>`<div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action ${i+1}:</strong> ${a}</div></div>`).join('')}</div></div>`;}
-    document.getElementById('insights-content').innerHTML=html;
-  }catch(e){
-    const fallback=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p>
-    <div class="card"><p style="font-size:13px;line-height:1.7;color:var(--text2);">Cohort is at ${avgOverall}% avg with ${Math.round(passCount/sessions.length*100)}% pass rate. ${weak.length?'Immediate focus needed on '+weak.join(' and ')+'.':'Performance is stable across topics.'}</p></div>
-    <div class="insight-card"><div class="insight-header">✦ Strengths</div><div class="insight-body">${(strong.length?strong.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>Cohort shows solid grasp of <strong>${s}</strong> concepts</div></div>`).join(''):['<div class="insight-item"><div class="insight-dot" style="background:var(--text3);"></div><div>Insufficient data for clear strengths — more sessions needed</div></div>']).join('')}</div></div>
-    <div class="insight-card"><div class="insight-header">⚠ Weak areas</div><div class="insight-body">${(weak.length?weak.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div><strong>${w}</strong>: scores consistently below 5/10, needs immediate intervention</div></div>`).join(''):['<div class="insight-item"><div class="insight-dot" style="background:var(--text3);"></div><div>No critical weak areas identified</div></div>']).join('')}</div></div>
-    <div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">
-      <div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action 1:</strong> Conduct focused 2-hour lab on ${weak[0]||'lowest-scoring topic'} with live coding exercises and real project scenarios</div></div>
-      <div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action 2:</strong> Pair low-scoring trainees (<50%) with top performers for daily 30-min peer review sessions</div></div>
-      <div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action 3:</strong> Assign mini-project using all 4 topics together — framework setup, SQL test data, functional scenarios, Selenium execution</div></div>
-    </div></div>`;
-    document.getElementById('insights-content').innerHTML=fallback;
-  }
+  const weakPoints=[];
+  if(weak.length){weak.forEach(t=>weakPoints.push(`<strong>${t.topic}</strong> is critically weak at ${t.avg}/10.${t.skipped>0?' '+t.skipped+' answer(s) skipped — suggests avoidance or low confidence.':' Answers attempted but scores low — conceptual gaps present.'}`));}
+  if(totalSkips>3){weakPoints.push(`<strong>${totalSkips} questions skipped</strong> total — suggests time pressure or avoidance of certain topics.`);}
+  if(passRate<60){weakPoints.push(`Only ${passRate}% cleared the 60% pass mark. Significant improvement needed before trainees are production-ready.`);}
+  if(avgOverall<50){weakPoints.push('Overall average below 50% — cohort needs a structured review from fundamentals before moving to advanced topics.');}
+  if(!weakPoints.length){weakPoints.push('No critical weaknesses detected. Continue monitoring across multiple sessions for consistency.');}
+
+  const actionMap={
+    'Core Java':'Run a 2-hour Java fundamentals workshop focused on OOP, exception handling, and collections — use live coding with TestNG as real-world context.',
+    'Functional Testing':'Hold a test design workshop: have trainees write real test cases for a login/registration module using EP, BVA, and exploratory techniques.',
+    'SQL':'Conduct a hands-on SQL lab using a test database. Cover JOINs, aggregations, and data cleanup queries linked directly to test data setup scenarios.',
+    'Selenium':'Assign a mini POM project: trainees build a framework with BasePage, 2 page classes, TestNG suite, and @DataProvider for a login test.'
+  };
+  const worstTopic=sorted[sorted.length-1];
+  const actions=[
+    actionMap[worstTopic.topic]||`Focus additional sessions on ${worstTopic.topic} with hands-on exercises.`,
+    totalSkips>2
+      ? 'Run a timed mock drill requiring trainees to attempt all 5 questions in 5 minutes — partial answers score better than skips. Reinforce this rule.'
+      : `Pair top scorer (${topScorer.trainee}, ${topScorer.pct}%) with lower scorers for weekly 30-min peer review sessions.`,
+    passRate<60
+      ? 'Before the next formal session, run an ungraded practice round for all trainees below 60% and review wrong answers together as a group.'
+      : 'Assign a capstone mini-project combining all 4 topics: SQL test data setup, Core Java utilities, functional test cases, and Selenium execution.'
+  ];
+
+  let html=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p>
+  <div class="card"><p style="font-size:13px;line-height:1.8;color:var(--text2);">${overallText}</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Top performer</div><div style="font-size:13px;font-weight:600;">${topScorer.trainee}</div><div style="font-size:11px;color:var(--text2);">${topScorer.pct}%</div></div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Needs most support</div><div style="font-size:13px;font-weight:600;">${bottomScorer.trainee}</div><div style="font-size:11px;color:var(--text2);">${bottomScorer.pct}%</div></div>
+  </div></div>
+  <p class="section-title">Topic-wise breakdown</p>
+  <div class="card">${topicData.map(t=>{
+    const pct=Math.round(t.avg*10);
+    const col=t.avg>=7?'var(--accent)':t.avg>=5?'var(--amber)':'var(--red)';
+    const label=t.avg>=7?'Strong':t.avg>=5?'Average':'Weak';
+    return`<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="font-size:13px;font-weight:500;">${t.topic}</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:${col};font-weight:600;background:${col}18;padding:2px 8px;border-radius:100px;">${label}</span><span style="font-size:12px;font-family:var(--mono);color:var(--text2);">${t.avg}/10</span></div></div><div class="progress-bar"><div style="height:100%;border-radius:100px;background:${col};width:${pct}%;transition:width 0.8s;"></div></div>${t.skipped>0?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">⚠ ${t.skipped} skipped</div>`:''}</div>`;
+  }).join('')}</div>
+  <div class="insight-card"><div class="insight-header">✦ Strengths observed</div><div class="insight-body">${strengthPoints.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>${s}</div></div>`).join('')}</div></div>
+  <div class="insight-card"><div class="insight-header">⚠ Areas needing attention</div><div class="insight-body">${weakPoints.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div>${w}</div></div>`).join('')}</div></div>
+  <div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">${actions.map((a,i)=>`<div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action ${i+1}:</strong> ${a}</div></div>`).join('')}</div></div>`;
+
+  document.getElementById('insights-content').innerHTML=html;
 }
 
 // ── TABS ──────────────────────────────────────────────────────────
@@ -563,7 +723,9 @@ function switchTab(tab){
     document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).style.display=t===tab?'':'none';
   });
-  if(tab==='insights')renderInsights(getSessions());
+  if(tab==='insights'){
+    renderInsights(getSessions());
+  }
   if(tab==='approvals')renderApprovals();
 }
 </script>
