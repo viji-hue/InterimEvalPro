@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EvalPro — Selenium Track</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f0f0d;--bg2:#161614;--bg3:#1e1e1b;--bg4:#252522;
+  --text:#f0efe8;--text2:#9a9990;--text3:#5a5a55;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --accent:#c8f060;--accent2:#a0d040;--accent-dim:rgba(200,240,96,0.12);
+  --red:#ff6b6b;--red-dim:rgba(255,107,107,0.12);
+  --amber:#ffb547;--amber-dim:rgba(255,181,71,0.12);
+  --blue:#60b8f0;--blue-dim:rgba(96,184,240,0.12);
+  --radius:8px;--radius-lg:14px;--radius-xl:20px;
+  --font:'Sora',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;}
+.app{width:100%;max-width:720px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.5);}
+.screen{display:none;}.screen.active{display:block;}
+.header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:15px;font-weight:600;letter-spacing:-0.02em;}.logo span{color:var(--accent);}
+.badge{font-size:10px;padding:3px 9px;border-radius:100px;background:var(--accent-dim);color:var(--accent);letter-spacing:0.05em;font-weight:500;}
+.hero{padding:2.5rem 1.5rem 1.5rem;}
+.hero h1{font-size:26px;font-weight:600;letter-spacing:-0.03em;line-height:1.2;margin-bottom:8px;}
+.hero h1 span{color:var(--accent);}
+.hero p{font-size:13px;color:var(--text2);line-height:1.7;max-width:460px;}
+.form-section{padding:0 1.5rem 1.5rem;}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.07em;font-weight:500;}
+input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;font-family:var(--font);background:var(--bg3);color:var(--text);outline:none;transition:border-color 0.15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{min-height:120px;resize:vertical;line-height:1.6;}
+select option{background:var(--bg3);}
+.btn{padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all 0.15s;font-family:var(--font);}
+.btn:hover{background:var(--bg4);}
+.btn-primary{background:var(--accent);color:#0f0f0d;border-color:var(--accent);font-weight:600;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-danger{background:var(--red-dim);color:var(--red);border-color:rgba(255,107,107,0.2);}
+.btn-success{background:var(--accent-dim);color:var(--accent);border-color:rgba(200,240,96,0.2);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1.5rem;}
+.tab{padding:12px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text2);transition:all 0.15s;font-weight:500;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:1.25rem 1.5rem;}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;}
+.metric-label{font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;}
+.metric-value{font-size:22px;font-weight:600;letter-spacing:-0.02em;}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin:0 1.5rem 1rem;}
+.card-title{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.07em;}
+.progress-bar{height:4px;background:var(--bg4);border-radius:100px;margin:5px 0 2px;}
+.progress-fill{height:100%;border-radius:100px;background:var(--accent);transition:width 0.6s;}
+.q-header{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.timer{font-size:24px;font-weight:500;font-family:var(--mono);color:var(--accent);}
+.timer.warning{color:var(--red);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.q-body{padding:1.5rem;}
+.q-topic-pill{display:inline-block;font-size:11px;padding:4px 10px;border-radius:100px;margin-bottom:14px;background:var(--bg4);color:var(--text2);font-weight:500;border:1px solid var(--border);}
+.q-text{font-size:15px;font-weight:500;line-height:1.6;margin-bottom:1.25rem;}
+.q-footer{padding:0 1.5rem 1.5rem;display:flex;gap:10px;align-items:center;}
+.skip-link{font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;}
+.loader{display:none;padding:1rem;font-size:12px;color:var(--text2);font-family:var(--mono);}
+.loader.active{display:flex;align-items:center;justify-content:center;gap:8px;}
+.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.result-card{margin:0 1.5rem 12px;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;background:var(--bg3);}
+.result-header{padding:10px 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);font-size:13px;background:var(--bg4);}
+.result-body{padding:1rem 1.25rem;}
+.result-label{font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em;margin-top:10px;}
+.result-label:first-child{margin-top:0;}
+.result-answer{font-size:13px;line-height:1.6;padding:8px 12px;border-radius:var(--radius);background:var(--bg2);border-left:2px solid var(--border2);}
+.feedback-block{background:var(--bg2);border-radius:var(--radius);padding:10px 12px;font-size:13px;line-height:1.6;color:var(--text2);}
+.score-pill{font-size:11px;padding:3px 10px;border-radius:100px;font-weight:600;font-family:var(--mono);}
+.score-high{background:var(--accent-dim);color:var(--accent);}
+.score-mid{background:var(--amber-dim);color:var(--amber);}
+.score-low{background:var(--red-dim);color:var(--red);}
+.trainee-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:padding 0.15s;}
+.trainee-row:last-child{border-bottom:none;}
+.trainee-row:hover{padding-left:4px;}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;background:var(--blue-dim);color:var(--blue);}
+.section-title{font-size:11px;font-weight:500;color:var(--text3);padding:0 1.5rem;margin:1rem 0 0.5rem;text-transform:uppercase;letter-spacing:0.07em;}
+.empty-state{padding:2rem;text-align:center;color:var(--text3);font-size:13px;}
+.approval-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.approval-row:last-child{border-bottom:none;}
+.insight-card{margin:0 1.5rem 1rem;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;}
+.insight-header{padding:10px 1.25rem;background:var(--bg4);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
+.insight-body{padding:1rem 1.25rem;background:var(--bg3);}
+.insight-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;}
+.insight-item:last-child{margin-bottom:0;}
+.insight-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.pending-banner{margin:0 1.5rem 1rem;background:var(--amber-dim);border:1px solid rgba(255,181,71,0.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;}
+.pending-banner h3{font-size:14px;font-weight:600;color:var(--amber);margin-bottom:4px;}
+.pending-banner p{font-size:13px;color:var(--text2);line-height:1.6;}
+.wait-screen{text-align:center;padding:3rem 1.5rem;}
+.wait-icon{font-size:40px;margin-bottom:1rem;}
+.wait-screen h2{font-size:20px;font-weight:600;margin-bottom:8px;}
+.wait-screen p{font-size:13px;color:var(--text2);line-height:1.7;max-width:360px;margin:0 auto 1.25rem;}
+.wait-id{font-family:var(--mono);font-size:18px;color:var(--accent);background:var(--accent-dim);padding:8px 20px;border-radius:var(--radius);display:inline-block;margin-bottom:1.25rem;letter-spacing:0.08em;}
+.chart-wrap{padding:0 1.5rem 1rem;}
+.chart-container{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">SELENIUM TRACK</div></div>
+  <div class="hero"><h1>Interim<br><span>Assessment</span></h1><p>Timed 5-question sessions on Core Java, Functional Testing, SQL & Selenium/TestNG — evaluated by Trainer Ramvel.</p></div>
+  <div class="form-section">
+    <div class="form-row"><label>Role</label>
+      <select id="role-select" onchange="toggleRole()">
+        <option value="trainee">Trainee — take assessment</option>
+        <option value="trainer">Trainer — dashboard</option>
+      </select>
+    </div>
+    <div id="trainee-fields">
+      <div class="form-row"><label>Your name</label><input type="text" id="trainee-name" placeholder="e.g. Priya Sharma"></div>
+      <div class="form-row"><label>Cohort / Batch</label><input type="text" id="cohort-name" placeholder="e.g. Batch-12 May 2025"></div>
+    </div>
+    <div id="trainer-fields" style="display:none;">
+      <div class="form-row"><label>Trainer name</label><input type="text" id="trainer-name" placeholder="Enter trainer name"></div>
+      <div class="form-row"><label>Access code</label><input type="password" id="trainer-pass" placeholder="Enter access code"></div>
+    </div>
+    <button class="btn btn-primary" onclick="handleLogin()" style="width:100%;margin-top:4px;">Continue →</button>
+  </div>
+</div>
+
+<!-- WAITING SCREEN -->
+<div class="screen" id="screen-wait">
+  <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">LOCKED</div></div>
+  <div class="wait-screen">
+    <div class="wait-icon">🔒</div>
+    <h2>Next session locked</h2>
+    <p>Your previous session has been recorded. Trainer Ramvel must approve your next session before you can continue.</p>
+    <div class="wait-id" id="wait-id-display">—</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:1.5rem;">Show this ID to Trainer Ramvel to get approved.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-sm" onclick="checkApprovalStatus()">Check status</button>
+      <button class="btn btn-sm" onclick="showScreen('screen-login')">← Back</button>
+    </div>
+    <div id="approval-msg" style="margin-top:1rem;font-size:13px;color:var(--text2);min-height:20px;"></div>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div class="screen" id="screen-question">
+  <div class="q-header">
+    <div>
+      <div style="font-size:14px;font-weight:600;" id="q-trainee-label"></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px;" id="q-cohort-label"></div>
+    </div>
+    <div style="text-align:right;">
+      <div class="timer" id="q-timer">5:00</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px;">TIME LEFT</div>
+    </div>
+  </div>
+  <div style="padding:0.75rem 1.5rem;">
+    <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;">
+      <span style="font-size:11px;color:var(--text3);" id="q-count-label">Question 1 of 5</span>
+      <span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="q-pts"></span>
+    </div>
+  </div>
+  <div class="q-body">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-family:var(--mono);" id="q-num">Q1</div>
+    <div class="q-topic-pill" id="q-topic">Core Java</div>
+    <div class="q-text" id="q-text">Loading...</div>
+    <textarea id="q-answer" placeholder="Type your answer here. Include code snippets or examples where relevant."></textarea>
+  </div>
+  <div class="loader" id="q-loader"><div class="spinner"></div> Evaluating your answer…</div>
+  <div class="q-footer">
+    <button class="btn btn-primary" id="q-next-btn" onclick="submitAnswer()" style="flex:1;">Next question →</button>
+    <span class="skip-link" onclick="skipQuestion()">Skip</span>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="header"><div class="logo">Session <span>Complete</span></div><button class="btn btn-sm" onclick="showScreen('screen-login')">Home</button></div>
+  <div class="cards-grid" id="results-metrics"></div>
+  <div class="pending-banner">
+    <h3>⏸ Next session locked</h3>
+    <p>Results sent to Trainer Ramvel. You need approval before your next session. Show your Session ID to the trainer.</p>
+  </div>
+  <div id="results-feedback" style="padding-bottom:1.5rem;"></div>
+</div>
+
+<!-- TRAINER DASHBOARD -->
+<div class="screen" id="screen-trainer">
+  <div class="header">
+    <div class="logo">Trainer <span>Dashboard</span></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sm" onclick="refreshDashboard()">↺ Refresh</button>
+      <button class="btn btn-sm" onclick="showScreen('screen-login')">Exit</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" onclick="switchTab('approvals')">Approvals<span id="appr-badge"></span></div>
+    <div class="tab" onclick="switchTab('individual')">Individual</div>
+    <div class="tab" onclick="switchTab('insights')">AI Insights</div>
+  </div>
+  <div id="tab-overview">
+    <div class="cards-grid" id="cohort-metrics"></div>
+    <div class="chart-wrap"><div class="card-title" style="padding:0 0 8px;">Trainee performance</div><div class="chart-container"><canvas id="chart-bar" height="220"></canvas></div></div>
+    <div class="chart-wrap"><div class="card-title" style="padding:0 0 8px;">Topic strength & weakness</div><div class="chart-container"><canvas id="chart-radar" height="260"></canvas></div></div>
+    <p class="section-title">All trainees</p>
+    <div class="card" id="trainee-list" style="margin-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-approvals" style="display:none;">
+    <p class="section-title" style="margin-top:1.25rem;">Pending approvals</p>
+    <div class="card" id="approvals-list" style="margin-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-individual" style="display:none;">
+    <div style="padding:1rem 1.5rem 0.5rem;"><select id="trainee-select" onchange="loadIndividual()" style="width:100%;"><option value="">— select trainee —</option></select></div>
+    <div id="individual-detail" style="padding-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-insights" style="display:none;">
+    <div class="cards-grid" id="insights-summary"></div>
+    <div id="insights-content" style="padding-bottom:1.5rem;"></div>
+  </div>
+</div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const TRAINER_NAME='Ramvel', TRAINER_CODE='ramvel123';
+const QB=[
+  {topic:"Core Java",q:"What is the difference between `==` and `.equals()` in Java? Give a real-world example where using `==` would cause a bug in test code.",key:"== compares object references while .equals() compares content. String s1=new String('hello'); String s2=new String('hello'); s1==s2 is false but s1.equals(s2) is true. In test code, comparing assertion strings with == would fail unexpectedly."},
+  {topic:"Core Java",q:"Explain method overloading vs method overriding with examples. How does this apply in Selenium Page Object Models?",key:"Overloading: same method name, different parameters in same class. Overriding: subclass redefines parent method. In POM, overriding is used when child page extends BasePage and provides specific implementations of common actions like login()."},
+  {topic:"Core Java",q:"What are checked vs unchecked exceptions? How should a Selenium framework handle NoSuchElementException?",key:"Checked must be declared or handled (IOException). Unchecked extend RuntimeException (NoSuchElementException). Catch NoSuchElementException in a helper method, log the error, throw custom exception or return null with meaningful message."},
+  {topic:"Core Java",q:"Explain ArrayList vs LinkedList. When would you prefer one in a test automation framework?",key:"ArrayList: dynamic array, fast random access O(1). LinkedList: doubly linked, fast insert/delete O(1). ArrayList preferred for storing test data where you iterate frequently. LinkedList suits a queue of test steps."},
+  {topic:"Core Java",q:"What is the `static` keyword in Java? How is it used in a WebDriver singleton pattern?",key:"static belongs to class, not instance. In WebDriver singleton, a static variable holds the single driver instance and static getInstance() returns it, ensuring only one browser is managed throughout the test run."},
+  {topic:"Functional Testing",q:"Difference between black-box and white-box testing? Which applies to a login module?",key:"Black-box tests functionality without code knowledge. White-box tests internal logic. For login, black-box is used — verify behavior (valid/invalid credentials, error messages, session) without knowing authentication implementation."},
+  {topic:"Functional Testing",q:"Explain Equivalence Partitioning and Boundary Value Analysis. Design test cases for age 18–60.",key:"EP divides inputs into valid/invalid partitions. BVA tests at boundaries. For age 18-60: valid(25), invalid-low(10), invalid-high(70). BVA: 17,18,19,59,60,61. About 7 meaningful test cases total."},
+  {topic:"Functional Testing",q:"What is regression testing? Why critical in agile? How does Selenium support it?",key:"Regression re-runs existing tests after changes to ensure no new bugs. In agile every sprint risks regression. Selenium automates the suite, running hundreds of tests quickly with pass/fail reports before release."},
+  {topic:"Functional Testing",q:"Test case vs test scenario. Write a scenario and 2 test cases for Forgot Password.",key:"Scenario: high-level flow. Test case: step-by-step with data. Scenario: Verify password reset via email. TC1: valid email → reset email sent. TC2: unregistered email → error 'Email not found'."},
+  {topic:"SQL",q:"Difference between INNER JOIN, LEFT JOIN, RIGHT JOIN? Write a query for all employees with dept names (NULL if no dept).",key:"INNER JOIN: matching rows only. LEFT JOIN: all left rows + matches. Query: SELECT e.name, d.dept_name FROM employees e LEFT JOIN departments d ON e.dept_id = d.id;"},
+  {topic:"SQL",q:"Explain GROUP BY and HAVING. Write a query for departments with more than 3 employees.",key:"GROUP BY aggregates rows by column. HAVING filters groups. Query: SELECT dept_id, COUNT(*) as cnt FROM employees GROUP BY dept_id HAVING COUNT(*) > 3;"},
+  {topic:"SQL",q:"What are primary key, foreign key, unique key? Why important for test data?",key:"PK: unique not-null row identifier. FK: references PK in another table. UK: no duplicates. These ensure test records are valid and relationships are maintained during data setup."},
+  {topic:"SQL",q:"Difference between DELETE, TRUNCATE, DROP? Which to use for test data cleanup?",key:"DELETE: removes rows, logged, can WHERE, can rollback. TRUNCATE: removes all rows, faster, no WHERE. DROP: removes entire table. Use DELETE for selective cleanup or TRUNCATE for clearing all test data. Never DROP."},
+  {topic:"Selenium",q:"Types of Selenium locators ranked by reliability. When would you use XPath over CSS?",key:"ID (most reliable), Name, CSS Selector, XPath, Class, LinkText. Use XPath when traversing parent elements, using text()= or when CSS cannot traverse upward. CSS preferred for performance."},
+  {topic:"Selenium",q:"What is Page Object Model? Describe the class hierarchy for login and dashboard pages.",key:"POM separates UI elements from test logic. Each page=one class. Hierarchy: BasePage (driver, common methods) → LoginPage (username, password, login()) → DashboardPage (menu, logout()). Tests call page methods, not locators."},
+  {topic:"Selenium",q:"How do you handle AJAX waits? Explain implicit, explicit, and Fluent wait.",key:"Implicit: global wait for all element lookups. Explicit: waits for specific condition (elementToBeClickable). Fluent: polling interval + ignore exceptions. For AJAX use explicit wait with ExpectedConditions. Avoid Thread.sleep()."},
+  {topic:"Selenium",q:"What is TestNG? Explain @BeforeClass, @BeforeMethod, @Test, @AfterMethod, @DataProvider.",key:"TestNG provides parallel execution, data-driven testing, grouping. @BeforeClass: once before class. @BeforeMethod: before each test. @Test: marks test. @AfterMethod: after each test. @DataProvider: supplies multiple data sets for parameterized testing."},
+  {topic:"Selenium",q:"How to implement data-driven test in TestNG with @DataProvider? Example with 3 login credential sets.",key:"@DataProvider returns Object[][].: {{'admin','admin123'},{'user','pass'},{'invalid','wrong'}}. @Test(dataProvider='credentials') loginTest(String u, String p) runs 3 times with each set automatically."},
+  {topic:"Selenium",q:"How would you handle file upload and download in Selenium?",key:"Upload: sendKeys() on input[type=file] with absolute path — no OS dialog. Download: configure download directory via ChromeOptions, trigger download, verify file exists using Java File class after wait."},
+  {topic:"Selenium",q:"Difference between driver.close() and driver.quit()? When would each cause a bug?",key:"close(): closes current window only. quit(): closes all windows, kills session. Bug with close(): other windows remain open, wasting resources. Bug with quit(): if called in @AfterMethod with @DataProvider, kills driver before all iterations complete."}
+];
+
+let sessionData={trainee:'',cohort:'',answers:[]};
+let currentQ=0,questions=[],timerInterval=null,timeLeft=300,evalResults=[],scoreSoFar=0;
+let barChart=null,radarChart=null;
+let waitingForTrainee='',waitingSessionId=null;
+
+function getSessions(){try{return JSON.parse(localStorage.getItem('ep_sessions')||'[]');}catch(e){return[];}}
+function saveSessions(d){try{localStorage.setItem('ep_sessions',JSON.stringify(d));}catch(e){}}
+function getApprovals(){try{return JSON.parse(localStorage.getItem('ep_approvals')||'{}');}catch(e){return{};}}
+function saveApprovals(d){try{localStorage.setItem('ep_approvals',JSON.stringify(d));}catch(e){}}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function toggleRole(){
+  const r=document.getElementById('role-select').value;
+  document.getElementById('trainee-fields').style.display=r==='trainee'?'':'none';
+  document.getElementById('trainer-fields').style.display=r==='trainer'?'':'none';
+}
+
+function handleLogin(){
+  const role=document.getElementById('role-select').value;
+  if(role==='trainer'){
+    const name=document.getElementById('trainer-name').value.trim();
+    const pass=document.getElementById('trainer-pass').value.trim();
+    if(name!==TRAINER_NAME){alert('❌ Access denied.\nOnly Trainer Ramvel can access the dashboard.');return;}
+    if(pass!==TRAINER_CODE){alert('❌ Incorrect access code.\nHint: ramvel123');return;}
+    showTrainerDashboard();
+  } else {
+    const name=document.getElementById('trainee-name').value.trim();
+    const cohort=document.getElementById('cohort-name').value.trim();
+    if(!name||!cohort){alert('Please enter your name and cohort.');return;}
+    const sessions=getSessions().filter(s=>s.trainee.toLowerCase()===name.toLowerCase());
+    if(sessions.length>0){
+      const last=sessions[sessions.length-1];
+      const approvals=getApprovals();
+      if(!approvals[last.id]){
+        waitingForTrainee=name;waitingSessionId=last.id;
+        document.getElementById('wait-id-display').textContent=name.toUpperCase().replace(/\s+/g,'-')+'-'+String(last.id).slice(-4);
+        showScreen('screen-wait');return;
+      }
+    }
+    sessionData={trainee:name,cohort:cohort,answers:[]};
+    startSession();
+  }
+}
+
+function checkApprovalStatus(){
+  const approvals=getApprovals();
+  if(waitingSessionId&&approvals[waitingSessionId]){
+    document.getElementById('approval-msg').innerHTML='<span style="color:var(--accent);">✓ Approved! Please go back and continue.</span>';
+  } else {
+    document.getElementById('approval-msg').textContent='Still pending. Please wait for Trainer Ramvel.';
+  }
+}
+
+function pickQuestions(){
+  const topics=['Core Java','Functional Testing','SQL','Selenium'];
+  let picked=[],pool=[...QB].sort(()=>Math.random()-0.5);
+  topics.forEach(t=>{const q=pool.find(q=>q.topic===t&&!picked.includes(q));if(q)picked.push(q);});
+  const rest=pool.filter(q=>!picked.includes(q));picked.push(rest[0]);
+  return picked.slice(0,5).sort(()=>Math.random()-0.5);
+}
+
+function startSession(){
+  questions=pickQuestions();currentQ=0;evalResults=[];scoreSoFar=0;
+  document.getElementById('q-trainee-label').textContent=sessionData.trainee;
+  document.getElementById('q-cohort-label').textContent=sessionData.cohort;
+  showScreen('screen-question');loadQ(0);startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);timeLeft=300;updateTimer();
+  timerInterval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=60)document.getElementById('q-timer').classList.add('warning');if(timeLeft<=0){clearInterval(timerInterval);autoFinish();}},1000);
+}
+function updateTimer(){const m=Math.floor(timeLeft/60),s=timeLeft%60;document.getElementById('q-timer').textContent=m+':'+String(s).padStart(2,'0');}
+
+function loadQ(idx){
+  const q=questions[idx];
+  document.getElementById('q-num').textContent='Q'+(idx+1);
+  document.getElementById('q-topic').textContent=q.topic;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-answer').value='';
+  document.getElementById('q-count-label').textContent='Question '+(idx+1)+' of 5';
+  document.getElementById('q-progress').style.width=(idx*20)+'%';
+  document.getElementById('q-pts').textContent=idx>0?scoreSoFar+'/'+(idx*10)+' pts':'';
+  document.getElementById('q-next-btn').textContent=idx<4?'Next question →':'Submit & finish ✓';
+  document.getElementById('q-timer').classList.remove('warning');
+}
+
+function skipQuestion(){
+  evalResults.push({q:questions[currentQ],answer:'[Skipped]',score:0,feedback:'Question was skipped.',correct:questions[currentQ].key});
+  moveNext();
+}
+
+async function submitAnswer(){
+  const answer=document.getElementById('q-answer').value.trim();
+  if(!answer){alert('Please type an answer or use Skip.');return;}
+  const loader=document.getElementById('q-loader'),btn=document.getElementById('q-next-btn');
+  loader.classList.add('active');btn.disabled=true;
+  const q=questions[currentQ];let score=0,feedback='';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`You are a senior QA lead evaluating a trainee's Selenium track assessment. Respond ONLY with valid JSON: {"score":<0-10>,"feedback":"<2-3 sentence evaluator feedback on what was correct, missing, and what to study>"}. Rubric: 9-10=complete; 7-8=mostly correct; 5-6=partial; 3-4=vague; 0-2=wrong.`,messages:[{role:'user',content:`Question: ${q.q}\n\nModel answer: ${q.key}\n\nTrainee answer: ${answer}`}]})});
+    const data=await resp.json();
+    const text=data.content.find(c=>c.type==='text')?.text||'{}';
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    score=parsed.score||0;feedback=parsed.feedback||'Unable to evaluate.';
+  }catch(e){score=5;feedback='AI evaluation unavailable. Recorded for trainer review.';}
+  loader.classList.remove('active');btn.disabled=false;
+  scoreSoFar+=score;
+  evalResults.push({q,answer,score,feedback,correct:q.key});
+  moveNext();
+}
+
+function autoFinish(){while(currentQ<5){evalResults.push({q:questions[currentQ],answer:'[Time expired]',score:0,feedback:'Time expired.',correct:questions[currentQ].key});currentQ++;}finishSession();}
+function moveNext(){currentQ++;if(currentQ>=5){clearInterval(timerInterval);finishSession();}else loadQ(currentQ);}
+
+function finishSession(){
+  const total=evalResults.reduce((s,r)=>s+r.score,0);
+  const pct=Math.round((total/50)*100);
+  const id=Date.now();
+  const record={id,trainee:sessionData.trainee,cohort:sessionData.cohort,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),score:total,pct,results:evalResults.map(r=>({topic:r.q.topic,question:r.q.q,answer:r.answer,correct:r.correct,score:r.score,feedback:r.feedback}))};
+  const sessions=getSessions();sessions.push(record);saveSessions(sessions);
+  waitingForTrainee=sessionData.trainee;waitingSessionId=id;
+  showResultsScreen(record);
+}
+
+function showResultsScreen(s){
+  showScreen('screen-results');
+  const grade=s.pct>=80?'Excellent':s.pct>=60?'Good':s.pct>=40?'Needs improvement':'Re-assessment needed';
+  document.getElementById('results-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Score</div><div class="metric-value">${s.score}/50</div></div>
+    <div class="metric"><div class="metric-label">Percentage</div><div class="metric-value">${s.pct}%</div></div>
+    <div class="metric"><div class="metric-label">Grade</div><div class="metric-value" style="font-size:13px;padding-top:6px;">${grade}</div></div>
+  `;
+  let html='';
+  s.results.forEach((r,i)=>{
+    const cls=r.score>=7?'score-high':r.score>=4?'score-mid':'score-low';
+    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><span class="score-pill ${cls}">${r.score}/10</span></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Your answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">Evaluator feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
+  });
+  document.getElementById('results-feedback').innerHTML=html;
+}
+
+// ── TRAINER ──────────────────────────────────────────────────────
+function showTrainerDashboard(){showScreen('screen-trainer');refreshDashboard();}
+function refreshDashboard(){const s=getSessions();renderOverview(s);renderApprovals(s);populateSelect(s);updateBadge();}
+
+function updateBadge(){
+  const approvals=getApprovals();
+  const sessions=getSessions();
+  const pending=sessions.filter(s=>!approvals[s.id]);
+  // Only show count for the last session per trainee
+  const byT={};sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
+  const count=Object.values(byT).filter(s=>!approvals[s.id]).length;
+  document.getElementById('appr-badge').textContent=count>0?` (${count})`:'';
+}
+
+function renderOverview(sessions){
+  if(!sessions.length){document.getElementById('cohort-metrics').innerHTML='<div class="empty-state">No sessions yet.</div>';document.getElementById('trainee-list').innerHTML='<p class="empty-state">No trainees yet.</p>';return;}
+  const avg=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const top=Math.max(...sessions.map(s=>s.pct));
+  const pass=sessions.filter(s=>s.pct>=60).length;
+  const trainees=[...new Set(sessions.map(s=>s.trainee))].length;
+  document.getElementById('cohort-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div><div class="metric-sub">${trainees} trainees</div></div>
+    <div class="metric"><div class="metric-label">Avg score</div><div class="metric-value">${avg}%</div></div>
+    <div class="metric"><div class="metric-label">Pass rate</div><div class="metric-value">${Math.round(pass/sessions.length*100)}%</div><div class="metric-sub">≥60%</div></div>
+    <div class="metric"><div class="metric-label">Top score</div><div class="metric-value">${top}%</div></div>
+  `;
+  renderBarChart(sessions);
+  renderRadarChart(sessions);
+  // trainee list
+  const byT={};sessions.forEach(s=>{if(!byT[s.trainee])byT[s.trainee]=[];byT[s.trainee].push(s);});
+  let html='';
+  Object.entries(byT).forEach(([name,sess])=>{
+    const latest=sess[sess.length-1];
+    const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const cls=latest.pct>=70?'score-high':latest.pct>=50?'score-mid':'score-low';
+    const avg2=Math.round(sess.reduce((s,r)=>s+r.pct,0)/sess.length);
+    html+=`<div class="trainee-row" onclick="quickView('${name}')"><div class="avatar">${initials}</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${latest.cohort} · ${sess.length} session${sess.length>1?'s':''} · avg ${avg2}%</div></div><span class="score-pill ${cls}">${latest.pct}%</span></div>`;
+  });
+  document.getElementById('trainee-list').innerHTML=html;
+}
+
+function renderBarChart(sessions){
+  const byT={};sessions.forEach(s=>{if(!byT[s.trainee])byT[s.trainee]=[];byT[s.trainee].push(s.pct);});
+  const labels=Object.keys(byT);
+  const avgs=labels.map(n=>Math.round(byT[n].reduce((a,b)=>a+b,0)/byT[n].length));
+  const colors=avgs.map(v=>v>=70?'rgba(200,240,96,0.85)':v>=50?'rgba(255,181,71,0.85)':'rgba(255,107,107,0.85)');
+  const ctx=document.getElementById('chart-bar').getContext('2d');
+  if(barChart)barChart.destroy();
+  barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Avg %',data:avgs,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},scales:{x:{ticks:{color:'#9a9990',font:{family:"'DM Mono'",size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{min:0,max:100,ticks:{color:'#9a9990',font:{family:"'DM Mono'",size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+}
+
+function renderRadarChart(sessions){
+  const topics=['Core Java','Functional Testing','SQL','Selenium'];
+  const avgs=topics.map(t=>{
+    let sc=[];sessions.forEach(s=>s.results.filter(r=>r.topic===t).forEach(r=>sc.push(r.score)));
+    return sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length*10):0;
+  });
+  const ctx=document.getElementById('chart-radar').getContext('2d');
+  if(radarChart)radarChart.destroy();
+  radarChart=new Chart(ctx,{type:'radar',data:{labels:topics,datasets:[{label:'Score %',data:avgs,backgroundColor:'rgba(200,240,96,0.12)',borderColor:'rgba(200,240,96,0.8)',borderWidth:2,pointBackgroundColor:'#c8f060',pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{color:'#5a5a55',backdropColor:'transparent',font:{size:10}},grid:{color:'rgba(255,255,255,0.07)'},angleLines:{color:'rgba(255,255,255,0.05)'},pointLabels:{color:'#9a9990',font:{family:"'Sora'",size:11}}}}}});
+}
+
+// ── APPROVALS ─────────────────────────────────────────────────────
+function renderApprovals(){
+  const sessions=getSessions();
+  const approvals=getApprovals();
+  // Get latest session per trainee that needs approval
+  const byT={};
+  sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
+  const pending=Object.values(byT).filter(s=>!approvals[s.id]);
+  let html='';
+  if(!pending.length){html='<div class="empty-state">No pending approvals. All trainees cleared ✓</div>';}
+  else{
+    pending.forEach(s=>{
+      const cls=s.pct>=70?'score-high':s.pct>=50?'score-mid':'score-low';
+      html+=`<div class="approval-row"><div><div style="font-size:14px;font-weight:600;">${s.trainee}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${s.cohort} · ${s.date} · <span class="score-pill ${cls}" style="font-size:10px;">${s.pct}%</span></div></div><div style="display:flex;gap:8px;"><button class="btn btn-success btn-sm" onclick="approveT(${s.id},'${s.trainee}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="denyT(${s.id},'${s.trainee}')">✗ Deny</button></div></div>`;
+    });
+  }
+  document.getElementById('approvals-list').innerHTML=html;
+  updateBadge();
+}
+
+function approveT(id,name){
+  const a=getApprovals();a[id]=true;saveApprovals(a);
+  alert('✓ '+name+' approved for next session.');
+  renderApprovals();
+}
+function denyT(id,name){
+  const a=getApprovals();a[id]='denied';saveApprovals(a);
+  alert(name+'\'s request denied.');
+  renderApprovals();
+}
+
+// ── INDIVIDUAL ────────────────────────────────────────────────────
+function populateSelect(sessions){
+  const names=[...new Set(sessions.map(s=>s.trainee))];
+  document.getElementById('trainee-select').innerHTML='<option value="">— select trainee —</option>'+names.map(n=>`<option>${n}</option>`).join('');
+}
+function quickView(name){switchTab('individual');document.getElementById('trainee-select').value=name;loadIndividual();}
+function loadIndividual(){
+  const name=document.getElementById('trainee-select').value;
+  if(!name){document.getElementById('individual-detail').innerHTML='';return;}
+  const sessions=getSessions().filter(s=>s.trainee===name);
+  if(!sessions.length){document.getElementById('individual-detail').innerHTML='<div class="empty-state">No data.</div>';return;}
+  const latest=sessions[sessions.length-1];
+  const avgPct=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const grade=avgPct>=80?'Excellent':avgPct>=60?'Good':avgPct>=40?'Needs improvement':'Re-assessment';
+  let html=`<div class="cards-grid" style="padding-top:0.75rem;"><div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div></div><div class="metric"><div class="metric-label">Avg</div><div class="metric-value">${avgPct}%</div></div><div class="metric"><div class="metric-label">Status</div><div class="metric-value" style="font-size:12px;padding-top:6px;">${grade}</div></div></div><p class="section-title">Latest session — ${latest.date}</p>`;
+  latest.results.forEach((r,i)=>{
+    const cls=r.score>=7?'score-high':r.score>=4?'score-mid':'score-low';
+    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><span class="score-pill ${cls}">${r.score}/10</span></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Trainee answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">AI feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
+  });
+  document.getElementById('individual-detail').innerHTML=html;
+}
+
+// ── AI INSIGHTS ───────────────────────────────────────────────────
+async function renderInsights(sessions){
+  if(!sessions.length){document.getElementById('insights-content').innerHTML='<div class="empty-state">No data to analyze yet.</div>';return;}
+  const topics=['Core Java','Functional Testing','SQL','Selenium'];
+  const topicData=topics.map(t=>{
+    let sc=[];sessions.forEach(s=>s.results.filter(r=>r.topic===t).forEach(r=>sc.push(r.score)));
+    return{topic:t,avg:sc.length?+(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):0};
+  });
+  const strong=topicData.filter(t=>t.avg>=7).map(t=>t.topic);
+  const weak=topicData.filter(t=>t.avg<5).map(t=>t.topic);
+  const avgOverall=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const passCount=sessions.filter(s=>s.pct>=60).length;
+  const trainees=[...new Set(sessions.map(s=>s.trainee))].length;
+
+  document.getElementById('insights-summary').innerHTML=`
+    <div class="metric"><div class="metric-label">Strong topics</div><div class="metric-value" style="font-size:13px;color:var(--accent);padding-top:4px;">${strong.length?strong.join(', '):'—'}</div></div>
+    <div class="metric"><div class="metric-label">Weak topics</div><div class="metric-value" style="font-size:13px;color:var(--red);padding-top:4px;">${weak.length?weak.join(', '):'—'}</div></div>
+  `;
+
+  document.getElementById('insights-content').innerHTML=`<div class="empty-state">Generating AI trainer insights<span class="spinner" style="display:inline-block;margin-left:8px;vertical-align:middle;"></span></div>`;
+
+  const summary=`${trainees} trainees, ${sessions.length} sessions. Overall avg: ${avgOverall}%. Pass rate: ${Math.round(passCount/sessions.length*100)}%. Topic scores (out of 10): ${topicData.map(t=>t.topic+' '+t.avg).join(', ')}. Strong: ${strong.join(', ')||'none'}. Weak: ${weak.join(', ')||'none'}.`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:`You are a senior QA training manager analyzing a cohort assessment data for a Selenium automation training program. Provide specific, actionable insights. Respond ONLY with valid JSON (no markdown): {"overall":"<2-sentence overall cohort assessment>","strengths":["<specific observation>","<specific observation>"],"weaknesses":["<specific observation>","<specific observation>"],"actions":["<specific trainer action with method>","<specific trainer action with method>","<specific trainer action with method>"]}`,messages:[{role:'user',content:`Data: ${summary}\n\nProvide: 2-sentence overall assessment, 2 strength observations, 2 weakness observations, 3 specific trainer actions (each with HOW to execute it) to improve the cohort.`}]})});
+    const data=await resp.json();
+    const text=data.content.find(c=>c.type==='text')?.text||'{}';
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    let html=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p><div class="card"><p style="font-size:13px;line-height:1.7;color:var(--text2);">${parsed.overall||'—'}</p></div>`;
+    if(parsed.strengths?.length){html+=`<div class="insight-card"><div class="insight-header">✦ Cohort strengths</div><div class="insight-body">${parsed.strengths.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>${s}</div></div>`).join('')}</div></div>`;}
+    if(parsed.weaknesses?.length){html+=`<div class="insight-card"><div class="insight-header">⚠ Areas needing attention</div><div class="insight-body">${parsed.weaknesses.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div>${w}</div></div>`).join('')}</div></div>`;}
+    if(parsed.actions?.length){html+=`<div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">${parsed.actions.map((a,i)=>`<div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action ${i+1}:</strong> ${a}</div></div>`).join('')}</div></div>`;}
+    document.getElementById('insights-content').innerHTML=html;
+  }catch(e){
+    const fallback=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p>
+    <div class="card"><p style="font-size:13px;line-height:1.7;color:var(--text2);">Cohort is at ${avgOverall}% avg with ${Math.round(passCount/sessions.length*100)}% pass rate. ${weak.length?'Immediate focus needed on '+weak.join(' and ')+'.':'Performance is stable across topics.'}</p></div>
+    <div class="insight-card"><div class="insight-header">✦ Strengths</div><div class="insight-body">${(strong.length?strong.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>Cohort shows solid grasp of <strong>${s}</strong> concepts</div></div>`).join(''):['<div class="insight-item"><div class="insight-dot" style="background:var(--text3);"></div><div>Insufficient data for clear strengths — more sessions needed</div></div>']).join('')}</div></div>
+    <div class="insight-card"><div class="insight-header">⚠ Weak areas</div><div class="insight-body">${(weak.length?weak.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div><strong>${w}</strong>: scores consistently below 5/10, needs immediate intervention</div></div>`).join(''):['<div class="insight-item"><div class="insight-dot" style="background:var(--text3);"></div><div>No critical weak areas identified</div></div>']).join('')}</div></div>
+    <div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">
+      <div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action 1:</strong> Conduct focused 2-hour lab on ${weak[0]||'lowest-scoring topic'} with live coding exercises and real project scenarios</div></div>
+      <div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action 2:</strong> Pair low-scoring trainees (<50%) with top performers for daily 30-min peer review sessions</div></div>
+      <div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action 3:</strong> Assign mini-project using all 4 topics together — framework setup, SQL test data, functional scenarios, Selenium execution</div></div>
+    </div></div>`;
+    document.getElementById('insights-content').innerHTML=fallback;
+  }
+}
+
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(tab){
+  const tabs=['overview','approvals','individual','insights'];
+  tabs.forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).style.display=t===tab?'':'none';
+  });
+  if(tab==='insights')renderInsights(getSessions());
+  if(tab==='approvals')renderApprovals();
+}
+</script>
+</body>
+</html>

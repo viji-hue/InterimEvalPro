@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EvalPro — Selenium Track</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f4f3ef;--bg2:#ffffff;--bg3:#f9f8f5;--bg4:#efefeb;
+  --text:#1a1a17;--text2:#6b6b65;--text3:#a0a09a;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --accent:#3a7d0a;--accent2:#2e6408;--accent-dim:rgba(58,125,10,0.09);
+  --red:#c0392b;--red-dim:rgba(192,57,43,0.09);
+  --amber:#b36a00;--amber-dim:rgba(179,106,0,0.09);
+  --blue:#1a6fa8;--blue-dim:rgba(26,111,168,0.09);
+  --radius:8px;--radius-lg:14px;--radius-xl:20px;
+  --font:'Sora',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;}
+.app{width:100%;max-width:720px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);}
+.screen{display:none;}.screen.active{display:block;}
+.header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:15px;font-weight:600;letter-spacing:-0.02em;}.logo span{color:var(--accent);}
+.badge{font-size:10px;padding:3px 9px;border-radius:100px;background:var(--accent-dim);color:var(--accent);letter-spacing:0.05em;font-weight:500;}
+.hero{padding:2.5rem 1.5rem 1.5rem;}
+.hero h1{font-size:26px;font-weight:600;letter-spacing:-0.03em;line-height:1.2;margin-bottom:8px;}
+.hero h1 span{color:var(--accent);}
+.hero p{font-size:13px;color:var(--text2);line-height:1.7;max-width:460px;}
+.form-section{padding:0 1.5rem 1.5rem;}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.07em;font-weight:500;}
+input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;font-family:var(--font);background:var(--bg3);color:var(--text);outline:none;transition:border-color 0.15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{min-height:120px;resize:vertical;line-height:1.6;}
+select option{background:var(--bg2);}
+.btn{padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all 0.15s;font-family:var(--font);}
+.btn:hover{background:var(--bg4);}
+.btn-primary{background:var(--accent);color:#ffffff;border-color:var(--accent);font-weight:600;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-danger{background:var(--red-dim);color:var(--red);border-color:rgba(192,57,43,0.2);}
+.btn-success{background:var(--accent-dim);color:var(--accent);border-color:rgba(58,125,10,0.2);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--bg3);}
+.tab{padding:12px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text2);transition:all 0.15s;font-weight:500;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:1.25rem 1.5rem;}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;}
+.metric-label{font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;}
+.metric-value{font-size:22px;font-weight:600;letter-spacing:-0.02em;}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin:0 1.5rem 1rem;}
+.card-title{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.07em;}
+.progress-bar{height:4px;background:var(--bg4);border-radius:100px;margin:5px 0 2px;}
+.progress-fill{height:100%;border-radius:100px;background:var(--accent);transition:width 0.6s;}
+.q-header{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg3);}
+.timer{font-size:24px;font-weight:500;font-family:var(--mono);color:var(--accent);}
+.timer.warning{color:var(--red);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.q-body{padding:1.5rem;}
+.q-topic-pill{display:inline-block;font-size:11px;padding:4px 10px;border-radius:100px;margin-bottom:14px;background:var(--bg4);color:var(--text2);font-weight:500;border:1px solid var(--border);}
+.q-text{font-size:15px;font-weight:500;line-height:1.6;margin-bottom:1.25rem;}
+.q-footer{padding:0 1.5rem 1.5rem;display:flex;gap:10px;align-items:center;}
+.skip-link{font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;}
+.loader{display:none;padding:1rem;font-size:12px;color:var(--text2);font-family:var(--mono);}
+.loader.active{display:flex;align-items:center;justify-content:center;gap:8px;}
+.spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.result-card{margin:0 1.5rem 12px;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;background:var(--bg2);}
+.result-header{padding:10px 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);font-size:13px;background:var(--bg3);}
+.result-body{padding:1rem 1.25rem;}
+.result-label{font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em;margin-top:10px;}
+.result-label:first-child{margin-top:0;}
+.result-answer{font-size:13px;line-height:1.6;padding:8px 12px;border-radius:var(--radius);background:var(--bg3);border-left:2px solid var(--border2);}
+.feedback-block{background:var(--bg3);border-radius:var(--radius);padding:10px 12px;font-size:13px;line-height:1.6;color:var(--text2);}
+.score-pill{font-size:11px;padding:3px 10px;border-radius:100px;font-weight:600;font-family:var(--mono);}
+.score-high{background:var(--accent-dim);color:var(--accent);}
+.score-mid{background:var(--amber-dim);color:var(--amber);}
+.score-low{background:var(--red-dim);color:var(--red);}
+.trainee-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:padding 0.15s;}
+.trainee-row:last-child{border-bottom:none;}
+.trainee-row:hover{padding-left:4px;}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;background:var(--blue-dim);color:var(--blue);}
+.section-title{font-size:11px;font-weight:500;color:var(--text3);padding:0 1.5rem;margin:1rem 0 0.5rem;text-transform:uppercase;letter-spacing:0.07em;}
+.empty-state{padding:2rem;text-align:center;color:var(--text3);font-size:13px;}
+.approval-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.approval-row:last-child{border-bottom:none;}
+.insight-card{margin:0 1.5rem 1rem;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;}
+.insight-header{padding:10px 1.25rem;background:var(--bg3);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border);}
+.insight-body{padding:1rem 1.25rem;background:var(--bg2);}
+.insight-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;color:var(--text);}
+.insight-item:last-child{margin-bottom:0;}
+.insight-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.pending-banner{margin:0 1.5rem 1rem;background:var(--amber-dim);border:1px solid rgba(179,106,0,0.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;}
+.pending-banner h3{font-size:14px;font-weight:600;color:var(--amber);margin-bottom:4px;}
+.pending-banner p{font-size:13px;color:var(--text2);line-height:1.6;}
+.wait-screen{text-align:center;padding:3rem 1.5rem;}
+.wait-icon{font-size:40px;margin-bottom:1rem;}
+.wait-screen h2{font-size:20px;font-weight:600;margin-bottom:8px;}
+.wait-screen p{font-size:13px;color:var(--text2);line-height:1.7;max-width:360px;margin:0 auto 1.25rem;}
+.wait-id{font-family:var(--mono);font-size:18px;color:var(--accent);background:var(--accent-dim);padding:8px 20px;border-radius:var(--radius);display:inline-block;margin-bottom:1.25rem;letter-spacing:0.08em;}
+.chart-wrap{padding:0 1.5rem 1rem;}
+.chart-container{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;}
+.error-msg{display:none;margin-top:10px;padding:10px 14px;background:var(--red-dim);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);font-size:13px;color:var(--red);}
+</style>
+</head>
+<body>
+<div class="app">
+ 
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">SELENIUM TRACK</div></div>
+  <div class="hero"><h1>Interim<br><span>Assessment</span></h1><p>Timed 5-question sessions on Core Java, Functional Testing, SQL & Selenium/TestNG — evaluated against BU standards.</p></div>
+  <div class="form-section">
+    <div class="form-row"><label>Role</label>
+      <select id="role-select" onchange="toggleRole()">
+        <option value="trainee">Trainee — take assessment</option>
+        <option value="trainer">Trainer — dashboard</option>
+      </select>
+    </div>
+    <div id="trainee-fields">
+      <div class="form-row"><label>Your name</label><input type="text" id="trainee-name" placeholder="e.g. Priya Sharma"></div>
+      <div class="form-row"><label>Cohort / Batch</label><input type="text" id="cohort-name" placeholder="e.g. Batch-12 May 2025"></div>
+    </div>
+    <div id="trainer-fields" style="display:none;">
+      <div class="form-row"><label>Trainer name</label><input type="text" id="trainer-name" placeholder="Enter trainer name" oninput="hideError()"></div>
+      <div class="form-row"><label>Access code</label><input type="password" id="trainer-pass" placeholder="Enter access code" oninput="hideError()"></div>
+      <div class="error-msg" id="trainer-error">⚠ Cannot access the trainer dashboard. Check your credentials and try again.</div>
+    </div>
+    <button class="btn btn-primary" onclick="handleLogin()" style="width:100%;margin-top:4px;">Continue →</button>
+  </div>
+</div>
+ 
+<!-- WAITING SCREEN -->
+<div class="screen" id="screen-wait">
+  <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">LOCKED</div></div>
+  <div class="wait-screen">
+    <div class="wait-icon">🔒</div>
+    <h2>Next session locked</h2>
+    <p>Your previous session has been recorded. The trainer must approve your next session before you can continue.</p>
+    <div class="wait-id" id="wait-id-display">—</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:1.5rem;">Show this ID to the trainer to get approved.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-sm" onclick="checkApprovalStatus()">Check status</button>
+      <button class="btn btn-sm" onclick="showScreen('screen-login')">← Back</button>
+    </div>
+    <div id="approval-msg" style="margin-top:1rem;font-size:13px;color:var(--text2);min-height:20px;"></div>
+  </div>
+</div>
+ 
+<!-- QUESTION -->
+<div class="screen" id="screen-question">
+  <div id="proctor-alert" style="display:none;background:#faeeda;border-bottom:1px solid rgba(179,106,0,0.25);padding:7px 1.5rem;font-size:12px;color:#b36a00;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:14px;">⚠</span>
+    <span id="proctor-alert-msg">Tab switch detected — this has been recorded.</span>
+  </div>
+  <div class="q-header">
+    <div>
+      <div style="font-size:14px;font-weight:600;" id="q-trainee-label"></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px;" id="q-cohort-label"></div>
+    </div>
+    <div style="text-align:right;">
+      <div class="timer" id="q-timer">5:00</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px;">TIME LEFT</div>
+    </div>
+  </div>
+  <div style="padding:0.75rem 1.5rem;">
+    <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;">
+      <span style="font-size:11px;color:var(--text3);" id="q-count-label">Question 1 of 5</span>
+      <span style="font-size:11px;color:var(--text3);font-family:var(--mono);" id="q-pts"></span>
+    </div>
+  </div>
+  <div class="q-body">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-family:var(--mono);" id="q-num">Q1</div>
+    <div class="q-topic-pill" id="q-topic">Core Java</div>
+    <div class="q-text" id="q-text">Loading...</div>
+    <textarea id="q-answer" placeholder="Type your answer here. Include code snippets or examples where relevant."></textarea>
+  </div>
+  <div class="loader" id="q-loader"><div class="spinner"></div> Evaluating your answer…</div>
+  <div class="q-footer">
+    <button class="btn btn-primary" id="q-next-btn" onclick="submitAnswer()" style="flex:1;">Next question →</button>
+    <span class="skip-link" onclick="skipQuestion()">Skip</span>
+  </div>
+</div>
+ 
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="header"><div class="logo">Session <span>Complete</span></div><button class="btn btn-sm" onclick="showScreen('screen-login')">Home</button></div>
+  <div class="cards-grid" id="results-metrics"></div>
+  <div class="pending-banner">
+    <h3>⏸ Next session locked</h3>
+    <p>Your results have been recorded. The trainer must approve before you can start another session. Show your Session ID.</p>
+  </div>
+  <div id="results-feedback" style="padding-bottom:1.5rem;"></div>
+</div>
+ 
+<!-- TRAINER DASHBOARD -->
+<div class="screen" id="screen-trainer">
+  <div class="header">
+    <div class="logo">Trainer <span>Dashboard</span></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sm" onclick="refreshDashboard()">↺ Refresh</button>
+      <button class="btn btn-sm" onclick="showScreen('screen-login')">Exit</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" onclick="switchTab('approvals')">Approvals<span id="appr-badge"></span></div>
+    <div class="tab" onclick="switchTab('individual')">Individual</div>
+    <div class="tab" onclick="switchTab('insights')">AI Insights</div>
+    <div class="tab" onclick="switchTab('integrity')">Integrity<span id="integrity-badge"></span></div>
+  </div>
+  <div id="tab-overview">
+    <div class="cards-grid" id="cohort-metrics"></div>
+    <div class="chart-wrap"><div class="card-title" style="padding:0 0 8px;">Trainee performance</div><div class="chart-container"><canvas id="chart-bar" height="220"></canvas></div></div>
+    <div class="chart-wrap"><div class="card-title" style="padding:0 0 8px;">Topic strength & weakness</div><div class="chart-container"><canvas id="chart-radar" height="260"></canvas></div></div>
+    <p class="section-title">All trainees</p>
+    <div class="card" id="trainee-list" style="margin-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-approvals" style="display:none;">
+    <p class="section-title" style="margin-top:1.25rem;">Pending approvals</p>
+    <div class="card" id="approvals-list" style="margin-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-individual" style="display:none;">
+    <div style="padding:1rem 1.5rem 0.5rem;display:flex;gap:8px;align-items:center;">
+    <select id="trainee-select" onchange="loadIndividual()" style="flex:1;"></select>
+    <button class="btn btn-danger btn-sm" id="individual-delete-btn" style="display:none;" onclick="deleteFromIndividual()">✕ Delete</button>
+  </div>
+    <div id="individual-detail" style="padding-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-insights" style="display:none;">
+    <div class="cards-grid" id="insights-summary"></div>
+    <div id="insights-content" style="padding-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-integrity" style="display:none;padding-bottom:1.5rem;">
+    <div class="cards-grid" id="integrity-metrics"></div>
+    <p class="section-title" style="margin-top:0.5rem;">Suspicion report — per trainee</p>
+    <div id="integrity-list"></div>
+  </div>
+</div>
+ 
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// QB is AES-encrypted. Trainer credentials are SHA-256 hashed.
+// Neither is readable in plain text — decrypted in memory at runtime.
+// ─────────────────────────────────────────────────────────────────
+const _ENC='gAAAAABp7PHHcEYtwyD1HgdcjIO5Jr9Lq1ZRLA4ypcXz6sQG0tSfbeLy_kUODl9NYnBlccxqL5OtS03iWOAUMKcBgTU7pKkreRcoGQfpqSkyshX4aUonuGC6JfDf88e4zEHZG9IuqobPFgEkxQo-NcFls-PulyovFxMCo8Pr0gXUz3JYqFo-D2ymXX1EUQsNmMdOg8r_gZ_k4dimodeCSryEwp9mUOuD_KVnlikF7CYMDIHMB6aMDfhrf9kES0pGieYAvIg7R1Y5NtXqMbHnqyqB2r-MKIDCkOaDFWLlu9Hd2c2YPUfxZqgkOLlJGO-KcYt8L_xY4raqtqr_FZqZLF3k9wOjCArSMv-RnlWXRibaMJcMIQTeH23UItE8tYrMcRA6f77Qftxxcb7zFU03vYL-MmcGPuJuHzMNiWhp3ZfIXY-B51jpf2Yu6LYbh2d6EfgDbXX2t3jjSGbHTvE8QpXsJbOj_wnA18sOoESgP3q5gPs3mRm4tj4XzXTIe2w4u5FMs3gDiP1vpiYQjDVby0ljKPYWSxJro6HBY7NTOUF6Td4T4iSdQI0Q29Qp93Lp_nF0dSSR1cjDQ_hWhRam0iCQV_7grfBSWQ44VtwSmuQugob96ZJ7dBGK6q6Qq-nGkSpstW7r2G3Mmg-EO4JZ7avr5cm6qx7ZxDbVyLDzD8hESWUKax9VP8v5BmMPqFMOfQyvz1QLGitNIMOHclyqIa0AYVr8AsaCuG5ucu2NcgmeFTVT5B8T6zS1169kEidlDnrgYTeQg1qQ83r1BlERs7g15pBUn3LOgI_CiebFks8yF2ACLI-Ay6TDEJoaJKrgsxxqEjuy7W59W-uhbDPZPrvtJnPUAeVhomnHrbDtC6Dyf339J6mR7KH8oohxUTM3uBOaZq-PmlItrUZCABPJXeZjwuxPB2KpFLPBwtsw4a6H3A82K8yFabyj2rBV7hN4DZw5ZGmbEAyDuomHWMLImv3Y6tbvOtqwnSbDGzrxvPuPJEsJ3RRkmotUUDLRKZwCIPlgf752GHnG-BXAtM1KYjTpwNVmJjbxZLRBbZnz0dNjVHWrb853Dbokn-WsYneamirUlzSdFLfj_ICctf1IbpGft3H-chcaNztq0OVV_WbPO-T7Fve90JX6cilZOvmoJGFxJbPCXUScsfU420ctx4DDguLL1kd1X-LYtBgUYLHg3Yw36Uv5Jhjx55RGbuPHvn3lNU7AumQ_FnUUWJPeJk28tzvDSSW-rGyiF4pk0HMO6-l5_QPk23JGhuKoEAQ-RLR7UXUN0f_OhG9A32OoWkEcgBwuwMzhMD4jMVdptU1Xygl5p9IKSp7fQkR3PxyliN4EPqg9MQdUaGwvBir0Q9-JRbP4NTsWdjbTnsfVQkOxSRGxCpu9IMOjMXGVYzA4uTwswSutVG4-ir0uysBHzlPMd6EqXTuBphspoZlDad-fBldy1ppzVy7KQTmSq8R7wRg6Jg56vsSojQwZ6KYIu5ifwhY22xUnWM1t5yrJQcczIrwA7agbD4nD13SZGuqZdIQ69dM9CLVcrvo8VfUedrBRYpAh0JTcG5bGWlE0xQa2pvk3laJh-qvxO_u6ly9aK25s8CaicK972JRfVI3iSLyEMGqyzNfODT2mJ0L8Q5O93u2MBRXP_1z8V5Qt5qSjZj-C217-YqiLIWHy7OlzbBUClKISk7Cz61QzWGCQ3j4WmqnGMBZamcK70L5GWZ3Ph9ETmwTNhy6FEN1esaEWgVY7kIys6M3FZxRfo3_uJkVzL3CwFbyjBpCCUdBIQ39KWucqxjZGw1ltLqoWfC-9LqGaL_SM_iNT83ck9uuFpwO1N63J0DsUAA2M5_J8z9jDvrIRSAUpAOTgzmvBcTGmGV_H2bWr1Qr6aDusZI6OVaMzpUHgAsg4SvSWiUL0c-lGs9cl8y00h6y8FXwUe6obMyPdn3fxFv7a8IbddnXiMTYvHy7VTXMcoBqei3jd3mBbeL_I8WT8ZyLVDgYsUnAjhR78qP6WloD9oQErK6BfatZUMFlIhVA3fuMLyBG9puGqjevJ50AW5mv04Yw1ef9DL6q5wesM4FJo6BNdjuwSoZsXJx2TWbu_KhW31ZTlqna7FfYb-Mctt8I7uVOCsxUcAAkRePS4bSbbfU4fZfmLNmH3ghDhsSjRG9O4Vv8AtRe3i7Z-FCj8e4gBot-cTBYzTRWBT39k8_CFLBGogGeP0wHdrL14pXum-sNaGMyQVDyDGYMOVp2zYea9KU6ZPktkgMURoEpjXC58kOJODO1m56xGLsEX-zrpggzlqqz1uBhWByzxTh9Y0LAYUH73lWwZLtgtLa4j9URRbi2ueP-oyNvU98yTTRBOekbj2GJ9whTX4A01bYG7NrcNuDnWwUv1BtyB2WBclVfzIfXlwDxMnqs08orGh1WXUndCSBTdT4WdC82ZMLQQxADTQ5umJt34KnVmcPdR3sZhXC00Emr2v_0Ig_X-okCVNXBHAuTJ7AxfEfTi1XkJ5v1kmkdmfvJdfWgp5BHVEDsPL1hcjrxK8faCGnttgUtjMBswj8Zl_-Nt8O1dumDmAp1oqEFtiB_5KJkIhYtiVJiPpWKq3yAlWjBk8GXhxqqcmBbhgGzA7DFqkEYLHIiPOpZGVKwDOvMeG7WOBfGcxMgP4-BuLvzfr3nrDshDramvQxNfl23MRljKR5H6oIUZ5LmicR5tfW1I4yucKQLDPbnRdvjJ8mKN2ELr9736Pq-SDBouZ9Y0KXZzPWpQAMh1nJl2GSrBODd4mOLgG4Kcrqs0ivQvP6zw0iR2RJZQEiDaCihJhAP5n95kEogYbjP0NPUGwslAqahSjeV5VnUk2m_VxcGsOiEDX20l7lJ2IuAPiC83b8aVZtQii-q7SyJYTQax6Dj-jFkObIwTlA2f1LmjHJG-pgrkeDJIHN2bCwzKaJhEtN-4qE9uVDH36ozDpfVLZlvxK9JCCi2tfupC7CLRxKVu8d5EAl-AZxCEXWq617tDrLSmWbEURhO7qF1GAxYVgxqUmWVX2G463K3O7rwtebQpJjilI4SNmRLPE2G0gwEtPJk5SoOevUm-MzcmVs3V8plNf9fxYv7UpsYV5gGQ-SFxlaFV1WEzv8kF7b_3HWqgXIaG_lARHR31OSsfkG26zS_iptCDK5Qv_42-vF3I8pj2DbMXP9BC3B7qhaA0VoPGXELRUdBHQVySEh7-6M9OpLquoFXvEspsvV5NrP3bP-FYYFO0rc5ftrttLkxZuMOPFVU8y8IB3qtx61wJyVYalIg5WmLu5yetiLxVw6MGZqd91mHUOlcQc-pphxSvgFmj-Uwb8aUHsxSGJ4Ygzpl8DdtiqC4uob2En7K5iCjkC74e2HKO2QT8CffJRYF5PXRlmiWKqU3F8IGGQHAEhINgmUwLzuWhWYm_2FbUdC5wzltRqoBLiFMODla4MFE3QJ3vhjuKLAlfIQo45Z_o8NTco16nygeS0DcmOQFXJLWBDnoZq-ieOSOr5U5A_nF-qZk_UxJf4D3cQ93LclAQnOSXGrQ6ind-rdPiJjp987VtjS1ZoFIwawlserbopu1wZm6OH2MnP8Y-395QbNGNgsJ4gWffiff73UrJFj6-nTYfjIZFTyetcvEcn_3r9SF-Ov8GEEA1jyZJddBQx4pZfdmzCAKHgpY4-PYzeq9g90u7pLaOV107j9XRf55TayjdtOGB4FslgapLDHKE9Wq5Bka6jy5PL9Zhczk8FZshBUDW_hxof-GVlK56caYJ4h_PMJbQ-Ffi_mMGUkMyF_-YgS3UF70YdkpcydK_CUFRr2I9skVo17hkvgKgTU-GPFAbJebbCt8q1KNgWb8cgnrNaE9uOOn0DZTWjRqCylFlG4oyttq4sgA6Qnq7AK3-XsGejpIOVLlgsY6KHuC2L1__B7IkF2T9waIwyu4knPzesqLWkRqIZUt2JQrVI-t5vAxXAx489YkgDFsISn7zN01ah-YBaiql75oljraExcUMpp4-rcj2bC0g64Ak3z1OYTGnHCqHJ-dLeKfaZeEeaSXTrN-QNBhGla2Zj0hlIWTXVS_f-0w--atfqA37GGUK5XlAdXNlkL83v8HdbqtVDPZEQhcBnb0ZhTWcj-VAUqxbfGD7Lcc7bfctXRkQp19IJpRG4RpI1ydy-WXBG1wsO7JlRT8xsjfenjSNsO7ePP-D4o7a7ci8XG245EauM9T9XyBocqOwKR2vg8AiUVJeUez6sz6DhBNmgkorJ7vd0KpeN34lirPJJZVrsPHRE-n4k8xgqD9YTRuA3bVIYZMBsNPa07kmvoHfofVupVq12lfkbszlo4r0kUE9HLYNEVAPPWT4bMnb3w_ce7e6iMdBYDPWgGLy4vBNklexWA0MPN4f5bnSlotb0KCJyWJgVC5v-PyGhpe-ql_BqqdM9XbIhLZBr1J5f41Iah5WsFoGkAvver11gci6m02Q_u_Npry1xwhccgohiXyd2jUxfWLciiBiebkLGuF8nJG7-M2MEXPHsnRAVwErmA9vyghuUTAssLoWVVPqrczVGY2odMGwLQ2VK5Ox7qYAopTq7MhNYos5M3zZGZFueV4QpJT0ZydAQ_UfmK7JM4_NWIwdt_RrN0spGPBsJvmPR3rqr89l8_0Em9eA9KBfEWBknvcGZwq88ngmlga4FrsrQyaQZtdByspBxePHsmat7g_5cce4Ge8mXYQjeTdxgINmzhN3DuoY35keU5WuWsKoSQt0QkL2CliBa2bW3CVCvanXqgBNbef4WRdyoYM4r8Q1lgS1W7oNg6lIcKDRnVHCwapD11ytjWe7HfKcU_fOy5lBrxHC-qiREyUPjI7I84dApFfRjvZ4E6v_ITJWpXVyLAEiReljY3PhRDovOwhPhf2bHAd6W1zcCcanor9lmXIPepc0rz6oSB6tIvgIbGOZGXNClOLdu2iVqy06cxu4IClIfWLqzMhELTYU3FbHYnYAqGkn2q_nw6Ghdd69kifbwy8IyvG6a5BkHv1LiTeg6sxIjK1yWzmPckJt0H45taWg6D6q9jp1DBleDGHfdbwrhfQztDDOrcJQcFlzo2mPxcrmLwV9OhHxuxuTFqflVvuaLo4_b2bxi_38l2ylzLSHgEUiFIRFiwED3JIhlPHa9i1P3-wPgNsLYH1OyBApoWObYXEUAKhc8DDUi0VsyuLufLLEuhpC-F4lCnO-TrA12_MkdsNCD7sgm3ZY_xDlvyddkrdROosTINT6Q0ONzTVGvMKCH3JIjvLB5kVgDvqghs8f5tgaYymWwNWSTFPW_vNCCb5_nOzRdqQn8RT9-CdmE0dO9b4E3lIDXkCgSp1s23vB4scx1npIikU5E6UJh01mAg-54Szw8xxEUYtsi0YyTk4ZVaHGtUak3uDxT8W5Pnp3CpEF8TWkOwd8MEkFnPHF5JRcpQitQ5p2OvTbKAO30FJs0zCVaTBC4KhQZev16ikPnXp1wq8DXUBvzlxOEOj9aFBJzkm6Ffl3tydkK4mjmS9brQuJGe-79VJM6uh563PT7mHV_nvOki00pTNZ2NwjPwjVP__0csCCjpEqC8-oBBIdFKshGyVNeVAEpEWPVNn_aHuxl7Q347FY6C5Zvi_2njHVy6MN3EFfFgDCY8qLvIa8yqO9_rct0T7BrJILBjkUqgd4ctD6daOquVp8tsT2RCP-_MgvuRIdw0KW1aD_mxeqNFXfDKgsX9anuxlUxIru5E8stIS5l3WEuOxF0F3861JUYrol9lWDO8vlAR20aFKE3zUGS29oNgqKUBPNhj30hhym4CMtvPBOrFkSWQkKgJmRsLIQ6SkEC5mIIcen-y3lmklVFXzNbSdTkNDApvvH47nf-2LJOFJHHJo80UMgEDeSj3_ybJEnl3KZCXKngvs7ZmgjS-OE1fpy3cxNIw9Y9jXNhfOTM3U0gjGpJWS_fd56uw3OWP3itUAS69hF9OZACt5e3yNU2tT_xM6aAtcN6VbmzQDu9i_q1pw5Pe3Yy1QJ8m_fYEfPj-j4QwgsLzcmsYAR510FtwckQ7QTACyNrchlVWpTMb1_5bqLUGE3vNJr7Vtwe1W4A1YI_i_oHtQMp35WbC9kOHFFXZ-3aZ8a-oF11Yv5yd2-3zHYqoYR1U_CinddXW7G7xoZsngahFzqONiuuwUnn4bx9dRaBjPKjhFe56A1csvIwwmAID6EH50XavXaLegW9Di-D57RdGY_XSjLsh2tdYpyNd-Ae5G2dRgm4gkoeAMs45amyft41pyOrYyulAe9_bF-fHnws8e3Sx-RUWPyTfL_mLZMif1Aefe3ES2tvYFBJdzUsmthcGwUJ-C2mKeE3PGJQTybBSAD8oBB1XItircj62nTfrPA6x0kIyNIeQ_tdTCltv_miJSPH9Xa3m2cyRr1543ltzcp1ieUHJfVI7D4FKrMhEAnedxLPA8eTQgg1jcTJOHoRaotlekvraea2_0iGxZITmElCIV3jqSaBRY8L4gl6D9vjEYQGuojvbhiUmebz4D9N0cD6v_93X04cQljEnaD3f6W4QQiXWrkgOglNlhZMbAGkivFflL7JvJJ00Yt_VVZkFgaX9sQMpey2ErJZp8FHxRZVrj1xTDH3DmYdiVgYPH-GnflgllCOPMu2YSBsuvEx8PcMeW_YyH9T6TqD4aSyo67yuzl8q3VZ2IABJNOm0kNdhDw9T3CtCKuFWqO0ins7MaB57jREk_3EaTEeehpzyjsElOb_KnC5lTSJv_X_vrmdhyL02n_Wt9G_37ttowsobIqOOvGql-cv-368r5bUo9cM6brbFWQPQ_OkVIevwD6jhlEMgp3OhxJkCzc532qPv0rXKNCkYnt6AJ3f-7s7-avZGAJwI0YXHRy0gyirSKK2Te5xaO7H732G3vX1E9K4UhyuxOwmZliHwYCV3G-J2KzH-2LR8QmvVFn_w_-bF_vimQllGSK03rDeldxnpjWN8pYMxeSc2MGBrqB3eD6IQuAb-ixWoNr9JF4Q3FozfMyrcampctW50S7tIfd84pvcXvrAh8HnO1eBlfsIlANrAfmvJScS3Gqh0PAUWkKf7TJZjhF5H2tiouacpfjAwW_wUkrWLGUgklF8rJJX2MHMzuAo96gpKD_sGVuaqUdOtAlmoeN4bI5yN9BvYosK_N4OXa7WuQOmQtM16Fjp5sfDKHaX9luUJMgWpLb5mk20MZxDtytoz5PIjBN-9YJM3kFMm0Gk5Ljv7CPBXFMW36BLUdFj2H7A2zWNRqdBOvqfUVkf8W2yFOvBdgELGpD94D8OfQHdHK8RTu8TjMjId-3X-dqGl0rFUt3DsJ8LWUkMylZLje9sJKzkdBsH7yVaFIcsMG0LdlSGYAaOebtbPuUcv-hWhu6zOh0si1bfiJ0O97x3DEuN6w3LHPV4TtBabOEmOp7x4VJKxDZ0_Ik6-BssSXZmREV9he_4nqUTMuNH6z8kLXRwcYfeoTzePAXhh-UNMn-GStzCPXevzUqrSGmjo_y2pG1jW2-yUOqYufwSCD6dLNASYU1hAZBej0aAR2EYOZ2gAvjsDtNUd0G41qWJhmqiZdRoZBta7iNMQrP32uhnRAScIW9OeBX-nzZxbZZaRa_3oFKO2iQ5rmKbPr346c0FyBTx695pq2AO3qRajAq03f9OvFeJoUXeq-Pg7_Uow1U6tv7X2g7MdlqHelLiJ8EL6BO6Yyq_M13Wo7JfCQhOBWK6EnriYV_bxrVMSbXHIL90z7Z9AYrc2dDme7rPWLUUyD_4PEjOkMmHidZsyvLcxhY_yoXThx0Gsm8QDYZgdXAsOz1u7boXxgYxqw5ntjbWVOp6l9EuZ4UiFVYCv_D0gw229MHvEiW7ins7ZRhXkm8EJ0LfzgH8R1oAdxYOKOHwcZ1oCZAmvFZ-2wDEUOdf3ySorxrCoA7z0eB1DR3xM_drNp0q1eDjZXUN9fayz7kzs-oGbjEyq1jEy2jPv279azNii0eYQa8VkgSX7FdDR50DCIZpWUEiBv214YKjsYnLxTi6iKwUdqapkIjKkFU0sAUHGu_ib4vR7VcwNj0O3QsUhfPir1BRk06Xtb_yuMk0zdsGhdJGNIoyVJ6BYu5FbRFZTk2Ln3yfghLmMoEws5rPKMQ93yDhFqBCnplgtuxR86rYOfCNgBognLaNM9X--qPox3N-3UMtOWH8pwTFdZ7PgnbdsLcFjtjJRIGSqYwkgPx-UW8VgdKCHdCTQBb2LUA0MkTmZFfN7gIq3TfSF3Vq-rmolV5TEIEnjY-QOWoqhQ21SZhgCnI8VvsX3dTKdpZL8w9C0GZ1qOrQqaOh35iBV5s8YccarTwNg6x9i-tK9x79jg4dX6xtLlLDCKzeUcq5uiQiFAiYGYQsDb4shsSRBNsei_GDyhb50DyS-a8kn9gaRSYmLlpipx88iSOT214F_UrgyBClHj_AL4N_RMJV8UpAqBOiBzw-rgmS4diYWvRvI_RHwQptr7w38wijj0NqXQyvz4VceTlpSmdpz3x6gdxgrlniiXwIIxXjkV_ipXCT71pdmQrIQabiJkSA9Laao0mjmrEyIVvg8JwPLXH2YBSmXM10E5oFYQ66OuJZmDvFFapfB13GHEoae1yP7nYjd5OKnUzYCIoK8x0rreq1oFXb7XgRmWVFL3t2z6zHPPPIvVwb2YNSqA__RZzQVYuO0UR5eEXcnPCzRMNf5uRbI9uBexvVvofXTpWHUYjc_5e0fsDIXaCC8Wo8x2BS8kwqwG3RIyyBBdMVyU0T7jRngxlXA9-TohzWm1V5yXIUT-fU1riU1UsdXrcaVvHn98ZPeupTAY5DX4Flm4p3fdbPGghWYLDXJMwWe3wrG7Rj9K05C8awJ0DMZSeJSr_unYww6-zigD9ZA7iclkQEbFCbNruviZM1LOfCmx7k5iTq2eZcNMmJKiSv0gC378RccnrbkRoth_0olFwOzjNflD6H9wjRwxe9e1DKaK7w3WbXgqlEMyTTHi-HePldkPQeWDOQXC_QDfoHB3k7rSZRLIldrtbB3Uo6AWGTBPQf93Mv_79BMvXYmaHAegf7Yi7cT3Wz9gyylSMz5YIS78GMg0ZA8gC_wIJJW8-NUOoqm2_nLSfmGIWLXfklMjTc1ds4Ok3KcNM064QVAFOF432fhAv4Gd4lg6Y5vFUHEOT-hhxRz4THpO26a5JAAbOy8jdwC55oNud6Kzm7EdEoqkkxTsRehNpgmC0OCjDDg7qjfCLaJOJYgGSUwMPFZXlE5dUf3xEr_HMdAvBPzwUPEzLb6qVw-T2L3lkphJfphzsxWxA-uDgUonwdTPEX_YnxTMoZU9u29_gkQI3LTZDB64h5wd4V-7NssDhOTRNROnbala-5lBkHRU4wMdQMyERaiNTlyvy8gSjgEaagFZeuEUh7BWcyrHjtAvAy5z11f1H1loRDN-z4_4eOAA1GwOwDNVShsc8K3A3NvWjtM3b7gN3Lklg4rCZavBf8BYaeOIqUjDCZAmnFvQVsoYANsMCiiGD1fyc_aYuoyFNvhGxro9zcxTkOhItHkQq8GxXkwWKLwXdVOaVsMQSSloEXLWRbjZ9-RuS8Nq1je8h5R7YEuC-niP0B5YOvx31d7OCHXDuBlZVcKXrrZiQ1dpQL3WYatWBDvcmwgXrFjuzyg49U8PrFyN4qomcthAYI7GkN-5XwJd5mfSHBct9k1ZFY71Lzka6zGYV-TPh4znfDFvyLEcsY3toPDGY9E2fe67EI7a45dKX0vsbgjH5cqLkouWBFNTNBQZNvhpOXqNO-v-iL5ybywamehqjHqnFo3fgf5VO9jUt4pGhygw9qZkD_pdwOfTRNvy1youMEBgRsfo3L5kPE-J1x5YX5GzokRZf84tfd9yh0qoqjhXRA0kOeRwzBHtod13IoPsOVfVxzjJhQ1lazcBoyi_Ka_QdzAbd8G4xL_MCTuMqOare-fSDsnvq57GS5ONbyqXoGUFhnpNIlEqCBP66bRs0XgSswp9r40v95FMzVd97ed1EC29CI-eyU5GG_QoYhEvpUPRzK3SjtjRU8m04pho-q0MWyk96SPgjS6BojTHB4RYnm0x9vsTTD3IXlXcCMKRx6lO7hylUJxksQ2RFhzNvquxKguXXppfw5cqLjNnSzcCbZ3mSObhqS2eafOr3SzaOaaWTeL3bWplm-EGW4wY3YgSzXGFyuommavgtfuYWmbnjlDg2LIhQ_X9gblUJzpe6POtlgpOqOrrM7uL8A0Bq4D2TDeN1gvrPJvJkHv61oKuybL84WUWigFaCLSxCI3_zfGYhFniyDJpxTc8y3FAItyMcMXsrxJymDUO72GuUUmeUVGntre2nX3gLN7q0kORptVRXEzagK5iKPForX2uv3NfPcIi-9BBt1a4t6azwjVij33gD9Hv_yTpqsZbKeie4_kSwtJ5Nj2Zq9lgJbLpCOkmvbiSF-16dxqnKNc-cPKGcomFbyY-ayUHmLA3N6HKZkt5SqOP0WspjMLsbvgZa-niWFSXC8WKoWjCLHDvLqxRJSOgZvJEc3_YxRw5yqJJ8e2mV9fAwTaOy2c6yePaHa4b_rgx6aSanJowQ4Z1FEZeiyhHCDq9Zr9QbslAQ9ZPU4iLiVZPvmu0L5uRtpwFERQVHuhr9sLKFTFVH0d6wCLutypUcvfkxK-jEwLlAmuugpnKtAmXSpC66mW0_5tGHbgCK06V1A_67wFyMIeXtkalY29st5gogIDO5kxIl4mWnbE2sxj52Xv5Y9z_TLvhF53KB6pldk_KTPfTWZ4IiDIVeOJu3GJ_qdbBH8gxb1P4Ib3aZScOeG4CbncEOi88XZ928CftGGLGUGTomML4xBNMyXtrnXT86NH2FBvQ6L97RQMhzZ1LKJcvEJ5tC8sIKEjiUA6D_m4zj00wdacyfq982jVDqVDt8mdYvvES5wg2oGzWIlu-p4oI21K0m7lVFRlU3jnYYq4rkZCtpZ9fFjj6DmsQncxFkjsJ9e9I4x9U6eOE3X1WDnolrU2DB1tFp-P8_sE1MfBk6vW8dfmGTsZK8Jz-7IU_Or5mFPWheJreP9s0aNGEdbsU02uSVLUHWugqXlPUOEq-WB60K8fC65LXkFZs-OnURa_8LehSTuypwuMVKWVeHQ-KBTOeGF50AjGxr-JrtWfRjAjj6nmR9Nf-aATG9giliRco9bUkZRYpfVwGePVojEODYwEDKhs3xMJ0NT1d1uxHZJ9vuEXWQWwkQWGatlc-hNvfoMmC4RNsFoVoI9-P7gCIEis2zuVVyaR1N8vZzxNmgqgnmPfYMxVcMWYeov0ViXOpMM03TDMW4PQen7C6RqNghylR6T8GqCzKRA6bGnqSegffEl_xB5xC0izyyu6wFA-X2zmkCIsJyfENV9AFvhdZweSSl6dw6BpbpskbNhvZUwF_GxwsNNU3I0BKgMKgmCp6BY1WmBg0R7W1JtwR3Kx46_5Bo1PzoieHhuef7ZJ6o2Kk_wHWmCh2QoWQ-8o34G8ebVYUzGhoWLe3Zm4A_8Mj5Kp7RrRXFy8kgLeOPNIGbt01EmbBk-SHIqYaDRw9MDqhJlCH7fEZ3iv-jwPGZGqKRrcExdboiay1mO6I0py-1mlF-YrCjUqIUqq2BOIiuBY0naI9brTOmP-gLNTgUfuaukoSZ6ueVumA0SmsU05ICUeOHujdPUfiRwJBOBXduYrj5A4Sk8mY0nf0yVheP3utkusgYvgCrVp5iJx3RMpiy3VSQSZ1n9hRhZ0Dvwg80DWCi2D4Qz7A4tdt11hx7DVCqHbxo64Zah2Y-Hd5yNS7-yeEqGAXoXK2EF5PNg-ZQDzAv1aOcm1ojm0kLkr-RmKK2RekRCo06vyQZXXWgNwTYrNjbpHmFY-qpb8G4RhS8J17ehLfK7AS3hC-iKQk-wtcVh9tPwdEeTsAn6Rd0x0gNKdUx1vQemUOr6Lsz9gCGxBrpFisBuS5thIjJfqcFK-Mif3G-GQImVKyk2iU6YD_tlKxCiHqGOSJX7-eSYZNVBm5Qd3cyJGy6pZ5V3q485fq_VF9kKPze7FIMcHqgqc58HGMrSP-aIgihpawt5jp1kxVBrCNl8ra2iJ7Ut85AVmfLCj_DSCV0vHa-iXOojou1qCtZFxc8RJbC3xJythawW_ck9B0ex3B5Wng__WDrvjwK07TVSUuCS1B3CvTs-zztUZKlnIBL135phe_CSXrE2pa-xBDluVOAmtfG6PF9AvllLlbhum2-diqtZWmI7jdAL-MiLCeJzZxGtZ5-lVKCWWdxKr--ifIHB6qz8sX726tsXPxJyfAEkb7WsVEGvK_v53OWj1fChSx6Ejy4TTgW52DLNDeY_qcp7CIJkfeWTwvd6r1ITYarN2ouGS1KenZvTXfoNRXVOaCKOJYq50jYTYfB4q1r_thOSlhH6dJL4m2lmnxvy5YHKozI8mz-TYym2XQAXFWZ67XEbbESpv6v8hV4D0YzcnS-uuetlJnT_pIKlAy8bXuuBk-SqAa1ZXjctIcgGjpLloLje8o5u0L4G1M333DQrtOMxrqmwEwnpzJy3ffBhi9-txgJJRocU0iYmc3d_BrBVoLpKAmMVcrH6pLtGLmTmRBDtPW4oNDxXbyQDcGecUGxcCT3TtBGdbB9o_7uYsbUmSbZd2iEuIU9aYYoksIJ0abMhJdxHqd7bcobRzCAIEow6KJazX7N1l28zPc3OrljmbE8n2T4fVKQ7_Le3z7fFHZ2s3orPMcGxUYG6PT9m6-y6LN9CfhDXkrqoalIxBOGw3gy944Us3nBLa71ZxuPwbmQplILF11Ll_ljs0Oj7YNvgNA4_dyKVGioA0z7l30RQ6H_Q8AZ0uZPSChP3EO4o4f_DsHEZ_A7dY4V4wDGP2TzFGZABYP3A_AkNuf6bIVxgBMvvzA2IjZ2Aizf540G62rtC0ls2JyW3pASr1Rd4I9f7PE2y83PG8oKe0ailxh85TpuJrkGF0scPUixUCxtKqKb1iyVEzX5ndyuofI1vWFUxj2O4HYiu7ufedN_kqikNQ0er1iWadaRxkTfPz-9HLvQhES979GWFu2xSTMVO5fI9MGPtK_MMyFM-wdLo-kidjsS4JFkdd9myYums_WqbTGSL56-tNWwlHNYpfwzAQ0YOwvYFIwR1_9hieAXQGUsqIfNgOCQnCRmxzTETvsk3pgB5MJ9gd5fzcB1BqcVvWLTZ3WYtBHWM8uOqiDURru66hgXE0BNTmwkadmUjtznau9sB2P27OJUC6StO_8nQSXi8phHhg9epBoKAWk2LWaLJlfjY12J4u-S6VEWCG67_a56KbKsy8oG6JbSwzmVw45wZ7xH4HKV_db58FN21xV-dybrmxH7Vbht09R_E2B5l4p6jyt4f-ZFxL2CQZHv3uRqLsYFFmJVQH9OBASPMu5dh7ns3odlXf3QDWAp1xDxGvW63VK5j77nR0q7HwVNGi4q4idxLe0OASWrUcq6PET-gW7eAWw0Z6YHfZrASopYNMyhzk2gxhk4PtpvtfHTsESKMkG-sTagNVaUid7obgZfuZVXo80q5DSooUFni22KBFFMap-uvxSVJdDrgu55WQEkRqVKCfyHbX2m_ZsWhY9qgPCNOB494FHLIkKBv5wAy_OgmVwQGQO1PilIzWL9INhkspUr8ejM_c9TgRg0jHr0CyfWZitKLVEUTQSACGUhSFeKtxqRF_MeroFtmyC0onFWm-OSt8uPNI6IGTdRPmfhyBVHu1OQAmaHoDiEp1lq7dKdV0Forg9cgo5diL2cjUKqt8b10HzEEnuf8soMup2E935WpN8s8zvQmv0OrBM5eu31vEhDgNIqtaxYIE7mv7hD1MfeoaLmYkw3g3gotSEqhOLNWTS6xTpSLPp9DjuMlPRMANA-3Mty2eIWwRAiDUop_J-2dDfxRksfVGz84dFltLkNitg3a3BXKplbQUj0ycioQP1D6GlMRP3jhHQZN5f3c7DhXGHW-8JDXjU_PS7nKIuayoBfcN104gMnvUWU5o0bejtGjkvsRfGJIfo_jaKA_CM9Iyow5UJFy2FFYdBkGsKSpv20yDpWn-8G1p3Gz3xV7A35qrtu0ttfoeXSxUtSfAVGq7MSs3ZQgdp4VZ_0ORiq39dTcKOAr3a-fhnPffPsozUDY1OvO3oyV-iDJzXk5oruytgfN-h_5WDZcgAd2QHOntUQsRR1YYfqmcbCBF5nc4OnyjWMPQqhgvpgVjV2hRhWflvZ0-GflJX186qfsomQ3-Q-Z9mSYFcQ-ETm0L7U7p-qkhYsKlFcSklemp3eQcv4J67eFdL9oiWGGHyFte9CsOsZtj7HLNn8qxt8DTCQWGXuheiGciftMxhenFKRTBqR4XC-xM4aNLLcMBsJX98CChfkI9nF-_HAOJPQpZ3L-EzGfmJuTMVs-TVJom5rLyJULmuomnQ8G5XyLGo285QCmSIaK-iztsYMV7YmHDNsPjDhumr1Qc240CTMEZwOiZmEwc0W3jEHKWou_N6S9OIW2-9dQ3HEITXzgbtY8ANVv-ozkGvk-tuXSnn0O3fC5Fbo3ih81YKOCdxeuxzA5Gv6YssiBNKFqOrlEFYM8VOBEF5aA_ETK-T4_MfslTVm-96Q2rfy6ieqZhJyn6aH-rb8MrXEb52RnsmbKp8ZN1x0Kfwz7VvOcHqxU9LYojSyAGNX-lQXoAe1ZrJg9PF13PtzE_sSzuIXKfbbS_rlnVDFncPGeg5QAjlyOeTuNehd2qA4PwaBveIdIpa0owT3nFJ-pg-LV0aIyuxENUHIRsBGk451aMXT1-zKQ-BQ6s6o_2u7R79TsOcUEyRzdL9speXNhgmM3vEuutVHorFCX35ppnZ8yH0B28qTx-SkXEf0bURtRbgmu0rqHJWUNsG3EXx35dp21AqVRHilVxe_cRM9mp6lFJFBjUL17bsfLfvdQ4DfLOl7SZlNtAzAPC7slUKvM-FhwifGWfnFMbPdZPCFwJ7RNPp-_YZQY08uQfjrt5oQCjxqpZtnp5VV2xeOvw5GZ3GaV9a_kZhdQVP7kIhtP_186r2iKtBnyU7PL4kmM-dF0is9KWHE08GNluS4TC6u6dyY';
+const _KEY='9Zrhvzb1ltMIBEt7EI-ScNydvn_SgyA_LVMQmVQVu1A=';
+const _NH='8038e69fd941aee7b03659e1f902278c7070e84df758538055c85ea8fa2ab414';
+const _CH='6b37bf945e55450965312b1e26983001bb0d55bbc6f58a2ffc4d70e289c55ac7';
+let QB=[];
+ 
+// Fernet decryption implemented in pure JS (no external lib)
+// Fernet = base64url(version[1] + timestamp[8] + IV[16] + ciphertext + HMAC[32])
+async function _initQB(){
+  try{
+    // Decode Fernet key (base64url → 32 bytes signing + 32 bytes encryption)
+    const keyBytes = _b64d(_KEY);
+    const encKey = keyBytes.slice(16, 32); // encryption key (second 16 bytes)
+ 
+    // Decode token
+    const tokenBytes = _b64d(_ENC);
+    // Fernet: 1 byte version + 8 bytes timestamp + 16 bytes IV + ciphertext + 32 bytes HMAC
+    const iv = tokenBytes.slice(9, 25);
+    const ciphertext = tokenBytes.slice(25, tokenBytes.length - 32);
+ 
+    // Import AES key
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', encKey, { name:'AES-CBC' }, false, ['decrypt']
+    );
+ 
+    // Decrypt
+    const decrypted = await crypto.subtle.decrypt(
+      { name:'AES-CBC', iv }, cryptoKey, ciphertext
+    );
+ 
+    // Remove PKCS7 padding and parse JSON
+    const text = new TextDecoder().decode(decrypted);
+    const trimmed = text.replace(/[\x00-\x1F]+$/, '').trimEnd();
+    QB = JSON.parse(trimmed);
+  } catch(e) {
+    console.error('QB init failed', e);
+    QB = [];
+  }
+}
+ 
+function _b64d(str) {
+  // base64url → Uint8Array
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  while(str.length % 4) str += '=';
+  const bin = atob(str);
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+ 
+async function _sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+ 
+let sessionData={trainee:'',cohort:'',answers:[]};
+let currentQ=0,questions=[],timerInterval=null,timeLeft=300,evalResults=[],scoreSoFar=0;
+let barChart=null,radarChart=null;
+let waitingForTrainee='',waitingSessionId=null;
+ 
+// ── PROCTORING STATE ─────────────────────────────────────────────
+let proctorLog=[];
+let proctorActive=false;
+let pasteCountPerQ=0;
+let typingStartTime=null;
+let lastAnswerLength=0;
+ 
+function logEvent(type,detail){
+  if(!proctorActive)return;
+  const ts=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  proctorLog.push({time:ts,q:'Q'+(currentQ+1),type,detail});
+  showProctorAlert(detail);
+}
+ 
+function showProctorAlert(msg){
+  const el=document.getElementById('proctor-alert');
+  const msgEl=document.getElementById('proctor-alert-msg');
+  if(!el||!msgEl)return;
+  msgEl.textContent=msg;
+  el.style.display='flex';
+  clearTimeout(el._hideTimer);
+  el._hideTimer=setTimeout(()=>{el.style.display='none';},4000);
+}
+ 
+function startProctoring(){
+  proctorLog=[];proctorActive=true;pasteCountPerQ=0;typingStartTime=null;lastAnswerLength=0;
+ 
+  // Tab visibility change
+  document.addEventListener('visibilitychange',onVisibilityChange);
+  // Window blur (switched app/window)
+  window.addEventListener('blur',onWindowBlur);
+  // Keyboard shortcuts
+  document.addEventListener('keydown',onKeyDown);
+  // Paste in textarea
+  const ta=document.getElementById('q-answer');
+  if(ta){ta.addEventListener('paste',onPaste);ta.addEventListener('input',onInput);}
+  // Right click
+  document.addEventListener('contextmenu',onContextMenu);
+}
+ 
+function stopProctoring(){
+  proctorActive=false;
+  document.removeEventListener('visibilitychange',onVisibilityChange);
+  window.removeEventListener('blur',onWindowBlur);
+  document.removeEventListener('keydown',onKeyDown);
+  document.removeEventListener('contextmenu',onContextMenu);
+  const ta=document.getElementById('q-answer');
+  if(ta){ta.removeEventListener('paste',onPaste);ta.removeEventListener('input',onInput);}
+}
+ 
+function onVisibilityChange(){
+  if(document.hidden){logEvent('TAB_HIDDEN','Tab hidden / switched to another tab — recorded at Q'+(currentQ+1));}
+  else{logEvent('TAB_RETURNED','Returned to tab at Q'+(currentQ+1));}
+}
+ 
+function onWindowBlur(){
+  logEvent('WINDOW_BLUR','Window lost focus (possible alt+tab or new window) at Q'+(currentQ+1));
+}
+ 
+function onKeyDown(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='c'){logEvent('COPY','Ctrl+C pressed — copied content at Q'+(currentQ+1));}
+  if((e.ctrlKey||e.metaKey)&&e.key==='v'){logEvent('PASTE_SHORTCUT','Ctrl+V paste shortcut used at Q'+(currentQ+1));}
+  if((e.ctrlKey||e.metaKey)&&e.key==='a'){logEvent('SELECT_ALL','Ctrl+A select-all used at Q'+(currentQ+1));}
+  if(e.altKey&&e.key==='Tab'){logEvent('ALT_TAB','Alt+Tab detected at Q'+(currentQ+1));}
+}
+ 
+function onPaste(e){
+  pasteCountPerQ++;
+  const pasted=e.clipboardData?e.clipboardData.getData('text'):'';
+  const wordCount=pasted.trim().split(/\s+/).length;
+  logEvent('PASTE',`Text pasted (${wordCount} words) into answer box — Q${currentQ+1}. Paste count this question: ${pasteCountPerQ}`);
+}
+ 
+function onInput(e){
+  const ta=document.getElementById('q-answer');
+  if(!ta)return;
+  const current=ta.value.length;
+  const delta=current-lastAnswerLength;
+  // If answer jumped by 30+ chars in one input event = likely paste
+  if(delta>=30){logEvent('SUDDEN_JUMP',`Answer length jumped by ${delta} characters in one input event at Q${currentQ+1} — possible paste`);}
+  lastAnswerLength=current;
+}
+ 
+function onContextMenu(){
+  logEvent('RIGHT_CLICK','Right-click context menu opened at Q'+(currentQ+1));
+}
+ 
+function resetPerQuestion(){
+  pasteCountPerQ=0;lastAnswerLength=0;
+}
+ 
+function getSessions(){try{return JSON.parse(localStorage.getItem('ep_sessions')||'[]');}catch(e){return[];}}
+function saveSessions(d){try{localStorage.setItem('ep_sessions',JSON.stringify(d));}catch(e){}}
+function getApprovals(){try{return JSON.parse(localStorage.getItem('ep_approvals')||'{}');}catch(e){return{};}}
+function saveApprovals(d){try{localStorage.setItem('ep_approvals',JSON.stringify(d));}catch(e){}}
+ 
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function toggleRole(){
+  const r=document.getElementById('role-select').value;
+  document.getElementById('trainee-fields').style.display=r==='trainee'?'':'none';
+  document.getElementById('trainer-fields').style.display=r==='trainer'?'':'none';
+}
+ 
+function showError(){const el=document.getElementById('trainer-error');if(el){el.style.display='block';}}
+function hideError(){const el=document.getElementById('trainer-error');if(el){el.style.display='none';}}
+ 
+async function handleLogin(){
+  const role=document.getElementById('role-select').value;
+  if(role==='trainer'){
+    const name=document.getElementById('trainer-name').value.trim();
+    const pass=document.getElementById('trainer-pass').value.trim();
+    if(!name||!pass){showError();return;}
+    const [nh,ch]=await Promise.all([_sha256(name),_sha256(pass)]);
+    if(nh!==_NH||ch!==_CH){showError();return;}
+    showTrainerDashboard();
+  } else {
+    const name=document.getElementById('trainee-name').value.trim();
+    const cohort=document.getElementById('cohort-name').value.trim();
+    if(!name||!cohort){alert('Please enter your name and cohort.');return;}
+    const sessions=getSessions().filter(s=>s.trainee.toLowerCase()===name.toLowerCase());
+    if(sessions.length>0){
+      const last=sessions[sessions.length-1];
+      const approvals=getApprovals();
+      if(!approvals[last.id]){
+        waitingForTrainee=name;waitingSessionId=last.id;
+        document.getElementById('wait-id-display').textContent=name.toUpperCase().replace(/\s+/g,'-')+'-'+String(last.id).slice(-4);
+        showScreen('screen-wait');return;
+      }
+    }
+    sessionData={trainee:name,cohort:cohort,answers:[]};
+    await startSession();
+  }
+}
+ 
+function checkApprovalStatus(){
+  const approvals=getApprovals();
+  if(waitingSessionId&&approvals[waitingSessionId]){
+    document.getElementById('approval-msg').innerHTML='<span style="color:var(--accent);">✓ Approved! Please go back and continue.</span>';
+  } else {
+    document.getElementById('approval-msg').textContent='Still pending. Please wait for trainer approval.';
+  }
+}
+ 
+function pickQuestions(){
+  const topics=['Core Java','Functional Testing','SQL','Selenium'];
+  let picked=[],pool=[...QB].sort(()=>Math.random()-0.5);
+  topics.forEach(t=>{const q=pool.find(q=>q.topic===t&&!picked.includes(q));if(q)picked.push(q);});
+  const rest=pool.filter(q=>!picked.includes(q));picked.push(rest[0]);
+  return picked.slice(0,5).sort(()=>Math.random()-0.5);
+}
+ 
+async function startSession(){
+  if(!QB.length) await _initQB();
+  questions=pickQuestions();currentQ=0;evalResults=[];scoreSoFar=0;
+  document.getElementById('q-trainee-label').textContent=sessionData.trainee;
+  document.getElementById('q-cohort-label').textContent=sessionData.cohort;
+  showScreen('screen-question');loadQ(0);startTimer();
+  startProctoring();
+}
+ 
+function startTimer(){
+  clearInterval(timerInterval);timeLeft=300;updateTimer();
+  timerInterval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=60)document.getElementById('q-timer').classList.add('warning');if(timeLeft<=0){clearInterval(timerInterval);autoFinish();}},1000);
+}
+function updateTimer(){const m=Math.floor(timeLeft/60),s=timeLeft%60;document.getElementById('q-timer').textContent=m+':'+String(s).padStart(2,'0');}
+ 
+function loadQ(idx){
+  const q=questions[idx];
+  resetPerQuestion();
+  document.getElementById('q-num').textContent='Q'+(idx+1);
+  document.getElementById('q-topic').textContent=q.topic;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-answer').value='';
+  document.getElementById('q-count-label').textContent='Question '+(idx+1)+' of 5';
+  document.getElementById('q-progress').style.width=(idx*20)+'%';
+  document.getElementById('q-pts').textContent=idx>0?scoreSoFar+'/'+(idx*10)+' pts':'';
+  document.getElementById('q-next-btn').textContent=idx<4?'Next question →':'Submit & finish ✓';
+  document.getElementById('q-timer').classList.remove('warning');
+}
+ 
+function skipQuestion(){
+  evalResults.push({q:questions[currentQ],answer:'[Skipped]',score:0,feedback:'Question was skipped.',correct:questions[currentQ].key});
+  moveNext();
+}
+ 
+async function submitAnswer(){
+  const answer=document.getElementById('q-answer').value.trim();
+  if(!answer){alert('Please type an answer or use Skip.');return;}
+  const loader=document.getElementById('q-loader'),btn=document.getElementById('q-next-btn');
+  loader.classList.add('active');btn.disabled=true;
+  const q=questions[currentQ];let score=0,feedback='',scoreLabel='';
+ 
+  const SYSTEM_PROMPT=`You are a strict senior QA lead and Selenium automation expert evaluating a trainee's written answer in an interim assessment. You must evaluate HONESTLY and PRECISELY using this exact rubric:
+ 
+SCORE 10/10 — Full marks:
+- Answer is complete, technically accurate, AND includes a real-world example or practical scenario (e.g., actual code, project situation, framework context)
+- Example must be relevant and demonstrate genuine understanding, not just restating theory
+- All key concepts from the model answer are covered
+ 
+SCORE 7/10 — Good answer:
+- Answer is mostly correct and covers main points
+- Has a basic example OR explains the concept clearly but example is generic/textbook
+- Minor gaps or missing edge cases — deduct from 10 accordingly
+ 
+SCORE 5/10 — Simple/surface answer (apply 30% reduction from full marks):
+- Answer mentions the right concept but only at a surface level
+- No real-world example, no practical context, just a definition or partial explanation
+- Trainee seems to know the term but cannot demonstrate application
+ 
+SCORE 2/10 — Vague or mostly wrong:
+- Answer is off-topic, confused, or shows fundamental misunderstanding
+- Correct keyword mentioned but explanation is wrong
+- Very incomplete — missing almost all key points
+ 
+SCORE 0/10 — Irrelevant or no understanding:
+- Answer has nothing to do with the question
+- Complete misunderstanding of the topic
+- Generic filler with no technical substance
+ 
+CRITICAL RULES:
+1. If the answer includes a real-world example (code snippet, project scenario, framework usage) AND is correct → score 10
+2. If the answer is correct but has NO example and is just a plain explanation → score 5 (surface answer, apply 30% reduction)
+3. If the answer is partially correct with some example → score 7
+4. NEVER give 10 for an answer without a practical example, even if technically correct
+5. NEVER give more than 5 for an answer that is just a textbook definition with no application
+6. Your feedback must explicitly say WHY the score was given — mention if example was missing, present, or wrong
+ 
+Respond ONLY with valid JSON, no markdown, no backticks:
+{"score":<0 or 2 or 5 or 7 or 10>,"scoreLabel":"<Full marks / Good answer / Surface answer / Mostly wrong / Irrelevant>","feedback":"<3-4 sentences: what was correct, what example they gave or missed, what was wrong, what they should study or add next time>"}`;
+ 
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1200,
+        system:SYSTEM_PROMPT,
+        messages:[{
+          role:'user',
+          content:`QUESTION: ${q.q}
+ 
+MODEL ANSWER (reference only, not shown to trainee): ${q.key}
+ 
+TRAINEE'S ANSWER: ${answer}
+ 
+Evaluate strictly using the rubric. Check if they gave a real-world example. Score accordingly.`
+        }]
+      })
+    });
+    const data=await resp.json();
+    if(data.error){throw new Error(data.error.message);}
+    const text=data.content.find(c=>c.type==='text')?.text||'{}';
+    const clean=text.replace(/^```json|^```|```$/gm,'').trim();
+    const parsed=JSON.parse(clean);
+    score=typeof parsed.score==='number'?parsed.score:0;
+    scoreLabel=parsed.scoreLabel||'';
+    feedback=parsed.feedback||'No feedback generated.';
+  }catch(e){
+    console.error('Eval error:',e);
+    // Fallback: local keyword-based scoring
+    const ansLower=answer.toLowerCase();
+    const keyLower=q.key.toLowerCase();
+    const keyWords=keyLower.split(/\s+/).filter(w=>w.length>4).slice(0,10);
+    const matched=keyWords.filter(w=>ansLower.includes(w)).length;
+    const hasExample=/example|e\.g\.|for instance|in my|in our|project|framework|code|class|method|new |string |int |boolean/i.test(answer);
+    const matchRatio=matched/Math.max(keyWords.length,1);
+    if(matchRatio<0.1){score=0;scoreLabel='Irrelevant';feedback='Answer does not address the question. Please review this topic and ensure your answer is relevant to what was asked.';}
+    else if(matchRatio<0.3){score=2;scoreLabel='Mostly wrong';feedback='Answer shows minimal understanding. Key concepts are missing or incorrect. Review the topic thoroughly.';}
+    else if(hasExample&&matchRatio>=0.5){score=10;scoreLabel='Full marks';feedback='Good attempt with an example noted. AI evaluation was unavailable — score estimated locally.';}
+    else if(matchRatio>=0.4){score=7;scoreLabel='Good answer';feedback='Answer covers main points. AI evaluation was unavailable — score estimated locally.';}
+    else{score=5;scoreLabel='Surface answer';feedback='Answer is too surface-level. Add real-world examples and practical context. AI evaluation was unavailable — score estimated locally.';}
+  }
+ 
+  loader.classList.remove('active');btn.disabled=false;
+  scoreSoFar+=score;
+  evalResults.push({q,answer,score,scoreLabel,feedback,correct:q.key});
+  moveNext();
+}
+ 
+function autoFinish(){while(currentQ<5){evalResults.push({q:questions[currentQ],answer:'[Time expired]',score:0,feedback:'Time expired.',correct:questions[currentQ].key});currentQ++;}finishSession();}
+function moveNext(){currentQ++;if(currentQ>=5){clearInterval(timerInterval);finishSession();}else loadQ(currentQ);}
+ 
+function finishSession(){
+  stopProctoring();
+  const total=evalResults.reduce((s,r)=>s+r.score,0);
+  const pct=Math.round((total/50)*100);
+  const id=Date.now();
+  // Compute suspicion score
+  const tabSwitches=proctorLog.filter(e=>e.type==='TAB_HIDDEN'||e.type==='WINDOW_BLUR').length;
+  const pastes=proctorLog.filter(e=>e.type==='PASTE'||e.type==='PASTE_SHORTCUT').length;
+  const copies=proctorLog.filter(e=>e.type==='COPY').length;
+  const suspicionScore=Math.min(100,tabSwitches*20+pastes*25+copies*10);
+  const suspicionLevel=suspicionScore>=60?'High':suspicionScore>=30?'Medium':suspicionScore===0?'Clean':'Low';
+  const record={id,trainee:sessionData.trainee,cohort:sessionData.cohort,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),score:total,pct,results:evalResults.map(r=>({topic:r.q.topic,question:r.q.q,answer:r.answer,correct:r.correct,score:r.score,scoreLabel:r.scoreLabel,feedback:r.feedback})),proctorLog:[...proctorLog],suspicionScore,suspicionLevel,tabSwitches,pastes,copies};
+  const sessions=getSessions();sessions.push(record);saveSessions(sessions);
+  waitingForTrainee=sessionData.trainee;waitingSessionId=id;
+  showResultsScreen(record);
+}
+ 
+function showResultsScreen(s){
+  showScreen('screen-results');
+  const grade=s.pct>=80?'Excellent':s.pct>=60?'Good':s.pct>=40?'Needs improvement':'Re-assessment needed';
+  const suspCols={'Clean':'var(--accent)','Low':'var(--amber)','Medium':'var(--amber)','High':'var(--red)'};
+  const suspCol=suspCols[s.suspicionLevel]||'var(--text2)';
+  document.getElementById('results-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Score</div><div class="metric-value">${s.score}/50</div></div>
+    <div class="metric"><div class="metric-label">Percentage</div><div class="metric-value">${s.pct}%</div></div>
+    <div class="metric"><div class="metric-label">Grade</div><div class="metric-value" style="font-size:13px;padding-top:6px;">${grade}</div></div>
+    <div class="metric"><div class="metric-label">Integrity</div><div class="metric-value" style="font-size:14px;color:${suspCol};padding-top:4px;">${s.suspicionLevel||'Clean'}</div></div>
+  `;
+  let html='';
+  s.results.forEach((r,i)=>{
+    const cls=r.score>=7?'score-high':r.score>=4?'score-mid':'score-low';
+    const labelIcons={'Full marks':'🏆','Good answer':'✓','Surface answer':'📖','Mostly wrong':'⚠','Irrelevant':'✕'};
+    const labelIcon=labelIcons[r.scoreLabel]||'';
+    const scoreLabelHtml=r.scoreLabel?`<span style="font-size:11px;color:var(--text3);margin-right:8px;">${labelIcon} ${r.scoreLabel}</span>`:'';
+    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><div style="display:flex;align-items:center;">${scoreLabelHtml}<span class="score-pill ${cls}">${r.score}/10</span></div></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Your answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">Evaluator feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
+  });
+  document.getElementById('results-feedback').innerHTML=html;
+}
+ 
+// ── TRAINER ──────────────────────────────────────────────────────
+function showTrainerDashboard(){showScreen('screen-trainer');refreshDashboard();}
+function refreshDashboard(){const s=getSessions();renderOverview(s);renderApprovals(s);populateSelect(s);updateBadge();updateIntegrityBadge();}
+ 
+function updateBadge(){
+  const approvals=getApprovals();
+  const sessions=getSessions();
+  const pending=sessions.filter(s=>!approvals[s.id]);
+  // Only show count for the last session per trainee
+  const byT={};sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
+  const count=Object.values(byT).filter(s=>!approvals[s.id]).length;
+  document.getElementById('appr-badge').textContent=count>0?` (${count})`:'';
+}
+ 
+function renderOverview(sessions){
+  if(!sessions.length){document.getElementById('cohort-metrics').innerHTML='<div class="empty-state">No sessions yet.</div>';document.getElementById('trainee-list').innerHTML='<p class="empty-state">No trainees yet.</p>';return;}
+  const avg=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const top=Math.max(...sessions.map(s=>s.pct));
+  const pass=sessions.filter(s=>s.pct>=60).length;
+  const trainees=[...new Set(sessions.map(s=>s.trainee))].length;
+  document.getElementById('cohort-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div><div class="metric-sub">${trainees} trainees</div></div>
+    <div class="metric"><div class="metric-label">Avg score</div><div class="metric-value">${avg}%</div></div>
+    <div class="metric"><div class="metric-label">Pass rate</div><div class="metric-value">${Math.round(pass/sessions.length*100)}%</div><div class="metric-sub">≥60%</div></div>
+    <div class="metric"><div class="metric-label">Top score</div><div class="metric-value">${top}%</div></div>
+  `;
+  renderBarChart(sessions);
+  renderRadarChart(sessions);
+  // trainee list
+  const byT={};sessions.forEach(s=>{if(!byT[s.trainee])byT[s.trainee]=[];byT[s.trainee].push(s);});
+  let html='';
+  Object.entries(byT).forEach(([name,sess])=>{
+    const latest=sess[sess.length-1];
+    const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const cls=latest.pct>=70?'score-high':latest.pct>=50?'score-mid':'score-low';
+    const avg2=Math.round(sess.reduce((s,r)=>s+r.pct,0)/sess.length);
+    html+=`<div class="trainee-row" style="cursor:default;"><div class="avatar" style="cursor:pointer;" onclick="quickView('${name}')">${initials}</div><div style="flex:1;cursor:pointer;" onclick="quickView('${name}')"><div style="font-size:14px;font-weight:600;">${name}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${latest.cohort} · ${sess.length} session${sess.length>1?'s':''} · avg ${avg2}%</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="score-pill ${cls}">${latest.pct}%</span><button class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:11px;" onclick="deleteTrainee('${name}')">✕ Delete</button></div></div>`;
+  });
+  document.getElementById('trainee-list').innerHTML=html;
+}
+ 
+function renderBarChart(sessions){
+  const byT={};sessions.forEach(s=>{if(!byT[s.trainee])byT[s.trainee]=[];byT[s.trainee].push(s.pct);});
+  const labels=Object.keys(byT);
+  const avgs=labels.map(n=>Math.round(byT[n].reduce((a,b)=>a+b,0)/byT[n].length));
+  const colors=avgs.map(v=>v>=70?'rgba(58,125,10,0.8)':v>=50?'rgba(179,106,0,0.8)':'rgba(192,57,43,0.8)');
+  const ctx=document.getElementById('chart-bar').getContext('2d');
+  if(barChart)barChart.destroy();
+  barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Avg %',data:avgs,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},scales:{x:{ticks:{color:'#6b6b65',font:{family:"'DM Mono'",size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y:{min:0,max:100,ticks:{color:'#6b6b65',font:{family:"'DM Mono'",size:11},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+}
+ 
+function renderRadarChart(sessions){
+  const topics=['Core Java','Functional Testing','SQL','Selenium'];
+  const avgs=topics.map(t=>{
+    let sc=[];sessions.forEach(s=>s.results.filter(r=>r.topic===t).forEach(r=>sc.push(r.score)));
+    return sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length*10):0;
+  });
+  const ctx=document.getElementById('chart-radar').getContext('2d');
+  if(radarChart)radarChart.destroy();
+  radarChart=new Chart(ctx,{type:'radar',data:{labels:topics,datasets:[{label:'Score %',data:avgs,backgroundColor:'rgba(58,125,10,0.08)',borderColor:'rgba(58,125,10,0.7)',borderWidth:2,pointBackgroundColor:'#3a7d0a',pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{color:'#a0a09a',backdropColor:'transparent',font:{size:10}},grid:{color:'rgba(0,0,0,0.08)'},angleLines:{color:'rgba(0,0,0,0.06)'},pointLabels:{color:'#6b6b65',font:{family:"'Sora'",size:11}}}}}});
+}
+ 
+ 
+// ── DELETE TRAINEE ────────────────────────────────────────────────
+function deleteTrainee(name){
+  const confirmed = confirm(`Delete ALL session data for "${name}"?\n\nThis cannot be undone.`);
+  if(!confirmed) return;
+  // Remove sessions
+  const sessions = getSessions().filter(s => s.trainee !== name);
+  saveSessions(sessions);
+  // Remove approvals for deleted trainee's sessions
+  // (approvals keyed by session id — clean up orphans)
+  // Remove from pending approvals too
+  refreshDashboard();
+  // If individual tab was showing this trainee, clear it
+  const sel = document.getElementById('trainee-select');
+  if(sel && sel.value === name){
+    sel.value = '';
+    document.getElementById('individual-detail').innerHTML = '';
+  }
+}
+ 
+// ── APPROVALS ─────────────────────────────────────────────────────
+function renderApprovals(){
+  const sessions=getSessions();
+  const approvals=getApprovals();
+  // Get latest session per trainee that needs approval
+  const byT={};
+  sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
+  const pending=Object.values(byT).filter(s=>!approvals[s.id]);
+  let html='';
+  if(!pending.length){html='<div class="empty-state">No pending approvals. All trainees cleared ✓</div>';}
+  else{
+    pending.forEach(s=>{
+      const cls=s.pct>=70?'score-high':s.pct>=50?'score-mid':'score-low';
+      html+=`<div class="approval-row"><div><div style="font-size:14px;font-weight:600;">${s.trainee}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${s.cohort} · ${s.date} · <span class="score-pill ${cls}" style="font-size:10px;">${s.pct}%</span></div></div><div style="display:flex;gap:8px;"><button class="btn btn-success btn-sm" onclick="approveT(${s.id},'${s.trainee}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="denyT(${s.id},'${s.trainee}')">✗ Deny</button></div></div>`;
+    });
+  }
+  document.getElementById('approvals-list').innerHTML=html;
+  updateBadge();
+}
+ 
+function approveT(id,name){
+  const a=getApprovals();a[id]=true;saveApprovals(a);
+  alert('✓ '+name+' approved for next session.');
+  renderApprovals();
+}
+function denyT(id,name){
+  const a=getApprovals();a[id]='denied';saveApprovals(a);
+  alert(name+'\'s request denied.');
+  renderApprovals();
+}
+ 
+// ── INDIVIDUAL ────────────────────────────────────────────────────
+function populateSelect(sessions){
+  const names=[...new Set(sessions.map(s=>s.trainee))];
+  document.getElementById('trainee-select').innerHTML='<option value="">— select trainee —</option>'+names.map(n=>`<option>${n}</option>`).join('');
+}
+function quickView(name){switchTab('individual');document.getElementById('trainee-select').value=name;loadIndividual();}
+function deleteFromIndividual(){
+  const name=document.getElementById('trainee-select').value;
+  if(!name)return;
+  deleteTrainee(name);
+  populateSelect(getSessions());
+  document.getElementById('individual-delete-btn').style.display='none';
+  document.getElementById('individual-detail').innerHTML='';
+}
+ 
+function loadIndividual(){
+  const name=document.getElementById('trainee-select').value;
+  const btn=document.getElementById('individual-delete-btn');
+  if(!name){document.getElementById('individual-detail').innerHTML='';if(btn)btn.style.display='none';return;}
+  if(btn)btn.style.display='';
+  const sessions=getSessions().filter(s=>s.trainee===name);
+  if(!sessions.length){document.getElementById('individual-detail').innerHTML='<div class="empty-state">No data.</div>';return;}
+  const latest=sessions[sessions.length-1];
+  const avgPct=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const grade=avgPct>=80?'Excellent':avgPct>=60?'Good':avgPct>=40?'Needs improvement':'Re-assessment';
+  let html=`<div class="cards-grid" style="padding-top:0.75rem;"><div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div></div><div class="metric"><div class="metric-label">Avg</div><div class="metric-value">${avgPct}%</div></div><div class="metric"><div class="metric-label">Status</div><div class="metric-value" style="font-size:12px;padding-top:6px;">${grade}</div></div></div><p class="section-title">Latest session — ${latest.date}</p>`;
+  latest.results.forEach((r,i)=>{
+    const cls=r.score>=7?'score-high':r.score>=4?'score-mid':'score-low';
+    const labelIcons={'Full marks':'🏆','Good answer':'✓','Surface answer':'📖','Mostly wrong':'⚠','Irrelevant':'✕'};
+    const labelIcon=labelIcons[r.scoreLabel]||'';
+    const scoreLabelHtml=r.scoreLabel?`<span style="font-size:11px;color:var(--text3);margin-right:8px;">${labelIcon} ${r.scoreLabel}</span>`:'';
+    html+=`<div class="result-card"><div class="result-header"><span style="font-weight:600;">Q${i+1} · ${r.topic}</span><div style="display:flex;align-items:center;">${scoreLabelHtml}<span class="score-pill ${cls}">${r.score}/10</span></div></div><div class="result-body"><div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div><div class="result-label">Trainee answer</div><div class="result-answer" style="margin-bottom:8px;">${r.answer}</div><div class="result-label">Model answer</div><div class="feedback-block" style="margin-bottom:8px;">${r.correct}</div><div class="result-label">Evaluator feedback</div><div class="feedback-block">${r.feedback}</div></div></div>`;
+  });
+  document.getElementById('individual-detail').innerHTML=html;
+}
+ 
+// ── AI INSIGHTS (local data-driven, no API/CORS issue) ───────────
+function renderInsights(sessions){
+  if(!sessions.length){
+    document.getElementById('insights-summary').innerHTML='';
+    document.getElementById('insights-content').innerHTML='<div class="empty-state">No session data yet. Trainees must complete at least one session.</div>';
+    return;
+  }
+  const topics=['Core Java','Functional Testing','SQL','Selenium'];
+  const topicData=topics.map(t=>{
+    let sc=[];
+    sessions.forEach(s=>s.results.filter(r=>r.topic===t).forEach(r=>sc.push(r.score)));
+    const avg=sc.length?+(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):0;
+    const skipped=sc.filter(s=>s===0).length;
+    return{topic:t,avg,count:sc.length,skipped};
+  });
+  const sorted=[...topicData].sort((a,b)=>b.avg-a.avg);
+  const strong=topicData.filter(t=>t.avg>=7);
+  const weak=topicData.filter(t=>t.avg<5);
+  const mid=topicData.filter(t=>t.avg>=5&&t.avg<7);
+  const avgOverall=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const passCount=sessions.filter(s=>s.pct>=60).length;
+  const passRate=Math.round(passCount/sessions.length*100);
+  const trainees=[...new Set(sessions.map(s=>s.trainee))];
+  const totalSkips=sessions.reduce((sum,s)=>sum+s.results.filter(r=>r.answer==='[Skipped]'||r.answer==='[Time expired]').length,0);
+  const topScorer=sessions.reduce((a,b)=>b.pct>a.pct?b:a);
+  const bottomScorer=sessions.reduce((a,b)=>b.pct<a.pct?b:a);
+ 
+  document.getElementById('insights-summary').innerHTML=`
+    <div class="metric"><div class="metric-label">Best topic</div><div class="metric-value" style="font-size:13px;color:var(--accent);padding-top:4px;">${sorted[0].topic}<div class="metric-sub">${sorted[0].avg}/10 avg</div></div></div>
+    <div class="metric"><div class="metric-label">Weakest topic</div><div class="metric-value" style="font-size:13px;color:var(--red);padding-top:4px;">${sorted[sorted.length-1].topic}<div class="metric-sub">${sorted[sorted.length-1].avg}/10 avg</div></div></div>
+    <div class="metric"><div class="metric-label">Total skips</div><div class="metric-value">${totalSkips}<div class="metric-sub">across sessions</div></div></div>
+  `;
+ 
+  const overallGrade=avgOverall>=80?'strong':avgOverall>=60?'satisfactory':avgOverall>=40?'below expectations':'critically low';
+  const overallText=`The cohort of ${trainees.length} trainee${trainees.length>1?'s':''} has achieved an overall average of <strong>${avgOverall}%</strong> across ${sessions.length} session${sessions.length>1?'s':''} — rated <strong>${overallGrade}</strong>. Pass rate is ${passRate}%${passRate<60?' — immediate intervention recommended.':passRate<80?' — some trainees need targeted support.':' — cohort is performing well.'}`;
+ 
+  const strengthPoints=[];
+  if(strong.length){strong.forEach(t=>strengthPoints.push(`<strong>${t.topic}</strong> is the strongest area with ${t.avg}/10 avg — trainees show solid grasp of these concepts.`));}
+  if(!strong.length&&mid.length){strengthPoints.push(`<strong>${mid[0].topic}</strong> shows the most consistent scores at ${mid[0].avg}/10 — a reasonable working understanding.`);}
+  if(totalSkips===0){strengthPoints.push('No questions were skipped — trainees are attempting all questions which shows good engagement.');}
+  if(passRate>=60){strengthPoints.push(`${passCount} of ${sessions.length} session${sessions.length>1?'s':''} crossed the 60% pass mark, showing the core curriculum is being absorbed.`);}
+  if(!strengthPoints.length){strengthPoints.push('Trainees are actively participating. With targeted coaching this cohort has clear room for improvement.');}
+ 
+  const weakPoints=[];
+  if(weak.length){weak.forEach(t=>weakPoints.push(`<strong>${t.topic}</strong> is critically weak at ${t.avg}/10.${t.skipped>0?' '+t.skipped+' answer(s) skipped — suggests avoidance or low confidence.':' Answers attempted but scores low — conceptual gaps present.'}`));}
+  if(totalSkips>3){weakPoints.push(`<strong>${totalSkips} questions skipped</strong> total — suggests time pressure or avoidance of certain topics.`);}
+  if(passRate<60){weakPoints.push(`Only ${passRate}% cleared the 60% pass mark. Significant improvement needed before trainees are production-ready.`);}
+  if(avgOverall<50){weakPoints.push('Overall average below 50% — cohort needs a structured review from fundamentals before moving to advanced topics.');}
+  if(!weakPoints.length){weakPoints.push('No critical weaknesses detected. Continue monitoring across multiple sessions for consistency.');}
+ 
+  // ── DYNAMIC ACTION PLAN ─────────────────────────────────────────
+  // Collect per-question data: which specific questions scored low, which were skipped
+  const qData={};
+  sessions.forEach(s=>{
+    s.results.forEach(r=>{
+      const k=r.question.slice(0,60);
+      if(!qData[k])qData[k]={topic:r.topic,question:r.question,scores:[],skips:0,surfaceCount:0,wrongCount:0};
+      if(r.answer==='[Skipped]'||r.answer==='[Time expired]'){qData[k].skips++;}
+      else{
+        qData[k].scores.push(r.score);
+        if(r.scoreLabel==='Surface answer')qData[k].surfaceCount++;
+        if(r.scoreLabel==='Mostly wrong'||r.scoreLabel==='Irrelevant')qData[k].wrongCount++;
+      }
+    });
+  });
+ 
+  // Find lowest scoring questions per topic
+  const worstQuestions=Object.values(qData).map(q=>({
+    ...q,
+    avg:q.scores.length?+(q.scores.reduce((a,b)=>a+b,0)/q.scores.length).toFixed(1):0
+  })).sort((a,b)=>a.avg-b.avg);
+ 
+  // Per-topic: find what sub-skill failed (based on actual question text)
+  const topicWeakSubSkills={};
+  worstQuestions.slice(0,8).forEach(q=>{
+    if(!topicWeakSubSkills[q.topic])topicWeakSubSkills[q.topic]=[];
+    topicWeakSubSkills[q.topic].push({avg:q.avg,skips:q.skips,surface:q.surfaceCount,wrong:q.wrongCount,qShort:q.question.slice(0,80)+'…'});
+  });
+ 
+  // Surface-answer trainees: know theory but can't apply
+  const surfaceTrainees=sessions.filter(s=>s.results.filter(r=>r.scoreLabel==='Surface answer').length>=2).map(s=>s.trainee);
+  const surfaceNames=[...new Set(surfaceTrainees)];
+ 
+  // Trainees who scored 0 on specific topics
+  const zeroPerTopic={};
+  sessions.forEach(s=>{
+    s.results.forEach(r=>{
+      if(r.score===0&&r.answer!=='[Skipped]'&&r.answer!=='[Time expired]'){
+        if(!zeroPerTopic[r.topic])zeroPerTopic[r.topic]=new Set();
+        zeroPerTopic[r.topic].add(s.trainee);
+      }
+    });
+  });
+ 
+  // Build dynamic action items — one per dimension of actual failure
+  const actions=[];
+ 
+  // Action 1: worst topic with specific sub-skill details
+  const worstTopic=sorted[sorted.length-1];
+  const worstTopicDetails=topicWeakSubSkills[worstTopic.topic];
+  if(worstTopicDetails&&worstTopicDetails.length){
+    const subDetail=worstTopicDetails[0];
+    let act1=`<strong>${worstTopic.topic}</strong> is the weakest area (${worstTopic.avg}/10 avg). `;
+    if(subDetail.skips>0){act1+=`Trainees skipped ${subDetail.skips} question(s) on this topic — schedule a focused session where they must attempt every question verbally first, then write it down. `;}
+    if(subDetail.surface>0){act1+=`${subDetail.surface} answer(s) were surface-level (knew the term but not the application) — assign a lab exercise where they must implement the concept in a real mini-project, not just define it. `;}
+    if(subDetail.wrong>0){act1+=`${subDetail.wrong} answer(s) were incorrect — revisit the fundamentals of this topic from scratch using the Selenium project as context, not textbook examples.`;}
+    if(!subDetail.skips&&!subDetail.surface&&!subDetail.wrong){act1+=`Schedule a 90-minute hands-on workshop specifically on this topic with live coding exercises tied to the current project.`;}
+    actions.push(act1.trim());
+  } else {
+    actions.push(`<strong>${worstTopic.topic}</strong> is the weakest area at ${worstTopic.avg}/10 — dedicate a full session to hands-on exercises on this topic before the next assessment.`);
+  }
+ 
+  // Action 2: surface-answer problem or second-weakest topic
+  if(surfaceNames.length>0){
+    const nameList=surfaceNames.slice(0,3).join(', ')+(surfaceNames.length>3?` and ${surfaceNames.length-3} more`:'');
+    const surfaceTopics=[...new Set(sessions.flatMap(s=>s.results.filter(r=>r.scoreLabel==='Surface answer').map(r=>r.topic)))];
+    actions.push(`<strong>${nameList}</strong> consistently gave surface-level answers — they know definitions but cannot apply them. For topics: ${surfaceTopics.join(', ')}, run a "show don't tell" drill: each trainee must explain the concept THROUGH a code example or project scenario, not with a dictionary definition. Award marks only when they demonstrate application.`);
+  } else if(sorted.length>=2){
+    const second=sorted[sorted.length-2];
+    const secondDetails=topicWeakSubSkills[second.topic];
+    let act2=`<strong>${second.topic}</strong> also needs attention at ${second.avg}/10. `;
+    if(secondDetails&&secondDetails[0]){
+      const d=secondDetails[0];
+      if(d.skips>0) act2+=`${d.skips} skip(s) detected — assign pre-reading homework on this topic and quiz them at the start of next session.`;
+      else act2+=`Conduct a peer-review exercise: pair trainees and have them critique each other's answers on this topic, identifying what real-world example is missing.`;
+    } else {
+      act2+=`Conduct a 1-hour practice drill specifically on ${second.topic} before the next formal assessment.`;
+    }
+    actions.push(act2);
+  }
+ 
+  // Action 3: based on pass rate + skips + integrity flags
+  const highRiskTrainees=sessions.filter(s=>s.suspicionLevel==='High'||s.suspicionLevel==='Medium').map(s=>s.trainee);
+  const highRiskNames=[...new Set(highRiskTrainees)];
+  if(highRiskNames.length>0){
+    actions.push(`<strong>Integrity concern:</strong> ${highRiskNames.slice(0,3).join(', ')} showed suspicious behaviour (tab switches / paste events). For their next session, consider an in-person supervised evaluation or verbal viva on their weakest topics to confirm genuine understanding.`);
+  } else if(totalSkips>3){
+    const skipRate=Math.round(totalSkips/sessions.length);
+    actions.push(`Avg of <strong>${skipRate} skips per session</strong> across the cohort — this indicates either time management failure or avoidance of specific topics. Run a timed mock drill: 1 minute per question, no skipping allowed. Use the drill scores to identify exactly which topics cause the most avoidance.`);
+  } else if(passRate<60){
+    const failTrainees=sessions.filter(s=>s.pct<60);
+    const failNames=[...new Set(failTrainees.map(s=>s.trainee))].slice(0,4).join(', ');
+    actions.push(`Pass rate is only ${passRate}%. Trainees below 60%: <strong>${failNames}</strong>. Schedule individual 20-minute review sessions with each of them — go through their wrong answers, ask them to re-explain verbally, and assign targeted homework before approving their next session.`);
+  } else {
+    // All is good — push them harder
+    const topicNames=topicData.filter(t=>t.avg<8).map(t=>t.topic);
+    actions.push(`Cohort is passing but has room to grow. ${topicNames.length>0?`Push <strong>${topicNames.join(' and ')}</strong> from average to excellent:`:''} assign a capstone integration task — build a Selenium POM framework that uses SQL for test data, applies functional testing principles for test case design, and uses Core Java utilities for data handling. Score it using the same rubric: real-world examples = full marks.`);
+  }
+ 
+  let html=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p>
+  <div class="card"><p style="font-size:13px;line-height:1.8;color:var(--text2);">${overallText}</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Top performer</div><div style="font-size:13px;font-weight:600;">${topScorer.trainee}</div><div style="font-size:11px;color:var(--text2);">${topScorer.pct}%</div></div>
+    <div style="background:var(--bg3);border-radius:var(--radius);padding:10px 12px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Needs most support</div><div style="font-size:13px;font-weight:600;">${bottomScorer.trainee}</div><div style="font-size:11px;color:var(--text2);">${bottomScorer.pct}%</div></div>
+  </div></div>
+  <p class="section-title">Topic-wise breakdown</p>
+  <div class="card">${topicData.map(t=>{
+    const pct=Math.round(t.avg*10);
+    const col=t.avg>=7?'var(--accent)':t.avg>=5?'var(--amber)':'var(--red)';
+    const label=t.avg>=7?'Strong':t.avg>=5?'Average':'Weak';
+    return`<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="font-size:13px;font-weight:500;">${t.topic}</span><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:${col};font-weight:600;background:${col}18;padding:2px 8px;border-radius:100px;">${label}</span><span style="font-size:12px;font-family:var(--mono);color:var(--text2);">${t.avg}/10</span></div></div><div class="progress-bar"><div style="height:100%;border-radius:100px;background:${col};width:${pct}%;transition:width 0.8s;"></div></div>${t.skipped>0?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">⚠ ${t.skipped} skipped</div>`:''}</div>`;
+  }).join('')}</div>
+  <div class="insight-card"><div class="insight-header">✦ Strengths observed</div><div class="insight-body">${strengthPoints.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>${s}</div></div>`).join('')}</div></div>
+  <div class="insight-card"><div class="insight-header">⚠ Areas needing attention</div><div class="insight-body">${weakPoints.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div>${w}</div></div>`).join('')}</div></div>
+  <div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">${actions.map((a,i)=>`<div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action ${i+1}:</strong> ${a}</div></div>`).join('')}</div></div>`;
+ 
+  document.getElementById('insights-content').innerHTML=html;
+}
+ 
+// ── INTEGRITY REPORT ─────────────────────────────────────────────
+function renderIntegrity(){
+  const sessions=getSessions();
+  const flagged=sessions.filter(s=>s.suspicionLevel&&s.suspicionLevel!=='Clean');
+  const high=sessions.filter(s=>s.suspicionLevel==='High').length;
+  const medium=sessions.filter(s=>s.suspicionLevel==='Medium').length;
+  const clean=sessions.filter(s=>!s.suspicionLevel||s.suspicionLevel==='Clean').length;
+ 
+  document.getElementById('integrity-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total sessions</div><div class="metric-value">${sessions.length}</div></div>
+    <div class="metric"><div class="metric-label" style="color:var(--red);">High risk</div><div class="metric-value" style="color:var(--red);">${high}</div></div>
+    <div class="metric"><div class="metric-label" style="color:var(--amber);">Medium risk</div><div class="metric-value" style="color:var(--amber);">${medium}</div></div>
+    <div class="metric"><div class="metric-label" style="color:var(--accent);">Clean</div><div class="metric-value" style="color:var(--accent);">${clean}</div></div>
+  `;
+ 
+  if(!sessions.length){document.getElementById('integrity-list').innerHTML='<div class="empty-state">No sessions yet.</div>';return;}
+ 
+  // Group by trainee, show latest session
+  const byT={};
+  sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
+ 
+  let html='';
+  Object.values(byT).sort((a,b)=>(b.suspicionScore||0)-(a.suspicionScore||0)).forEach(s=>{
+    const level=s.suspicionLevel||'Clean';
+    const score=s.suspicionScore||0;
+    const col=level==='High'?'var(--red)':level==='Medium'?'var(--amber)':level==='Low'?'var(--amber)':'var(--accent)';
+    const bgCol=level==='High'?'var(--red-dim)':level==='Medium'?'var(--amber-dim)':level==='Low'?'var(--amber-dim)':'var(--accent-dim)';
+    const log=s.proctorLog||[];
+    const tabSw=s.tabSwitches||0;
+    const pastes=s.pastes||0;
+    const copies=s.copies||0;
+ 
+    let eventsHtml='';
+    if(log.length===0){
+      eventsHtml='<div style="font-size:12px;color:var(--text3);padding:6px 0;">No suspicious events recorded.</div>';
+    } else {
+      // Show up to 10 events
+      const shown=log.slice(0,10);
+      eventsHtml=shown.map(e=>{
+        const iconMap={TAB_HIDDEN:'👁',TAB_RETURNED:'↩',WINDOW_BLUR:'🔓',COPY:'📋',PASTE:'📥',PASTE_SHORTCUT:'📥',SUDDEN_JUMP:'⚡',RIGHT_CLICK:'🖱',ALT_TAB:'⇥',SELECT_ALL:'⬛'};
+        const icon=iconMap[e.type]||'•';
+        return`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;"><span style="color:var(--text3);font-family:var(--mono);flex-shrink:0;">${e.time}</span><span style="color:var(--text3);flex-shrink:0;">${icon}</span><span style="color:var(--text2);">${e.detail}</span></div>`;
+      }).join('');
+      if(log.length>10)eventsHtml+=`<div style="font-size:11px;color:var(--text3);padding:6px 0;">+${log.length-10} more events…</div>`;
+    }
+ 
+    html+=`<div class="card" style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">${s.trainee}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${s.cohort} · ${s.date} · Score: ${s.pct}%</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:600;color:${col};background:${bgCol};padding:4px 12px;border-radius:100px;display:inline-block;">${level} risk</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Suspicion: ${score}/100</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Tab switches</span> <strong style="margin-left:6px;">${tabSw}</strong></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Pastes</span> <strong style="margin-left:6px;">${pastes}</strong></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Copies</span> <strong style="margin-left:6px;">${copies}</strong></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Events logged</span> <strong style="margin-left:6px;">${log.length}</strong></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Event log</div>
+      <div style="background:var(--bg3);border-radius:var(--radius);padding:8px 12px;max-height:200px;overflow-y:auto;">${eventsHtml}</div>
+    </div>`;
+  });
+  document.getElementById('integrity-list').innerHTML=html;
+ 
+  // Update badge
+  const badge=document.getElementById('integrity-badge');
+  if(badge)badge.textContent=flagged.length>0?` (${flagged.length})`:'';
+}
+ 
+function updateIntegrityBadge(){
+  const sessions=getSessions();
+  const flagged=sessions.filter(s=>s.suspicionLevel&&s.suspicionLevel!=='Clean').length;
+  const badge=document.getElementById('integrity-badge');
+  if(badge)badge.textContent=flagged>0?` (${flagged})`:'';
+}
+ 
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(tab){
+  const tabs=['overview','approvals','individual','insights','integrity'];
+  tabs.forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).style.display=t===tab?'':'none';
+  });
+  if(tab==='insights') renderInsights(getSessions());
+  if(tab==='approvals') renderApprovals();
+  if(tab==='integrity') renderIntegrity();
+}
+// Pre-decrypt QB silently when page loads so first session is instant
+_initQB();
+</script>
+</body>
+</html>
+ 
