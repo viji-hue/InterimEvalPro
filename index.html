@@ -1,1 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EvalPro — Selenium Track Interim Assessment</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #efefec;
+    --text: #1a1a18; --text2: #5f5e5a; --text3: #8a8a86;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+    --info-bg: #e6f1fb; --info-text: #185fa5;
+    --success-bg: #eaf3de; --success-text: #3b6d11;
+    --warn-bg: #faeeda; --warn-text: #854f0b;
+    --danger-bg: #fcebeb; --danger-text: #a32d2d;
+    --radius: 8px; --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SF Mono', 'Fira Code', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+      --text: #f0efe8; --text2: #a8a7a2; --text3: #6e6e6a;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --info-bg: #042c53; --info-text: #85b7eb;
+      --success-bg: #173404; --success-text: #97c459;
+      --warn-bg: #412402; --warn-text: #ef9f27;
+      --danger-bg: #501313; --danger-text: #f09595;
+    }
+  }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; }
+  .app { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); width: 100%; max-width: 680px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { padding: 1rem 1.5rem; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+  .logo { font-size: 15px; font-weight: 500; color: var(--text); }
+  .logo span { color: var(--text2); font-weight: 400; }
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 100px; background: var(--info-bg); color: var(--info-text); }
+  .hero { padding: 2rem 1.5rem 1rem; }
+  .hero h1 { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+  .hero p { font-size: 14px; color: var(--text2); line-height: 1.6; max-width: 480px; }
+  .form-section { padding: 1rem 1.5rem 1.5rem; }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 5px; }
+  input, select, textarea { width: 100%; padding: 8px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius); font-size: 14px; font-family: var(--font); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--text2); }
+  textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+  .btn { padding: 9px 20px; border-radius: var(--radius); font-size: 14px; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); transition: background 0.15s; font-family: var(--font); }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .tabs { display: flex; border-bottom: 0.5px solid var(--border); padding: 0 1.5rem; background: var(--bg); }
+  .tab { padding: 10px 16px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text2); transition: color 0.15s; }
+  .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 1.25rem 1.5rem; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 0.875rem 1rem; }
+  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin: 0 1.5rem 1rem; }
+  .progress-bar { height: 5px; background: var(--bg2); border-radius: 100px; margin: 4px 0 2px; }
+  .progress-fill { height: 100%; border-radius: 100px; background: var(--text); transition: width 0.4s; }
+  .q-header { padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); }
+  .timer { font-size: 22px; font-weight: 500; font-family: var(--mono); }
+  .timer.warning { color: var(--danger-text); }
+  .q-body { padding: 1.5rem; }
+  .q-topic { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 100px; margin-bottom: 12px; background: var(--bg2); color: var(--text2); }
+  .q-text { font-size: 15px; font-weight: 500; line-height: 1.55; margin-bottom: 1.25rem; }
+  .result-card { margin: 0 1.5rem 1rem; border-radius: var(--radius-lg); border: 0.5px solid var(--border); overflow: hidden; }
+  .result-header { padding: 10px 1.25rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border); font-size: 13px; background: var(--bg2); }
+  .result-body { padding: 1rem 1.25rem; }
+  .result-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 10px; }
+  .result-label:first-child { margin-top: 0; }
+  .result-answer { font-size: 13px; line-height: 1.6; padding-left: 10px; border-left: 2px solid var(--border2); }
+  .feedback-block { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; font-size: 13px; line-height: 1.6; color: var(--text2); }
+  .score-pill { font-size: 12px; padding: 3px 10px; border-radius: 100px; font-weight: 500; }
+  .score-high { background: var(--success-bg); color: var(--success-text); }
+  .score-mid { background: var(--warn-bg); color: var(--warn-text); }
+  .score-low { background: var(--danger-bg); color: var(--danger-text); }
+  .trainee-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .trainee-row:last-child { border-bottom: none; }
+  .trainee-row:hover { background: var(--bg2); margin: 0 -1.25rem; padding-left: 1.25rem; padding-right: 1.25rem; border-radius: var(--radius); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; background: var(--info-bg); color: var(--info-text); }
+  .section-title { font-size: 12px; font-weight: 500; color: var(--text3); padding: 0 1.5rem; margin: 1rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .loader { display: none; text-align: center; padding: 1rem; font-size: 13px; color: var(--text2); }
+  .loader.active { display: block; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--text2); border-radius: 50%; animation: spin 0.7s linear infinite; margin-left: 6px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .skip-link { font-size: 12px; color: var(--text2); cursor: pointer; text-decoration: underline; }
+  .empty-state { padding: 2rem 1.5rem; text-align: center; color: var(--text2); font-size: 14px; }
+  .q-num-label { font-size: 12px; color: var(--text2); }
+  .q-footer { padding: 0 1.5rem 1.5rem; display: flex; gap: 10px; align-items: center; }
+  select option { background: var(--bg); color: var(--text); }
+  .topic-row { margin-bottom: 12px; }
+  .topic-row-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .info-banner { margin: 0 1.5rem 1rem; background: var(--info-bg); color: var(--info-text); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
 
+  <!-- LOGIN -->
+  <div class="screen active" id="screen-login">
+    <div class="header"><div class="logo">EvalPro <span>/ Selenium Track</span></div><div class="badge">BU Standard</div></div>
+    <div class="hero">
+      <h1>Interim assessment</h1>
+      <p>Timed 5-question sessions covering Core Java, Functional Testing, SQL, and Selenium with TestNG — evaluated against business unit standards.</p>
+    </div>
+    <div class="form-section">
+      <div class="form-row"><label>Select role</label>
+        <select id="role-select" onchange="toggleRole()">
+          <option value="trainee">Trainee — take assessment</option>
+          <option value="trainer">Trainer — view dashboard</option>
+        </select>
+      </div>
+      <div id="trainee-fields">
+        <div class="form-row"><label>Your name</label><input type="text" id="trainee-name" placeholder="e.g. Priya Sharma"></div>
+        <div class="form-row"><label>Cohort / Batch</label><input type="text" id="cohort-name" placeholder="e.g. Batch-12 May 2025"></div>
+      </div>
+      <div id="trainer-fields" style="display:none;">
+        <div class="form-row"><label>Trainer name</label><input type="text" id="trainer-name" placeholder="e.g. Ramesh Kumar"></div>
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()" style="width:100%;margin-top:4px;">Continue →</button>
+    </div>
+    <div class="info-banner">
+      Powered by Claude AI for real-time answer evaluation. Requires internet for AI scoring; questions and session storage work offline.
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="screen" id="screen-question">
+    <div class="q-header">
+      <div>
+        <div style="font-size:14px;font-weight:500;" id="q-trainee-label"></div>
+        <div style="font-size:12px;color:var(--text2);" id="q-cohort-label"></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="timer" id="q-timer">5:00</div>
+        <div style="font-size:11px;color:var(--text2);">time remaining</div>
+      </div>
+    </div>
+    <div style="padding:0.75rem 1.5rem;">
+      <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;">
+        <span class="q-num-label" id="q-count-label">Question 1 of 5</span>
+        <span class="q-num-label" id="q-score-so-far"></span>
+      </div>
+    </div>
+    <div class="q-body">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px;" id="q-num">Q1</div>
+      <div class="q-topic" id="q-topic">Core Java</div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <textarea id="q-answer" placeholder="Type your answer here. Be specific — include code snippets or examples where relevant."></textarea>
+    </div>
+    <div class="loader" id="q-loader">Evaluating your answer<span class="spinner"></span></div>
+    <div class="q-footer">
+      <button class="btn btn-primary" id="q-next-btn" onclick="submitAnswer()" style="flex:1;">Next question</button>
+      <span class="skip-link" onclick="skipQuestion()">Skip</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="header"><div class="logo">Session complete</div><button class="btn btn-sm" onclick="showScreen('screen-login')">New session</button></div>
+    <div class="cards-grid" id="results-metrics"></div>
+    <div id="results-feedback" style="padding-bottom:1.5rem;"></div>
+  </div>
+
+  <!-- TRAINER -->
+  <div class="screen" id="screen-trainer">
+    <div class="header">
+      <div class="logo">Trainer dashboard</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" onclick="refreshDashboard()">↺ Refresh</button>
+        <button class="btn btn-sm" onclick="showScreen('screen-login')">Exit</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('cohort')">Cohort overview</div>
+      <div class="tab" onclick="switchTab('individual')">Individual review</div>
+    </div>
+    <div id="tab-cohort">
+      <div class="cards-grid" id="cohort-metrics"></div>
+      <p class="section-title">Topic-wise performance</p>
+      <div class="card" id="topic-breakdown"></div>
+      <p class="section-title">All trainees</p>
+      <div class="card" id="trainee-list" style="margin-bottom:1.5rem;"></div>
+    </div>
+    <div id="tab-individual" style="display:none;">
+      <div style="padding:1rem 1.5rem 0.5rem;">
+        <select id="trainee-select" onchange="loadIndividual()" style="width:100%;"><option value="">— select trainee —</option></select>
+      </div>
+      <div id="individual-detail" style="padding-bottom:1.5rem;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const QB = [
+  {topic:"Core Java",q:"What is the difference between `==` and `.equals()` in Java? Give a real-world example where using `==` would cause a bug in test code.",key:"== compares object references (memory address) while .equals() compares object content/value. Example: String s1 = new String('hello'); String s2 = new String('hello'); s1==s2 is false but s1.equals(s2) is true. In test code, comparing assertion strings with == would fail unexpectedly."},
+  {topic:"Core Java",q:"Explain method overloading vs method overriding with examples. How does this apply in Selenium Page Object Models?",key:"Overloading: same method name, different parameters in the same class. Overriding: subclass redefines a parent method. In POM, overriding is used when a child page class extends BasePage and provides specific implementations of common actions like login()."},
+  {topic:"Core Java",q:"What are checked vs unchecked exceptions in Java? How should a Selenium framework handle NoSuchElementException?",key:"Checked exceptions must be declared or handled (e.g. IOException). Unchecked extend RuntimeException (e.g. NoSuchElementException). In Selenium, catch NoSuchElementException in a helper method, log the error, and either throw a custom exception or return null/false with a meaningful message."},
+  {topic:"Core Java",q:"Explain the difference between ArrayList and LinkedList. In what scenario would you prefer one over the other in a test automation framework?",key:"ArrayList uses dynamic array (fast random access O(1)), LinkedList uses doubly linked list (fast insertion/deletion O(1)). ArrayList is preferred for storing test data or results where you iterate frequently. LinkedList suits a queue of test steps."},
+  {topic:"Core Java",q:"What is the purpose of the `static` keyword in Java? How is it used in a Selenium WebDriver singleton pattern?",key:"static belongs to the class, not instance. In WebDriver singleton, a static variable holds the single driver instance and a static method getInstance() returns it, ensuring only one browser window is managed throughout the test run."},
+  {topic:"Functional Testing",q:"What is the difference between black-box and white-box testing? Which approach do you apply when testing a web application login module and why?",key:"Black-box tests functionality without code knowledge; white-box tests internal logic. For login module, black-box is used — testers verify behavior (valid/invalid credentials, error messages, session) without knowing the authentication implementation."},
+  {topic:"Functional Testing",q:"Explain Equivalence Partitioning and Boundary Value Analysis. Design test cases for a registration form that accepts age between 18 and 60.",key:"EP divides inputs into valid/invalid partitions. BVA tests at boundaries. For age 18-60: EP: valid (25), invalid low (10), invalid high (70). BVA: 17, 18, 19, 59, 60, 61. Total ~7 meaningful test cases."},
+  {topic:"Functional Testing",q:"What is regression testing and why is it critical in agile sprints? How does Selenium automation support regression cycles?",key:"Regression testing re-runs existing tests after changes to ensure no new bugs. In agile, every sprint risks regressions. Selenium automates the regression suite, running hundreds of tests quickly and providing pass/fail reports before release."},
+  {topic:"Functional Testing",q:"Define a test case vs a test scenario. Write a test scenario and 2 test cases for the 'Forgot Password' feature.",key:"Test scenario is a high-level user flow. Test case is step-by-step with data. Scenario: Verify password reset via email. TC1: Enter valid registered email — expect reset email sent. TC2: Enter unregistered email — expect error 'Email not found'."},
+  {topic:"SQL",q:"What is the difference between INNER JOIN, LEFT JOIN, and RIGHT JOIN? Write a query to fetch all employees and their department names (NULL for those without a department).",key:"INNER JOIN returns matching rows only. LEFT JOIN returns all left table rows + matches. Query: SELECT e.name, d.dept_name FROM employees e LEFT JOIN departments d ON e.dept_id = d.id;"},
+  {topic:"SQL",q:"Explain GROUP BY and HAVING clauses. Write a query to find departments with more than 3 employees.",key:"GROUP BY aggregates rows by column. HAVING filters grouped results. Query: SELECT dept_id, COUNT(*) as emp_count FROM employees GROUP BY dept_id HAVING COUNT(*) > 3;"},
+  {topic:"SQL",q:"What are primary key, foreign key, and unique key constraints? Why are they important for test data setup?",key:"Primary key: unique, not null row identifier. Foreign key: references primary key in another table. Unique key: no duplicate values. These ensure test records are valid and relationships are maintained during test data setup."},
+  {topic:"SQL",q:"What is the difference between DELETE, TRUNCATE, and DROP? Which would you use to clean up test data after a test run?",key:"DELETE removes rows (logged, can WHERE, rollback). TRUNCATE removes all rows (faster, no WHERE). DROP removes entire table structure. Use DELETE for selective cleanup or TRUNCATE for clearing all test data — never DROP."},
+  {topic:"Selenium",q:"Explain the different types of locators in Selenium and rank them by reliability. When would you use XPath over CSS selectors?",key:"Locators: ID (most reliable), Name, CSS Selector, XPath, Class, LinkText. Use XPath when: traversing parent elements, using text-based location (text()=), or when CSS cannot traverse upward. CSS selectors preferred for performance."},
+  {topic:"Selenium",q:"What is the Page Object Model (POM) design pattern? Describe the class hierarchy for a login and dashboard page scenario.",key:"POM separates UI elements from test logic. Each page = one class. Hierarchy: BasePage (driver init, common methods) → LoginPage (username, password, login method) → DashboardPage (menu, widgets, logout). Tests call page methods, not locators directly."},
+  {topic:"Selenium",q:"How do you handle dynamic elements and AJAX waits in Selenium? Explain implicit wait vs explicit wait vs Fluent wait.",key:"Implicit wait: global wait for all element lookups. Explicit wait: waits for specific condition (elementToBeClickable). Fluent wait: polling interval + ignore exceptions. For AJAX, use explicit wait with ExpectedConditions.visibilityOfElementLocated. Avoid Thread.sleep()."},
+  {topic:"Selenium",q:"What is TestNG and how does it improve test organization? Explain @BeforeClass, @BeforeMethod, @Test, @AfterMethod, @DataProvider.",key:"TestNG provides parallel execution, data-driven testing, grouping, dependency. @BeforeClass runs once before class. @BeforeMethod runs before each test. @Test marks test. @AfterMethod runs after each test. @DataProvider supplies multiple data sets for parameterized testing."},
+  {topic:"Selenium",q:"How would you implement a data-driven test in TestNG using @DataProvider? Give an example for a login test with 3 sets of credentials.",key:"@DataProvider returns Object[][] with test data. Example: {{'admin','admin123'},{'user','pass'},{'invalid','wrong'}}. @Test(dataProvider='credentials') loginTest(String u, String p) runs 3 times with each data set automatically."},
+  {topic:"Selenium",q:"Explain how you would handle file upload and download scenarios in Selenium WebDriver.",key:"File upload: use sendKeys() on input[type=file] passing the absolute file path — no OS dialog needed. File download: configure browser download directory via ChromeOptions preferences, trigger download, then verify file exists using Java File class after a wait."},
+  {topic:"Selenium",q:"What is the difference between driver.close() and driver.quit()? When would each cause a bug in a test suite?",key:"close() closes only the current window. quit() closes all windows and kills the WebDriver session. Bug with close(): other windows remain open, wasting resources. Bug with quit(): if called in @AfterMethod with @DataProvider, it kills driver before all iterations complete."}
+];
+
+let sessionData = {trainee:'', cohort:'', answers:[]};
+let currentQ = 0, questions = [], timerInterval = null, timeLeft = 300;
+let evaluationResults = [], scoreSoFar = 0;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toggleRole() {
+  const r = document.getElementById('role-select').value;
+  document.getElementById('trainee-fields').style.display = r === 'trainee' ? '' : 'none';
+  document.getElementById('trainer-fields').style.display = r === 'trainer' ? '' : 'none';
+}
+
+function handleLogin() {
+  const role = document.getElementById('role-select').value;
+  if (role === 'trainee') {
+    const name = document.getElementById('trainee-name').value.trim();
+    const cohort = document.getElementById('cohort-name').value.trim();
+    if (!name || !cohort) { alert('Please enter your name and cohort.'); return; }
+    sessionData = { trainee: name, cohort: cohort, answers: [] };
+    startSession();
+  } else {
+    showTrainerDashboard();
+  }
+}
+
+function pickQuestions() {
+  const topics = ['Core Java','Functional Testing','SQL','Selenium'];
+  let picked = [], pool = [...QB].sort(() => Math.random() - 0.5);
+  topics.forEach(t => { const q = pool.find(q => q.topic === t && !picked.includes(q)); if (q) picked.push(q); });
+  const rest = pool.filter(q => !picked.includes(q));
+  picked.push(rest[0]);
+  return picked.slice(0, 5).sort(() => Math.random() - 0.5);
+}
+
+function startSession() {
+  questions = pickQuestions();
+  currentQ = 0; evaluationResults = []; scoreSoFar = 0;
+  document.getElementById('q-trainee-label').textContent = sessionData.trainee;
+  document.getElementById('q-cohort-label').textContent = sessionData.cohort;
+  showScreen('screen-question');
+  loadQuestion(0);
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval); timeLeft = 300; updateTimer();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 60) document.getElementById('q-timer').classList.add('warning');
+    if (timeLeft <= 0) { clearInterval(timerInterval); autoFinish(); }
+  }, 1000);
+}
+
+function updateTimer() {
+  const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+  document.getElementById('q-timer').textContent = m + ':' + String(s).padStart(2,'0');
+}
+
+function loadQuestion(idx) {
+  const q = questions[idx];
+  document.getElementById('q-num').textContent = 'Q' + (idx + 1);
+  document.getElementById('q-topic').textContent = q.topic;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-answer').value = '';
+  document.getElementById('q-count-label').textContent = 'Question ' + (idx+1) + ' of 5';
+  document.getElementById('q-progress').style.width = (idx * 20) + '%';
+  document.getElementById('q-score-so-far').textContent = idx > 0 ? scoreSoFar + '/' + (idx*10) + ' pts so far' : '';
+  document.getElementById('q-next-btn').textContent = idx < 4 ? 'Next question' : 'Submit & finish';
+  document.getElementById('q-timer').classList.remove('warning');
+}
+
+function skipQuestion() {
+  const a = document.getElementById('q-answer').value.trim();
+  evaluationResults.push({ q: questions[currentQ], answer: a || '[Skipped]', score: 0, feedback: 'Question was skipped.', correct: questions[currentQ].key });
+  moveNext();
+}
+
+async function submitAnswer() {
+  const answer = document.getElementById('q-answer').value.trim();
+  if (!answer) { alert('Please type an answer or use Skip.'); return; }
+  const loader = document.getElementById('q-loader');
+  const btn = document.getElementById('q-next-btn');
+  loader.classList.add('active'); btn.disabled = true;
+  const q = questions[currentQ];
+  let score = 0, feedback = '';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        system: `You are a senior QA lead evaluating a trainee's interim assessment for a Selenium automation project. Evaluate the trainee answer against the question and model answer. Respond ONLY with valid JSON (no markdown, no backticks): {"score": <0-10>, "feedback": "<2-3 sentence evaluator-style feedback mentioning what was correct, what was missing, and what to study>"}. Score rubric: 9-10=complete and accurate, 7-8=mostly correct minor gaps, 5-6=partially correct, 3-4=vague/incomplete, 0-2=wrong or off-topic.`,
+        messages: [{ role: 'user', content: `Question: ${q.q}\n\nModel answer: ${q.key}\n\nTrainee answer: ${answer}` }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content.find(c => c.type === 'text')?.text || '{}';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    score = parsed.score || 0; feedback = parsed.feedback || 'Unable to evaluate.';
+  } catch(e) {
+    score = 5; feedback = 'AI evaluation unavailable. Answer recorded for trainer review.';
+  }
+  loader.classList.remove('active'); btn.disabled = false;
+  scoreSoFar += score;
+  evaluationResults.push({ q, answer, score, feedback, correct: q.key });
+  moveNext();
+}
+
+function autoFinish() {
+  while (currentQ < 5) {
+    evaluationResults.push({ q: questions[currentQ], answer: '[Time expired]', score: 0, feedback: 'Time expired.', correct: questions[currentQ].key });
+    currentQ++;
+  }
+  finishSession();
+}
+
+function moveNext() {
+  currentQ++;
+  if (currentQ >= 5) { clearInterval(timerInterval); finishSession(); }
+  else loadQuestion(currentQ);
+}
+
+function finishSession() {
+  const total = evaluationResults.reduce((s, r) => s + r.score, 0);
+  const pct = Math.round((total / 50) * 100);
+  const record = {
+    id: Date.now(), trainee: sessionData.trainee, cohort: sessionData.cohort,
+    date: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),
+    score: total, pct,
+    results: evaluationResults.map(r => ({ topic: r.q.topic, question: r.q.q, answer: r.answer, correct: r.correct, score: r.score, feedback: r.feedback }))
+  };
+  try { let d = JSON.parse(localStorage.getItem('evalSessions') || '[]'); d.push(record); localStorage.setItem('evalSessions', JSON.stringify(d)); } catch(e) {}
+  showResultsScreen(record);
+}
+
+function showResultsScreen(s) {
+  showScreen('screen-results');
+  const grade = s.pct >= 80 ? 'Excellent' : s.pct >= 60 ? 'Good' : s.pct >= 40 ? 'Needs improvement' : 'Requires re-assessment';
+  document.getElementById('results-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total score</div><div class="metric-value">${s.score}/50</div></div>
+    <div class="metric"><div class="metric-label">Percentage</div><div class="metric-value">${s.pct}%</div></div>
+    <div class="metric"><div class="metric-label">Grade</div><div class="metric-value" style="font-size:14px;padding-top:6px;">${grade}</div></div>
+  `;
+  let html = '';
+  s.results.forEach((r, i) => {
+    const cls = r.score >= 7 ? 'score-high' : r.score >= 4 ? 'score-mid' : 'score-low';
+    html += `<div class="result-card">
+      <div class="result-header"><span style="font-weight:500;">Q${i+1} · ${r.topic}</span><span class="score-pill ${cls}">${r.score}/10</span></div>
+      <div class="result-body">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div>
+        <div class="result-label">Your answer</div>
+        <div class="result-answer" style="margin-bottom:10px;">${r.answer}</div>
+        <div class="result-label">Model answer</div>
+        <div class="feedback-block">${r.correct}</div>
+        <div class="result-label">Evaluator feedback</div>
+        <div class="feedback-block">${r.feedback}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('results-feedback').innerHTML = html;
+}
+
+function showTrainerDashboard() { showScreen('screen-trainer'); refreshDashboard(); }
+
+function refreshDashboard() {
+  let sessions = [];
+  try { sessions = JSON.parse(localStorage.getItem('evalSessions') || '[]'); } catch(e) {}
+  renderCohort(sessions); renderList(sessions); populateSelect(sessions);
+}
+
+function renderCohort(sessions) {
+  if (!sessions.length) {
+    document.getElementById('cohort-metrics').innerHTML = '<div class="empty-state">No sessions recorded yet.</div>';
+    document.getElementById('topic-breakdown').innerHTML = '<p style="font-size:13px;color:var(--text2);">No data yet.</p>';
+    return;
+  }
+  const avg = Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const top = Math.max(...sessions.map(s=>s.pct));
+  const pass = sessions.filter(s=>s.pct>=60).length;
+  document.getElementById('cohort-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div></div>
+    <div class="metric"><div class="metric-label">Avg score</div><div class="metric-value">${avg}%</div></div>
+    <div class="metric"><div class="metric-label">Pass rate</div><div class="metric-value">${Math.round(pass/sessions.length*100)}%</div></div>
+    <div class="metric"><div class="metric-label">Top score</div><div class="metric-value">${top}%</div></div>
+  `;
+  const topics = ['Core Java','Functional Testing','SQL','Selenium'];
+  let html = '';
+  topics.forEach(t => {
+    let scores = [];
+    sessions.forEach(s => s.results.filter(r=>r.topic===t).forEach(r=>scores.push(r.score)));
+    const a = scores.length ? Math.round(scores.reduce((x,y)=>x+y,0)/scores.length*10) : 0;
+    const col = a >= 70 ? '#639922' : a >= 50 ? '#BA7517' : '#A32D2D';
+    html += `<div class="topic-row"><div class="topic-row-header"><span>${t}</span><span style="color:var(--text2);">${a}%</span></div><div class="progress-bar"><div style="height:100%;border-radius:100px;background:${col};width:${a}%;transition:width 0.6s;"></div></div></div>`;
+  });
+  document.getElementById('topic-breakdown').innerHTML = html;
+}
+
+function renderList(sessions) {
+  if (!sessions.length) { document.getElementById('trainee-list').innerHTML = '<p style="font-size:14px;color:var(--text2);">No trainees yet.</p>'; return; }
+  const byT = {};
+  sessions.forEach(s => { if (!byT[s.trainee]) byT[s.trainee] = []; byT[s.trainee].push(s); });
+  let html = '';
+  Object.entries(byT).forEach(([name, sess]) => {
+    const latest = sess[sess.length-1];
+    const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const cls = latest.pct >= 70 ? 'score-high' : latest.pct >= 50 ? 'score-mid' : 'score-low';
+    html += `<div class="trainee-row" onclick="quickView('${name}')">
+      <div class="avatar">${initials}</div>
+      <div style="flex:1;"><div style="font-size:14px;font-weight:500;">${name}</div><div style="font-size:12px;color:var(--text2);">${latest.cohort} · ${sess.length} session${sess.length>1?'s':''}</div></div>
+      <span class="score-pill ${cls}">${latest.pct}%</span>
+    </div>`;
+  });
+  document.getElementById('trainee-list').innerHTML = html;
+}
+
+function populateSelect(sessions) {
+  const names = [...new Set(sessions.map(s=>s.trainee))];
+  document.getElementById('trainee-select').innerHTML = '<option value="">— select trainee —</option>' + names.map(n=>`<option>${n}</option>`).join('');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='cohort')||(i===1&&tab==='individual')));
+  document.getElementById('tab-cohort').style.display = tab==='cohort' ? '' : 'none';
+  document.getElementById('tab-individual').style.display = tab==='individual' ? '' : 'none';
+}
+
+function quickView(name) {
+  switchTab('individual');
+  document.getElementById('trainee-select').value = name;
+  loadIndividual();
+}
+
+function loadIndividual() {
+  const name = document.getElementById('trainee-select').value;
+  if (!name) { document.getElementById('individual-detail').innerHTML = ''; return; }
+  let sessions = [];
+  try { sessions = JSON.parse(localStorage.getItem('evalSessions')||'[]').filter(s=>s.trainee===name); } catch(e) {}
+  if (!sessions.length) { document.getElementById('individual-detail').innerHTML = '<div style="padding:1rem 1.5rem;font-size:14px;color:var(--text2);">No data.</div>'; return; }
+  const latest = sessions[sessions.length-1];
+  const avgPct = Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
+  const grade = avgPct >= 80 ? 'Excellent' : avgPct >= 60 ? 'Good' : avgPct >= 40 ? 'Needs improvement' : 'Requires re-assessment';
+  let html = `<div class="cards-grid" style="padding-top:0.75rem;">
+    <div class="metric"><div class="metric-label">Sessions</div><div class="metric-value">${sessions.length}</div></div>
+    <div class="metric"><div class="metric-label">Avg score</div><div class="metric-value">${avgPct}%</div></div>
+    <div class="metric"><div class="metric-label">Status</div><div class="metric-value" style="font-size:13px;padding-top:6px;">${grade}</div></div>
+  </div><p class="section-title">Latest session — ${latest.date}</p>`;
+  latest.results.forEach((r,i) => {
+    const cls = r.score >= 7 ? 'score-high' : r.score >= 4 ? 'score-mid' : 'score-low';
+    html += `<div class="result-card">
+      <div class="result-header"><span style="font-weight:500;">Q${i+1} · ${r.topic}</span><span class="score-pill ${cls}">${r.score}/10</span></div>
+      <div class="result-body">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px;">${r.question}</div>
+        <div class="result-label">Trainee answer</div>
+        <div class="result-answer" style="margin-bottom:10px;">${r.answer}</div>
+        <div class="result-label">Model answer</div>
+        <div class="feedback-block">${r.correct}</div>
+        <div class="result-label">Evaluator feedback</div>
+        <div class="feedback-block">${r.feedback}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('individual-detail').innerHTML = html;
+}
+</script>
+</body>
+</html>
