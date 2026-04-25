@@ -152,6 +152,10 @@ select option{background:var(--bg2);}
 
 <!-- QUESTION -->
 <div class="screen" id="screen-question">
+  <div id="proctor-alert" style="display:none;background:#faeeda;border-bottom:1px solid rgba(179,106,0,0.25);padding:7px 1.5rem;font-size:12px;color:#b36a00;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:14px;">⚠</span>
+    <span id="proctor-alert-msg">Tab switch detected — this has been recorded.</span>
+  </div>
   <div class="q-header">
     <div>
       <div style="font-size:14px;font-weight:600;" id="q-trainee-label"></div>
@@ -207,6 +211,7 @@ select option{background:var(--bg2);}
     <div class="tab" onclick="switchTab('approvals')">Approvals<span id="appr-badge"></span></div>
     <div class="tab" onclick="switchTab('individual')">Individual</div>
     <div class="tab" onclick="switchTab('insights')">AI Insights</div>
+    <div class="tab" onclick="switchTab('integrity')">Integrity<span id="integrity-badge"></span></div>
   </div>
   <div id="tab-overview">
     <div class="cards-grid" id="cohort-metrics"></div>
@@ -229,6 +234,11 @@ select option{background:var(--bg2);}
   <div id="tab-insights" style="display:none;">
     <div class="cards-grid" id="insights-summary"></div>
     <div id="insights-content" style="padding-bottom:1.5rem;"></div>
+  </div>
+  <div id="tab-integrity" style="display:none;padding-bottom:1.5rem;">
+    <div class="cards-grid" id="integrity-metrics"></div>
+    <p class="section-title" style="margin-top:0.5rem;">Suspicion report — per trainee</p>
+    <div id="integrity-list"></div>
   </div>
 </div>
 
@@ -263,6 +273,97 @@ let sessionData={trainee:'',cohort:'',answers:[]};
 let currentQ=0,questions=[],timerInterval=null,timeLeft=300,evalResults=[],scoreSoFar=0;
 let barChart=null,radarChart=null;
 let waitingForTrainee='',waitingSessionId=null;
+
+// ── PROCTORING STATE ─────────────────────────────────────────────
+let proctorLog=[];
+let proctorActive=false;
+let pasteCountPerQ=0;
+let typingStartTime=null;
+let lastAnswerLength=0;
+
+function logEvent(type,detail){
+  if(!proctorActive)return;
+  const ts=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  proctorLog.push({time:ts,q:'Q'+(currentQ+1),type,detail});
+  showProctorAlert(detail);
+}
+
+function showProctorAlert(msg){
+  const el=document.getElementById('proctor-alert');
+  const msgEl=document.getElementById('proctor-alert-msg');
+  if(!el||!msgEl)return;
+  msgEl.textContent=msg;
+  el.style.display='flex';
+  clearTimeout(el._hideTimer);
+  el._hideTimer=setTimeout(()=>{el.style.display='none';},4000);
+}
+
+function startProctoring(){
+  proctorLog=[];proctorActive=true;pasteCountPerQ=0;typingStartTime=null;lastAnswerLength=0;
+
+  // Tab visibility change
+  document.addEventListener('visibilitychange',onVisibilityChange);
+  // Window blur (switched app/window)
+  window.addEventListener('blur',onWindowBlur);
+  // Keyboard shortcuts
+  document.addEventListener('keydown',onKeyDown);
+  // Paste in textarea
+  const ta=document.getElementById('q-answer');
+  if(ta){ta.addEventListener('paste',onPaste);ta.addEventListener('input',onInput);}
+  // Right click
+  document.addEventListener('contextmenu',onContextMenu);
+}
+
+function stopProctoring(){
+  proctorActive=false;
+  document.removeEventListener('visibilitychange',onVisibilityChange);
+  window.removeEventListener('blur',onWindowBlur);
+  document.removeEventListener('keydown',onKeyDown);
+  document.removeEventListener('contextmenu',onContextMenu);
+  const ta=document.getElementById('q-answer');
+  if(ta){ta.removeEventListener('paste',onPaste);ta.removeEventListener('input',onInput);}
+}
+
+function onVisibilityChange(){
+  if(document.hidden){logEvent('TAB_HIDDEN','Tab hidden / switched to another tab — recorded at Q'+(currentQ+1));}
+  else{logEvent('TAB_RETURNED','Returned to tab at Q'+(currentQ+1));}
+}
+
+function onWindowBlur(){
+  logEvent('WINDOW_BLUR','Window lost focus (possible alt+tab or new window) at Q'+(currentQ+1));
+}
+
+function onKeyDown(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='c'){logEvent('COPY','Ctrl+C pressed — copied content at Q'+(currentQ+1));}
+  if((e.ctrlKey||e.metaKey)&&e.key==='v'){logEvent('PASTE_SHORTCUT','Ctrl+V paste shortcut used at Q'+(currentQ+1));}
+  if((e.ctrlKey||e.metaKey)&&e.key==='a'){logEvent('SELECT_ALL','Ctrl+A select-all used at Q'+(currentQ+1));}
+  if(e.altKey&&e.key==='Tab'){logEvent('ALT_TAB','Alt+Tab detected at Q'+(currentQ+1));}
+}
+
+function onPaste(e){
+  pasteCountPerQ++;
+  const pasted=e.clipboardData?e.clipboardData.getData('text'):'';
+  const wordCount=pasted.trim().split(/\s+/).length;
+  logEvent('PASTE',`Text pasted (${wordCount} words) into answer box — Q${currentQ+1}. Paste count this question: ${pasteCountPerQ}`);
+}
+
+function onInput(e){
+  const ta=document.getElementById('q-answer');
+  if(!ta)return;
+  const current=ta.value.length;
+  const delta=current-lastAnswerLength;
+  // If answer jumped by 30+ chars in one input event = likely paste
+  if(delta>=30){logEvent('SUDDEN_JUMP',`Answer length jumped by ${delta} characters in one input event at Q${currentQ+1} — possible paste`);}
+  lastAnswerLength=current;
+}
+
+function onContextMenu(){
+  logEvent('RIGHT_CLICK','Right-click context menu opened at Q'+(currentQ+1));
+}
+
+function resetPerQuestion(){
+  pasteCountPerQ=0;lastAnswerLength=0;
+}
 
 function getSessions(){try{return JSON.parse(localStorage.getItem('ep_sessions')||'[]');}catch(e){return[];}}
 function saveSessions(d){try{localStorage.setItem('ep_sessions',JSON.stringify(d));}catch(e){}}
@@ -327,6 +428,7 @@ function startSession(){
   document.getElementById('q-trainee-label').textContent=sessionData.trainee;
   document.getElementById('q-cohort-label').textContent=sessionData.cohort;
   showScreen('screen-question');loadQ(0);startTimer();
+  startProctoring();
 }
 
 function startTimer(){
@@ -337,6 +439,7 @@ function updateTimer(){const m=Math.floor(timeLeft/60),s=timeLeft%60;document.ge
 
 function loadQ(idx){
   const q=questions[idx];
+  resetPerQuestion();
   document.getElementById('q-num').textContent='Q'+(idx+1);
   document.getElementById('q-topic').textContent=q.topic;
   document.getElementById('q-text').textContent=q.q;
@@ -452,10 +555,17 @@ function autoFinish(){while(currentQ<5){evalResults.push({q:questions[currentQ],
 function moveNext(){currentQ++;if(currentQ>=5){clearInterval(timerInterval);finishSession();}else loadQ(currentQ);}
 
 function finishSession(){
+  stopProctoring();
   const total=evalResults.reduce((s,r)=>s+r.score,0);
   const pct=Math.round((total/50)*100);
   const id=Date.now();
-  const record={id,trainee:sessionData.trainee,cohort:sessionData.cohort,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),score:total,pct,results:evalResults.map(r=>({topic:r.q.topic,question:r.q.q,answer:r.answer,correct:r.correct,score:r.score,feedback:r.feedback}))};
+  // Compute suspicion score
+  const tabSwitches=proctorLog.filter(e=>e.type==='TAB_HIDDEN'||e.type==='WINDOW_BLUR').length;
+  const pastes=proctorLog.filter(e=>e.type==='PASTE'||e.type==='PASTE_SHORTCUT').length;
+  const copies=proctorLog.filter(e=>e.type==='COPY').length;
+  const suspicionScore=Math.min(100,tabSwitches*20+pastes*25+copies*10);
+  const suspicionLevel=suspicionScore>=60?'High':suspicionScore>=30?'Medium':suspicionScore===0?'Clean':'Low';
+  const record={id,trainee:sessionData.trainee,cohort:sessionData.cohort,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),score:total,pct,results:evalResults.map(r=>({topic:r.q.topic,question:r.q.q,answer:r.answer,correct:r.correct,score:r.score,scoreLabel:r.scoreLabel,feedback:r.feedback})),proctorLog:[...proctorLog],suspicionScore,suspicionLevel,tabSwitches,pastes,copies};
   const sessions=getSessions();sessions.push(record);saveSessions(sessions);
   waitingForTrainee=sessionData.trainee;waitingSessionId=id;
   showResultsScreen(record);
@@ -464,10 +574,13 @@ function finishSession(){
 function showResultsScreen(s){
   showScreen('screen-results');
   const grade=s.pct>=80?'Excellent':s.pct>=60?'Good':s.pct>=40?'Needs improvement':'Re-assessment needed';
+  const suspCols={'Clean':'var(--accent)','Low':'var(--amber)','Medium':'var(--amber)','High':'var(--red)'};
+  const suspCol=suspCols[s.suspicionLevel]||'var(--text2)';
   document.getElementById('results-metrics').innerHTML=`
     <div class="metric"><div class="metric-label">Score</div><div class="metric-value">${s.score}/50</div></div>
     <div class="metric"><div class="metric-label">Percentage</div><div class="metric-value">${s.pct}%</div></div>
     <div class="metric"><div class="metric-label">Grade</div><div class="metric-value" style="font-size:13px;padding-top:6px;">${grade}</div></div>
+    <div class="metric"><div class="metric-label">Integrity</div><div class="metric-value" style="font-size:14px;color:${suspCol};padding-top:4px;">${s.suspicionLevel||'Clean'}</div></div>
   `;
   let html='';
   s.results.forEach((r,i)=>{
@@ -482,7 +595,7 @@ function showResultsScreen(s){
 
 // ── TRAINER ──────────────────────────────────────────────────────
 function showTrainerDashboard(){showScreen('screen-trainer');refreshDashboard();}
-function refreshDashboard(){const s=getSessions();renderOverview(s);renderApprovals(s);populateSelect(s);updateBadge();}
+function refreshDashboard(){const s=getSessions();renderOverview(s);renderApprovals(s);populateSelect(s);updateBadge();updateIntegrityBadge();}
 
 function updateBadge(){
   const approvals=getApprovals();
@@ -679,22 +792,104 @@ function renderInsights(sessions){
   if(avgOverall<50){weakPoints.push('Overall average below 50% — cohort needs a structured review from fundamentals before moving to advanced topics.');}
   if(!weakPoints.length){weakPoints.push('No critical weaknesses detected. Continue monitoring across multiple sessions for consistency.');}
 
-  const actionMap={
-    'Core Java':'Run a 2-hour Java fundamentals workshop focused on OOP, exception handling, and collections — use live coding with TestNG as real-world context.',
-    'Functional Testing':'Hold a test design workshop: have trainees write real test cases for a login/registration module using EP, BVA, and exploratory techniques.',
-    'SQL':'Conduct a hands-on SQL lab using a test database. Cover JOINs, aggregations, and data cleanup queries linked directly to test data setup scenarios.',
-    'Selenium':'Assign a mini POM project: trainees build a framework with BasePage, 2 page classes, TestNG suite, and @DataProvider for a login test.'
-  };
+  // ── DYNAMIC ACTION PLAN ─────────────────────────────────────────
+  // Collect per-question data: which specific questions scored low, which were skipped
+  const qData={};
+  sessions.forEach(s=>{
+    s.results.forEach(r=>{
+      const k=r.question.slice(0,60);
+      if(!qData[k])qData[k]={topic:r.topic,question:r.question,scores:[],skips:0,surfaceCount:0,wrongCount:0};
+      if(r.answer==='[Skipped]'||r.answer==='[Time expired]'){qData[k].skips++;}
+      else{
+        qData[k].scores.push(r.score);
+        if(r.scoreLabel==='Surface answer')qData[k].surfaceCount++;
+        if(r.scoreLabel==='Mostly wrong'||r.scoreLabel==='Irrelevant')qData[k].wrongCount++;
+      }
+    });
+  });
+
+  // Find lowest scoring questions per topic
+  const worstQuestions=Object.values(qData).map(q=>({
+    ...q,
+    avg:q.scores.length?+(q.scores.reduce((a,b)=>a+b,0)/q.scores.length).toFixed(1):0
+  })).sort((a,b)=>a.avg-b.avg);
+
+  // Per-topic: find what sub-skill failed (based on actual question text)
+  const topicWeakSubSkills={};
+  worstQuestions.slice(0,8).forEach(q=>{
+    if(!topicWeakSubSkills[q.topic])topicWeakSubSkills[q.topic]=[];
+    topicWeakSubSkills[q.topic].push({avg:q.avg,skips:q.skips,surface:q.surfaceCount,wrong:q.wrongCount,qShort:q.question.slice(0,80)+'…'});
+  });
+
+  // Surface-answer trainees: know theory but can't apply
+  const surfaceTrainees=sessions.filter(s=>s.results.filter(r=>r.scoreLabel==='Surface answer').length>=2).map(s=>s.trainee);
+  const surfaceNames=[...new Set(surfaceTrainees)];
+
+  // Trainees who scored 0 on specific topics
+  const zeroPerTopic={};
+  sessions.forEach(s=>{
+    s.results.forEach(r=>{
+      if(r.score===0&&r.answer!=='[Skipped]'&&r.answer!=='[Time expired]'){
+        if(!zeroPerTopic[r.topic])zeroPerTopic[r.topic]=new Set();
+        zeroPerTopic[r.topic].add(s.trainee);
+      }
+    });
+  });
+
+  // Build dynamic action items — one per dimension of actual failure
+  const actions=[];
+
+  // Action 1: worst topic with specific sub-skill details
   const worstTopic=sorted[sorted.length-1];
-  const actions=[
-    actionMap[worstTopic.topic]||`Focus additional sessions on ${worstTopic.topic} with hands-on exercises.`,
-    totalSkips>2
-      ? 'Run a timed mock drill requiring trainees to attempt all 5 questions in 5 minutes — partial answers score better than skips. Reinforce this rule.'
-      : `Pair top scorer (${topScorer.trainee}, ${topScorer.pct}%) with lower scorers for weekly 30-min peer review sessions.`,
-    passRate<60
-      ? 'Before the next formal session, run an ungraded practice round for all trainees below 60% and review wrong answers together as a group.'
-      : 'Assign a capstone mini-project combining all 4 topics: SQL test data setup, Core Java utilities, functional test cases, and Selenium execution.'
-  ];
+  const worstTopicDetails=topicWeakSubSkills[worstTopic.topic];
+  if(worstTopicDetails&&worstTopicDetails.length){
+    const subDetail=worstTopicDetails[0];
+    let act1=`<strong>${worstTopic.topic}</strong> is the weakest area (${worstTopic.avg}/10 avg). `;
+    if(subDetail.skips>0){act1+=`Trainees skipped ${subDetail.skips} question(s) on this topic — schedule a focused session where they must attempt every question verbally first, then write it down. `;}
+    if(subDetail.surface>0){act1+=`${subDetail.surface} answer(s) were surface-level (knew the term but not the application) — assign a lab exercise where they must implement the concept in a real mini-project, not just define it. `;}
+    if(subDetail.wrong>0){act1+=`${subDetail.wrong} answer(s) were incorrect — revisit the fundamentals of this topic from scratch using the Selenium project as context, not textbook examples.`;}
+    if(!subDetail.skips&&!subDetail.surface&&!subDetail.wrong){act1+=`Schedule a 90-minute hands-on workshop specifically on this topic with live coding exercises tied to the current project.`;}
+    actions.push(act1.trim());
+  } else {
+    actions.push(`<strong>${worstTopic.topic}</strong> is the weakest area at ${worstTopic.avg}/10 — dedicate a full session to hands-on exercises on this topic before the next assessment.`);
+  }
+
+  // Action 2: surface-answer problem or second-weakest topic
+  if(surfaceNames.length>0){
+    const nameList=surfaceNames.slice(0,3).join(', ')+(surfaceNames.length>3?` and ${surfaceNames.length-3} more`:'');
+    const surfaceTopics=[...new Set(sessions.flatMap(s=>s.results.filter(r=>r.scoreLabel==='Surface answer').map(r=>r.topic)))];
+    actions.push(`<strong>${nameList}</strong> consistently gave surface-level answers — they know definitions but cannot apply them. For topics: ${surfaceTopics.join(', ')}, run a "show don't tell" drill: each trainee must explain the concept THROUGH a code example or project scenario, not with a dictionary definition. Award marks only when they demonstrate application.`);
+  } else if(sorted.length>=2){
+    const second=sorted[sorted.length-2];
+    const secondDetails=topicWeakSubSkills[second.topic];
+    let act2=`<strong>${second.topic}</strong> also needs attention at ${second.avg}/10. `;
+    if(secondDetails&&secondDetails[0]){
+      const d=secondDetails[0];
+      if(d.skips>0) act2+=`${d.skips} skip(s) detected — assign pre-reading homework on this topic and quiz them at the start of next session.`;
+      else act2+=`Conduct a peer-review exercise: pair trainees and have them critique each other's answers on this topic, identifying what real-world example is missing.`;
+    } else {
+      act2+=`Conduct a 1-hour practice drill specifically on ${second.topic} before the next formal assessment.`;
+    }
+    actions.push(act2);
+  }
+
+  // Action 3: based on pass rate + skips + integrity flags
+  const highRiskTrainees=sessions.filter(s=>s.suspicionLevel==='High'||s.suspicionLevel==='Medium').map(s=>s.trainee);
+  const highRiskNames=[...new Set(highRiskTrainees)];
+  if(highRiskNames.length>0){
+    actions.push(`<strong>Integrity concern:</strong> ${highRiskNames.slice(0,3).join(', ')} showed suspicious behaviour (tab switches / paste events). For their next session, consider an in-person supervised evaluation or verbal viva on their weakest topics to confirm genuine understanding.`);
+  } else if(totalSkips>3){
+    const skipRate=Math.round(totalSkips/sessions.length);
+    actions.push(`Avg of <strong>${skipRate} skips per session</strong> across the cohort — this indicates either time management failure or avoidance of specific topics. Run a timed mock drill: 1 minute per question, no skipping allowed. Use the drill scores to identify exactly which topics cause the most avoidance.`);
+  } else if(passRate<60){
+    const failTrainees=sessions.filter(s=>s.pct<60);
+    const failNames=[...new Set(failTrainees.map(s=>s.trainee))].slice(0,4).join(', ');
+    actions.push(`Pass rate is only ${passRate}%. Trainees below 60%: <strong>${failNames}</strong>. Schedule individual 20-minute review sessions with each of them — go through their wrong answers, ask them to re-explain verbally, and assign targeted homework before approving their next session.`);
+  } else {
+    // All is good — push them harder
+    const topicNames=topicData.filter(t=>t.avg<8).map(t=>t.topic);
+    actions.push(`Cohort is passing but has room to grow. ${topicNames.length>0?`Push <strong>${topicNames.join(' and ')}</strong> from average to excellent:`:''} assign a capstone integration task — build a Selenium POM framework that uses SQL for test data, applies functional testing principles for test case design, and uses Core Java utilities for data handling. Score it using the same rubric: real-world examples = full marks.`);
+  }
 
   let html=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p>
   <div class="card"><p style="font-size:13px;line-height:1.8;color:var(--text2);">${overallText}</p>
@@ -716,17 +911,97 @@ function renderInsights(sessions){
   document.getElementById('insights-content').innerHTML=html;
 }
 
+// ── INTEGRITY REPORT ─────────────────────────────────────────────
+function renderIntegrity(){
+  const sessions=getSessions();
+  const flagged=sessions.filter(s=>s.suspicionLevel&&s.suspicionLevel!=='Clean');
+  const high=sessions.filter(s=>s.suspicionLevel==='High').length;
+  const medium=sessions.filter(s=>s.suspicionLevel==='Medium').length;
+  const clean=sessions.filter(s=>!s.suspicionLevel||s.suspicionLevel==='Clean').length;
+
+  document.getElementById('integrity-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total sessions</div><div class="metric-value">${sessions.length}</div></div>
+    <div class="metric"><div class="metric-label" style="color:var(--red);">High risk</div><div class="metric-value" style="color:var(--red);">${high}</div></div>
+    <div class="metric"><div class="metric-label" style="color:var(--amber);">Medium risk</div><div class="metric-value" style="color:var(--amber);">${medium}</div></div>
+    <div class="metric"><div class="metric-label" style="color:var(--accent);">Clean</div><div class="metric-value" style="color:var(--accent);">${clean}</div></div>
+  `;
+
+  if(!sessions.length){document.getElementById('integrity-list').innerHTML='<div class="empty-state">No sessions yet.</div>';return;}
+
+  // Group by trainee, show latest session
+  const byT={};
+  sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
+
+  let html='';
+  Object.values(byT).sort((a,b)=>(b.suspicionScore||0)-(a.suspicionScore||0)).forEach(s=>{
+    const level=s.suspicionLevel||'Clean';
+    const score=s.suspicionScore||0;
+    const col=level==='High'?'var(--red)':level==='Medium'?'var(--amber)':level==='Low'?'var(--amber)':'var(--accent)';
+    const bgCol=level==='High'?'var(--red-dim)':level==='Medium'?'var(--amber-dim)':level==='Low'?'var(--amber-dim)':'var(--accent-dim)';
+    const log=s.proctorLog||[];
+    const tabSw=s.tabSwitches||0;
+    const pastes=s.pastes||0;
+    const copies=s.copies||0;
+
+    let eventsHtml='';
+    if(log.length===0){
+      eventsHtml='<div style="font-size:12px;color:var(--text3);padding:6px 0;">No suspicious events recorded.</div>';
+    } else {
+      // Show up to 10 events
+      const shown=log.slice(0,10);
+      eventsHtml=shown.map(e=>{
+        const iconMap={TAB_HIDDEN:'👁',TAB_RETURNED:'↩',WINDOW_BLUR:'🔓',COPY:'📋',PASTE:'📥',PASTE_SHORTCUT:'📥',SUDDEN_JUMP:'⚡',RIGHT_CLICK:'🖱',ALT_TAB:'⇥',SELECT_ALL:'⬛'};
+        const icon=iconMap[e.type]||'•';
+        return`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:12px;"><span style="color:var(--text3);font-family:var(--mono);flex-shrink:0;">${e.time}</span><span style="color:var(--text3);flex-shrink:0;">${icon}</span><span style="color:var(--text2);">${e.detail}</span></div>`;
+      }).join('');
+      if(log.length>10)eventsHtml+=`<div style="font-size:11px;color:var(--text3);padding:6px 0;">+${log.length-10} more events…</div>`;
+    }
+
+    html+=`<div class="card" style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;">${s.trainee}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${s.cohort} · ${s.date} · Score: ${s.pct}%</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:600;color:${col};background:${bgCol};padding:4px 12px;border-radius:100px;display:inline-block;">${level} risk</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">Suspicion: ${score}/100</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Tab switches</span> <strong style="margin-left:6px;">${tabSw}</strong></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Pastes</span> <strong style="margin-left:6px;">${pastes}</strong></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Copies</span> <strong style="margin-left:6px;">${copies}</strong></div>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:6px 12px;font-size:12px;"><span style="color:var(--text3);">Events logged</span> <strong style="margin-left:6px;">${log.length}</strong></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Event log</div>
+      <div style="background:var(--bg3);border-radius:var(--radius);padding:8px 12px;max-height:200px;overflow-y:auto;">${eventsHtml}</div>
+    </div>`;
+  });
+  document.getElementById('integrity-list').innerHTML=html;
+
+  // Update badge
+  const badge=document.getElementById('integrity-badge');
+  if(badge)badge.textContent=flagged.length>0?` (${flagged.length})`:'';
+}
+
+function updateIntegrityBadge(){
+  const sessions=getSessions();
+  const flagged=sessions.filter(s=>s.suspicionLevel&&s.suspicionLevel!=='Clean').length;
+  const badge=document.getElementById('integrity-badge');
+  if(badge)badge.textContent=flagged>0?` (${flagged})`:'';
+}
+
 // ── TABS ──────────────────────────────────────────────────────────
 function switchTab(tab){
-  const tabs=['overview','approvals','individual','insights'];
+  const tabs=['overview','approvals','individual','insights','integrity'];
   tabs.forEach((t,i)=>{
     document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
     document.getElementById('tab-'+t).style.display=t===tab?'':'none';
   });
-  if(tab==='insights'){
-    renderInsights(getSessions());
-  }
-  if(tab==='approvals')renderApprovals();
+  if(tab==='insights') renderInsights(getSessions());
+  if(tab==='approvals') renderApprovals();
+  if(tab==='integrity') renderIntegrity();
 }
 </script>
 </body>
