@@ -108,7 +108,7 @@ select option{background:var(--bg2);}
 </head>
 <body>
 <div class="app">
-
+ 
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">SELENIUM TRACK</div></div>
@@ -132,7 +132,7 @@ select option{background:var(--bg2);}
     <button class="btn btn-primary" onclick="handleLogin()" style="width:100%;margin-top:4px;">Continue →</button>
   </div>
 </div>
-
+ 
 <!-- WAITING SCREEN -->
 <div class="screen" id="screen-wait">
   <div class="header"><div class="logo">Eval<span>Pro</span></div><div class="badge">LOCKED</div></div>
@@ -149,7 +149,7 @@ select option{background:var(--bg2);}
     <div id="approval-msg" style="margin-top:1rem;font-size:13px;color:var(--text2);min-height:20px;"></div>
   </div>
 </div>
-
+ 
 <!-- QUESTION -->
 <div class="screen" id="screen-question">
   <div id="proctor-alert" style="display:none;background:#faeeda;border-bottom:1px solid rgba(179,106,0,0.25);padding:7px 1.5rem;font-size:12px;color:#b36a00;display:flex;align-items:center;gap:8px;">
@@ -185,7 +185,7 @@ select option{background:var(--bg2);}
     <span class="skip-link" onclick="skipQuestion()">Skip</span>
   </div>
 </div>
-
+ 
 <!-- RESULTS -->
 <div class="screen" id="screen-results">
   <div class="header"><div class="logo">Session <span>Complete</span></div><button class="btn btn-sm" onclick="showScreen('screen-login')">Home</button></div>
@@ -196,7 +196,7 @@ select option{background:var(--bg2);}
   </div>
   <div id="results-feedback" style="padding-bottom:1.5rem;"></div>
 </div>
-
+ 
 <!-- TRAINER DASHBOARD -->
 <div class="screen" id="screen-trainer">
   <div class="header">
@@ -241,7 +241,7 @@ select option{background:var(--bg2);}
     <div id="integrity-list"></div>
   </div>
 </div>
-
+ 
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
@@ -254,7 +254,7 @@ const _KEY='9Zrhvzb1ltMIBEt7EI-ScNydvn_SgyA_LVMQmVQVu1A=';
 const _NH='8038e69fd941aee7b03659e1f902278c7070e84df758538055c85ea8fa2ab414';
 const _CH='6b37bf945e55450965312b1e26983001bb0d55bbc6f58a2ffc4d70e289c55ac7';
 let QB=[];
-
+ 
 // Fernet decryption implemented in pure JS (no external lib)
 // Fernet = base64url(version[1] + timestamp[8] + IV[16] + ciphertext + HMAC[32])
 async function _initQB(){
@@ -262,23 +262,23 @@ async function _initQB(){
     // Decode Fernet key (base64url → 32 bytes signing + 32 bytes encryption)
     const keyBytes = _b64d(_KEY);
     const encKey = keyBytes.slice(16, 32); // encryption key (second 16 bytes)
-
+ 
     // Decode token
     const tokenBytes = _b64d(_ENC);
     // Fernet: 1 byte version + 8 bytes timestamp + 16 bytes IV + ciphertext + 32 bytes HMAC
     const iv = tokenBytes.slice(9, 25);
     const ciphertext = tokenBytes.slice(25, tokenBytes.length - 32);
-
+ 
     // Import AES key
     const cryptoKey = await crypto.subtle.importKey(
       'raw', encKey, { name:'AES-CBC' }, false, ['decrypt']
     );
-
+ 
     // Decrypt
     const decrypted = await crypto.subtle.decrypt(
       { name:'AES-CBC', iv }, cryptoKey, ciphertext
     );
-
+ 
     // Remove PKCS7 padding and parse JSON
     const text = new TextDecoder().decode(decrypted);
     const trimmed = text.replace(/[\x00-\x1F]+$/, '').trimEnd();
@@ -288,7 +288,7 @@ async function _initQB(){
     QB = [];
   }
 }
-
+ 
 function _b64d(str) {
   // base64url → Uint8Array
   str = str.replace(/-/g,'+').replace(/_/g,'/');
@@ -296,31 +296,31 @@ function _b64d(str) {
   const bin = atob(str);
   return Uint8Array.from(bin, c => c.charCodeAt(0));
 }
-
+ 
 async function _sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-
+ 
 let sessionData={trainee:'',cohort:'',answers:[]};
 let currentQ=0,questions=[],timerInterval=null,timeLeft=300,evalResults=[],scoreSoFar=0;
 let barChart=null,radarChart=null;
 let waitingForTrainee='',waitingSessionId=null;
-
+ 
 // ── PROCTORING STATE ─────────────────────────────────────────────
 let proctorLog=[];
 let proctorActive=false;
 let pasteCountPerQ=0;
 let typingStartTime=null;
 let lastAnswerLength=0;
-
+ 
 function logEvent(type,detail){
   if(!proctorActive)return;
   const ts=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   proctorLog.push({time:ts,q:'Q'+(currentQ+1),type,detail});
   showProctorAlert(detail);
 }
-
+ 
 function showProctorAlert(msg){
   const el=document.getElementById('proctor-alert');
   const msgEl=document.getElementById('proctor-alert-msg');
@@ -330,10 +330,10 @@ function showProctorAlert(msg){
   clearTimeout(el._hideTimer);
   el._hideTimer=setTimeout(()=>{el.style.display='none';},4000);
 }
-
+ 
 function startProctoring(){
   proctorLog=[];proctorActive=true;pasteCountPerQ=0;typingStartTime=null;lastAnswerLength=0;
-
+ 
   // Tab visibility change
   document.addEventListener('visibilitychange',onVisibilityChange);
   // Window blur (switched app/window)
@@ -346,7 +346,7 @@ function startProctoring(){
   // Right click
   document.addEventListener('contextmenu',onContextMenu);
 }
-
+ 
 function stopProctoring(){
   proctorActive=false;
   document.removeEventListener('visibilitychange',onVisibilityChange);
@@ -356,30 +356,30 @@ function stopProctoring(){
   const ta=document.getElementById('q-answer');
   if(ta){ta.removeEventListener('paste',onPaste);ta.removeEventListener('input',onInput);}
 }
-
+ 
 function onVisibilityChange(){
   if(document.hidden){logEvent('TAB_HIDDEN','Tab hidden / switched to another tab — recorded at Q'+(currentQ+1));}
   else{logEvent('TAB_RETURNED','Returned to tab at Q'+(currentQ+1));}
 }
-
+ 
 function onWindowBlur(){
   logEvent('WINDOW_BLUR','Window lost focus (possible alt+tab or new window) at Q'+(currentQ+1));
 }
-
+ 
 function onKeyDown(e){
   if((e.ctrlKey||e.metaKey)&&e.key==='c'){logEvent('COPY','Ctrl+C pressed — copied content at Q'+(currentQ+1));}
   if((e.ctrlKey||e.metaKey)&&e.key==='v'){logEvent('PASTE_SHORTCUT','Ctrl+V paste shortcut used at Q'+(currentQ+1));}
   if((e.ctrlKey||e.metaKey)&&e.key==='a'){logEvent('SELECT_ALL','Ctrl+A select-all used at Q'+(currentQ+1));}
   if(e.altKey&&e.key==='Tab'){logEvent('ALT_TAB','Alt+Tab detected at Q'+(currentQ+1));}
 }
-
+ 
 function onPaste(e){
   pasteCountPerQ++;
   const pasted=e.clipboardData?e.clipboardData.getData('text'):'';
   const wordCount=pasted.trim().split(/\s+/).length;
   logEvent('PASTE',`Text pasted (${wordCount} words) into answer box — Q${currentQ+1}. Paste count this question: ${pasteCountPerQ}`);
 }
-
+ 
 function onInput(e){
   const ta=document.getElementById('q-answer');
   if(!ta)return;
@@ -389,30 +389,30 @@ function onInput(e){
   if(delta>=30){logEvent('SUDDEN_JUMP',`Answer length jumped by ${delta} characters in one input event at Q${currentQ+1} — possible paste`);}
   lastAnswerLength=current;
 }
-
+ 
 function onContextMenu(){
   logEvent('RIGHT_CLICK','Right-click context menu opened at Q'+(currentQ+1));
 }
-
+ 
 function resetPerQuestion(){
   pasteCountPerQ=0;lastAnswerLength=0;
 }
-
+ 
 function getSessions(){try{return JSON.parse(localStorage.getItem('ep_sessions')||'[]');}catch(e){return[];}}
 function saveSessions(d){try{localStorage.setItem('ep_sessions',JSON.stringify(d));}catch(e){}}
 function getApprovals(){try{return JSON.parse(localStorage.getItem('ep_approvals')||'{}');}catch(e){return{};}}
 function saveApprovals(d){try{localStorage.setItem('ep_approvals',JSON.stringify(d));}catch(e){}}
-
+ 
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 function toggleRole(){
   const r=document.getElementById('role-select').value;
   document.getElementById('trainee-fields').style.display=r==='trainee'?'':'none';
   document.getElementById('trainer-fields').style.display=r==='trainer'?'':'none';
 }
-
+ 
 function showError(){const el=document.getElementById('trainer-error');if(el){el.style.display='block';}}
 function hideError(){const el=document.getElementById('trainer-error');if(el){el.style.display='none';}}
-
+ 
 async function handleLogin(){
   const role=document.getElementById('role-select').value;
   if(role==='trainer'){
@@ -440,7 +440,7 @@ async function handleLogin(){
     await startSession();
   }
 }
-
+ 
 function checkApprovalStatus(){
   const approvals=getApprovals();
   if(waitingSessionId&&approvals[waitingSessionId]){
@@ -449,7 +449,7 @@ function checkApprovalStatus(){
     document.getElementById('approval-msg').textContent='Still pending. Please wait for trainer approval.';
   }
 }
-
+ 
 function pickQuestions(){
   const topics=['Core Java','Functional Testing','SQL','Selenium'];
   let picked=[],pool=[...QB].sort(()=>Math.random()-0.5);
@@ -457,7 +457,7 @@ function pickQuestions(){
   const rest=pool.filter(q=>!picked.includes(q));picked.push(rest[0]);
   return picked.slice(0,5).sort(()=>Math.random()-0.5);
 }
-
+ 
 async function startSession(){
   if(!QB.length) await _initQB();
   questions=pickQuestions();currentQ=0;evalResults=[];scoreSoFar=0;
@@ -466,13 +466,13 @@ async function startSession(){
   showScreen('screen-question');loadQ(0);startTimer();
   startProctoring();
 }
-
+ 
 function startTimer(){
   clearInterval(timerInterval);timeLeft=300;updateTimer();
   timerInterval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=60)document.getElementById('q-timer').classList.add('warning');if(timeLeft<=0){clearInterval(timerInterval);autoFinish();}},1000);
 }
 function updateTimer(){const m=Math.floor(timeLeft/60),s=timeLeft%60;document.getElementById('q-timer').textContent=m+':'+String(s).padStart(2,'0');}
-
+ 
 function loadQ(idx){
   const q=questions[idx];
   resetPerQuestion();
@@ -486,46 +486,46 @@ function loadQ(idx){
   document.getElementById('q-next-btn').textContent=idx<4?'Next question →':'Submit & finish ✓';
   document.getElementById('q-timer').classList.remove('warning');
 }
-
+ 
 function skipQuestion(){
   evalResults.push({q:questions[currentQ],answer:'[Skipped]',score:0,feedback:'Question was skipped.',correct:questions[currentQ].key});
   moveNext();
 }
-
+ 
 async function submitAnswer(){
   const answer=document.getElementById('q-answer').value.trim();
   if(!answer){alert('Please type an answer or use Skip.');return;}
   const loader=document.getElementById('q-loader'),btn=document.getElementById('q-next-btn');
   loader.classList.add('active');btn.disabled=true;
   const q=questions[currentQ];let score=0,feedback='',scoreLabel='';
-
+ 
   const SYSTEM_PROMPT=`You are a strict senior QA lead and Selenium automation expert evaluating a trainee's written answer in an interim assessment. You must evaluate HONESTLY and PRECISELY using this exact rubric:
-
+ 
 SCORE 10/10 — Full marks:
 - Answer is complete, technically accurate, AND includes a real-world example or practical scenario (e.g., actual code, project situation, framework context)
 - Example must be relevant and demonstrate genuine understanding, not just restating theory
 - All key concepts from the model answer are covered
-
+ 
 SCORE 7/10 — Good answer:
 - Answer is mostly correct and covers main points
 - Has a basic example OR explains the concept clearly but example is generic/textbook
 - Minor gaps or missing edge cases — deduct from 10 accordingly
-
+ 
 SCORE 5/10 — Simple/surface answer (apply 30% reduction from full marks):
 - Answer mentions the right concept but only at a surface level
 - No real-world example, no practical context, just a definition or partial explanation
 - Trainee seems to know the term but cannot demonstrate application
-
+ 
 SCORE 2/10 — Vague or mostly wrong:
 - Answer is off-topic, confused, or shows fundamental misunderstanding
 - Correct keyword mentioned but explanation is wrong
 - Very incomplete — missing almost all key points
-
+ 
 SCORE 0/10 — Irrelevant or no understanding:
 - Answer has nothing to do with the question
 - Complete misunderstanding of the topic
 - Generic filler with no technical substance
-
+ 
 CRITICAL RULES:
 1. If the answer includes a real-world example (code snippet, project scenario, framework usage) AND is correct → score 10
 2. If the answer is correct but has NO example and is just a plain explanation → score 5 (surface answer, apply 30% reduction)
@@ -533,10 +533,10 @@ CRITICAL RULES:
 4. NEVER give 10 for an answer without a practical example, even if technically correct
 5. NEVER give more than 5 for an answer that is just a textbook definition with no application
 6. Your feedback must explicitly say WHY the score was given — mention if example was missing, present, or wrong
-
+ 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {"score":<0 or 2 or 5 or 7 or 10>,"scoreLabel":"<Full marks / Good answer / Surface answer / Mostly wrong / Irrelevant>","feedback":"<3-4 sentences: what was correct, what example they gave or missed, what was wrong, what they should study or add next time>"}`;
-
+ 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -548,11 +548,11 @@ Respond ONLY with valid JSON, no markdown, no backticks:
         messages:[{
           role:'user',
           content:`QUESTION: ${q.q}
-
+ 
 MODEL ANSWER (reference only, not shown to trainee): ${q.key}
-
+ 
 TRAINEE'S ANSWER: ${answer}
-
+ 
 Evaluate strictly using the rubric. Check if they gave a real-world example. Score accordingly.`
         }]
       })
@@ -580,16 +580,16 @@ Evaluate strictly using the rubric. Check if they gave a real-world example. Sco
     else if(matchRatio>=0.4){score=7;scoreLabel='Good answer';feedback='Answer covers main points. AI evaluation was unavailable — score estimated locally.';}
     else{score=5;scoreLabel='Surface answer';feedback='Answer is too surface-level. Add real-world examples and practical context. AI evaluation was unavailable — score estimated locally.';}
   }
-
+ 
   loader.classList.remove('active');btn.disabled=false;
   scoreSoFar+=score;
   evalResults.push({q,answer,score,scoreLabel,feedback,correct:q.key});
   moveNext();
 }
-
+ 
 function autoFinish(){while(currentQ<5){evalResults.push({q:questions[currentQ],answer:'[Time expired]',score:0,feedback:'Time expired.',correct:questions[currentQ].key});currentQ++;}finishSession();}
 function moveNext(){currentQ++;if(currentQ>=5){clearInterval(timerInterval);finishSession();}else loadQ(currentQ);}
-
+ 
 function finishSession(){
   stopProctoring();
   const total=evalResults.reduce((s,r)=>s+r.score,0);
@@ -606,7 +606,7 @@ function finishSession(){
   waitingForTrainee=sessionData.trainee;waitingSessionId=id;
   showResultsScreen(record);
 }
-
+ 
 function showResultsScreen(s){
   showScreen('screen-results');
   const grade=s.pct>=80?'Excellent':s.pct>=60?'Good':s.pct>=40?'Needs improvement':'Re-assessment needed';
@@ -628,11 +628,11 @@ function showResultsScreen(s){
   });
   document.getElementById('results-feedback').innerHTML=html;
 }
-
+ 
 // ── TRAINER ──────────────────────────────────────────────────────
 function showTrainerDashboard(){showScreen('screen-trainer');refreshDashboard();}
 function refreshDashboard(){const s=getSessions();renderOverview(s);renderApprovals(s);populateSelect(s);updateBadge();updateIntegrityBadge();}
-
+ 
 function updateBadge(){
   const approvals=getApprovals();
   const sessions=getSessions();
@@ -642,7 +642,7 @@ function updateBadge(){
   const count=Object.values(byT).filter(s=>!approvals[s.id]).length;
   document.getElementById('appr-badge').textContent=count>0?` (${count})`:'';
 }
-
+ 
 function renderOverview(sessions){
   if(!sessions.length){document.getElementById('cohort-metrics').innerHTML='<div class="empty-state">No sessions yet.</div>';document.getElementById('trainee-list').innerHTML='<p class="empty-state">No trainees yet.</p>';return;}
   const avg=Math.round(sessions.reduce((s,r)=>s+r.pct,0)/sessions.length);
@@ -669,7 +669,7 @@ function renderOverview(sessions){
   });
   document.getElementById('trainee-list').innerHTML=html;
 }
-
+ 
 function renderBarChart(sessions){
   const byT={};sessions.forEach(s=>{if(!byT[s.trainee])byT[s.trainee]=[];byT[s.trainee].push(s.pct);});
   const labels=Object.keys(byT);
@@ -679,7 +679,7 @@ function renderBarChart(sessions){
   if(barChart)barChart.destroy();
   barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Avg %',data:avgs,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},scales:{x:{ticks:{color:'#6b6b65',font:{family:"'DM Mono'",size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y:{min:0,max:100,ticks:{color:'#6b6b65',font:{family:"'DM Mono'",size:11},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.06)'}}}}});
 }
-
+ 
 function renderRadarChart(sessions){
   const topics=['Core Java','Functional Testing','SQL','Selenium'];
   const avgs=topics.map(t=>{
@@ -690,8 +690,8 @@ function renderRadarChart(sessions){
   if(radarChart)radarChart.destroy();
   radarChart=new Chart(ctx,{type:'radar',data:{labels:topics,datasets:[{label:'Score %',data:avgs,backgroundColor:'rgba(58,125,10,0.08)',borderColor:'rgba(58,125,10,0.7)',borderWidth:2,pointBackgroundColor:'#3a7d0a',pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{color:'#a0a09a',backdropColor:'transparent',font:{size:10}},grid:{color:'rgba(0,0,0,0.08)'},angleLines:{color:'rgba(0,0,0,0.06)'},pointLabels:{color:'#6b6b65',font:{family:"'Sora'",size:11}}}}}});
 }
-
-
+ 
+ 
 // ── DELETE TRAINEE ────────────────────────────────────────────────
 function deleteTrainee(name){
   const confirmed = confirm(`Delete ALL session data for "${name}"?\n\nThis cannot be undone.`);
@@ -710,7 +710,7 @@ function deleteTrainee(name){
     document.getElementById('individual-detail').innerHTML = '';
   }
 }
-
+ 
 // ── APPROVALS ─────────────────────────────────────────────────────
 function renderApprovals(){
   const sessions=getSessions();
@@ -730,7 +730,7 @@ function renderApprovals(){
   document.getElementById('approvals-list').innerHTML=html;
   updateBadge();
 }
-
+ 
 function approveT(id,name){
   const a=getApprovals();a[id]=true;saveApprovals(a);
   alert('✓ '+name+' approved for next session.');
@@ -741,7 +741,7 @@ function denyT(id,name){
   alert(name+'\'s request denied.');
   renderApprovals();
 }
-
+ 
 // ── INDIVIDUAL ────────────────────────────────────────────────────
 function populateSelect(sessions){
   const names=[...new Set(sessions.map(s=>s.trainee))];
@@ -756,7 +756,7 @@ function deleteFromIndividual(){
   document.getElementById('individual-delete-btn').style.display='none';
   document.getElementById('individual-detail').innerHTML='';
 }
-
+ 
 function loadIndividual(){
   const name=document.getElementById('trainee-select').value;
   const btn=document.getElementById('individual-delete-btn');
@@ -777,7 +777,7 @@ function loadIndividual(){
   });
   document.getElementById('individual-detail').innerHTML=html;
 }
-
+ 
 // ── AI INSIGHTS (local data-driven, no API/CORS issue) ───────────
 function renderInsights(sessions){
   if(!sessions.length){
@@ -804,30 +804,30 @@ function renderInsights(sessions){
   const totalSkips=sessions.reduce((sum,s)=>sum+s.results.filter(r=>r.answer==='[Skipped]'||r.answer==='[Time expired]').length,0);
   const topScorer=sessions.reduce((a,b)=>b.pct>a.pct?b:a);
   const bottomScorer=sessions.reduce((a,b)=>b.pct<a.pct?b:a);
-
+ 
   document.getElementById('insights-summary').innerHTML=`
     <div class="metric"><div class="metric-label">Best topic</div><div class="metric-value" style="font-size:13px;color:var(--accent);padding-top:4px;">${sorted[0].topic}<div class="metric-sub">${sorted[0].avg}/10 avg</div></div></div>
     <div class="metric"><div class="metric-label">Weakest topic</div><div class="metric-value" style="font-size:13px;color:var(--red);padding-top:4px;">${sorted[sorted.length-1].topic}<div class="metric-sub">${sorted[sorted.length-1].avg}/10 avg</div></div></div>
     <div class="metric"><div class="metric-label">Total skips</div><div class="metric-value">${totalSkips}<div class="metric-sub">across sessions</div></div></div>
   `;
-
+ 
   const overallGrade=avgOverall>=80?'strong':avgOverall>=60?'satisfactory':avgOverall>=40?'below expectations':'critically low';
   const overallText=`The cohort of ${trainees.length} trainee${trainees.length>1?'s':''} has achieved an overall average of <strong>${avgOverall}%</strong> across ${sessions.length} session${sessions.length>1?'s':''} — rated <strong>${overallGrade}</strong>. Pass rate is ${passRate}%${passRate<60?' — immediate intervention recommended.':passRate<80?' — some trainees need targeted support.':' — cohort is performing well.'}`;
-
+ 
   const strengthPoints=[];
   if(strong.length){strong.forEach(t=>strengthPoints.push(`<strong>${t.topic}</strong> is the strongest area with ${t.avg}/10 avg — trainees show solid grasp of these concepts.`));}
   if(!strong.length&&mid.length){strengthPoints.push(`<strong>${mid[0].topic}</strong> shows the most consistent scores at ${mid[0].avg}/10 — a reasonable working understanding.`);}
   if(totalSkips===0){strengthPoints.push('No questions were skipped — trainees are attempting all questions which shows good engagement.');}
   if(passRate>=60){strengthPoints.push(`${passCount} of ${sessions.length} session${sessions.length>1?'s':''} crossed the 60% pass mark, showing the core curriculum is being absorbed.`);}
   if(!strengthPoints.length){strengthPoints.push('Trainees are actively participating. With targeted coaching this cohort has clear room for improvement.');}
-
+ 
   const weakPoints=[];
   if(weak.length){weak.forEach(t=>weakPoints.push(`<strong>${t.topic}</strong> is critically weak at ${t.avg}/10.${t.skipped>0?' '+t.skipped+' answer(s) skipped — suggests avoidance or low confidence.':' Answers attempted but scores low — conceptual gaps present.'}`));}
   if(totalSkips>3){weakPoints.push(`<strong>${totalSkips} questions skipped</strong> total — suggests time pressure or avoidance of certain topics.`);}
   if(passRate<60){weakPoints.push(`Only ${passRate}% cleared the 60% pass mark. Significant improvement needed before trainees are production-ready.`);}
   if(avgOverall<50){weakPoints.push('Overall average below 50% — cohort needs a structured review from fundamentals before moving to advanced topics.');}
   if(!weakPoints.length){weakPoints.push('No critical weaknesses detected. Continue monitoring across multiple sessions for consistency.');}
-
+ 
   // ── DYNAMIC ACTION PLAN ─────────────────────────────────────────
   // Collect per-question data: which specific questions scored low, which were skipped
   const qData={};
@@ -843,24 +843,24 @@ function renderInsights(sessions){
       }
     });
   });
-
+ 
   // Find lowest scoring questions per topic
   const worstQuestions=Object.values(qData).map(q=>({
     ...q,
     avg:q.scores.length?+(q.scores.reduce((a,b)=>a+b,0)/q.scores.length).toFixed(1):0
   })).sort((a,b)=>a.avg-b.avg);
-
+ 
   // Per-topic: find what sub-skill failed (based on actual question text)
   const topicWeakSubSkills={};
   worstQuestions.slice(0,8).forEach(q=>{
     if(!topicWeakSubSkills[q.topic])topicWeakSubSkills[q.topic]=[];
     topicWeakSubSkills[q.topic].push({avg:q.avg,skips:q.skips,surface:q.surfaceCount,wrong:q.wrongCount,qShort:q.question.slice(0,80)+'…'});
   });
-
+ 
   // Surface-answer trainees: know theory but can't apply
   const surfaceTrainees=sessions.filter(s=>s.results.filter(r=>r.scoreLabel==='Surface answer').length>=2).map(s=>s.trainee);
   const surfaceNames=[...new Set(surfaceTrainees)];
-
+ 
   // Trainees who scored 0 on specific topics
   const zeroPerTopic={};
   sessions.forEach(s=>{
@@ -871,10 +871,10 @@ function renderInsights(sessions){
       }
     });
   });
-
+ 
   // Build dynamic action items — one per dimension of actual failure
   const actions=[];
-
+ 
   // Action 1: worst topic with specific sub-skill details
   const worstTopic=sorted[sorted.length-1];
   const worstTopicDetails=topicWeakSubSkills[worstTopic.topic];
@@ -889,7 +889,7 @@ function renderInsights(sessions){
   } else {
     actions.push(`<strong>${worstTopic.topic}</strong> is the weakest area at ${worstTopic.avg}/10 — dedicate a full session to hands-on exercises on this topic before the next assessment.`);
   }
-
+ 
   // Action 2: surface-answer problem or second-weakest topic
   if(surfaceNames.length>0){
     const nameList=surfaceNames.slice(0,3).join(', ')+(surfaceNames.length>3?` and ${surfaceNames.length-3} more`:'');
@@ -908,7 +908,7 @@ function renderInsights(sessions){
     }
     actions.push(act2);
   }
-
+ 
   // Action 3: based on pass rate + skips + integrity flags
   const highRiskTrainees=sessions.filter(s=>s.suspicionLevel==='High'||s.suspicionLevel==='Medium').map(s=>s.trainee);
   const highRiskNames=[...new Set(highRiskTrainees)];
@@ -926,7 +926,7 @@ function renderInsights(sessions){
     const topicNames=topicData.filter(t=>t.avg<8).map(t=>t.topic);
     actions.push(`Cohort is passing but has room to grow. ${topicNames.length>0?`Push <strong>${topicNames.join(' and ')}</strong> from average to excellent:`:''} assign a capstone integration task — build a Selenium POM framework that uses SQL for test data, applies functional testing principles for test case design, and uses Core Java utilities for data handling. Score it using the same rubric: real-world examples = full marks.`);
   }
-
+ 
   let html=`<p class="section-title" style="margin-top:1rem;">Overall assessment</p>
   <div class="card"><p style="font-size:13px;line-height:1.8;color:var(--text2);">${overallText}</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
@@ -943,10 +943,10 @@ function renderInsights(sessions){
   <div class="insight-card"><div class="insight-header">✦ Strengths observed</div><div class="insight-body">${strengthPoints.map(s=>`<div class="insight-item"><div class="insight-dot" style="background:var(--accent);"></div><div>${s}</div></div>`).join('')}</div></div>
   <div class="insight-card"><div class="insight-header">⚠ Areas needing attention</div><div class="insight-body">${weakPoints.map(w=>`<div class="insight-item"><div class="insight-dot" style="background:var(--red);"></div><div>${w}</div></div>`).join('')}</div></div>
   <div class="insight-card"><div class="insight-header">→ Trainer action plan</div><div class="insight-body">${actions.map((a,i)=>`<div class="insight-item"><div class="insight-dot" style="background:var(--blue);"></div><div><strong style="color:var(--text);">Action ${i+1}:</strong> ${a}</div></div>`).join('')}</div></div>`;
-
+ 
   document.getElementById('insights-content').innerHTML=html;
 }
-
+ 
 // ── INTEGRITY REPORT ─────────────────────────────────────────────
 function renderIntegrity(){
   const sessions=getSessions();
@@ -954,20 +954,20 @@ function renderIntegrity(){
   const high=sessions.filter(s=>s.suspicionLevel==='High').length;
   const medium=sessions.filter(s=>s.suspicionLevel==='Medium').length;
   const clean=sessions.filter(s=>!s.suspicionLevel||s.suspicionLevel==='Clean').length;
-
+ 
   document.getElementById('integrity-metrics').innerHTML=`
     <div class="metric"><div class="metric-label">Total sessions</div><div class="metric-value">${sessions.length}</div></div>
     <div class="metric"><div class="metric-label" style="color:var(--red);">High risk</div><div class="metric-value" style="color:var(--red);">${high}</div></div>
     <div class="metric"><div class="metric-label" style="color:var(--amber);">Medium risk</div><div class="metric-value" style="color:var(--amber);">${medium}</div></div>
     <div class="metric"><div class="metric-label" style="color:var(--accent);">Clean</div><div class="metric-value" style="color:var(--accent);">${clean}</div></div>
   `;
-
+ 
   if(!sessions.length){document.getElementById('integrity-list').innerHTML='<div class="empty-state">No sessions yet.</div>';return;}
-
+ 
   // Group by trainee, show latest session
   const byT={};
   sessions.forEach(s=>{if(!byT[s.trainee]||s.id>byT[s.trainee].id)byT[s.trainee]=s;});
-
+ 
   let html='';
   Object.values(byT).sort((a,b)=>(b.suspicionScore||0)-(a.suspicionScore||0)).forEach(s=>{
     const level=s.suspicionLevel||'Clean';
@@ -978,7 +978,7 @@ function renderIntegrity(){
     const tabSw=s.tabSwitches||0;
     const pastes=s.pastes||0;
     const copies=s.copies||0;
-
+ 
     let eventsHtml='';
     if(log.length===0){
       eventsHtml='<div style="font-size:12px;color:var(--text3);padding:6px 0;">No suspicious events recorded.</div>';
@@ -992,7 +992,7 @@ function renderIntegrity(){
       }).join('');
       if(log.length>10)eventsHtml+=`<div style="font-size:11px;color:var(--text3);padding:6px 0;">+${log.length-10} more events…</div>`;
     }
-
+ 
     html+=`<div class="card" style="margin-bottom:1rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
@@ -1015,19 +1015,19 @@ function renderIntegrity(){
     </div>`;
   });
   document.getElementById('integrity-list').innerHTML=html;
-
+ 
   // Update badge
   const badge=document.getElementById('integrity-badge');
   if(badge)badge.textContent=flagged.length>0?` (${flagged.length})`:'';
 }
-
+ 
 function updateIntegrityBadge(){
   const sessions=getSessions();
   const flagged=sessions.filter(s=>s.suspicionLevel&&s.suspicionLevel!=='Clean').length;
   const badge=document.getElementById('integrity-badge');
   if(badge)badge.textContent=flagged>0?` (${flagged})`:'';
 }
-
+ 
 // ── TABS ──────────────────────────────────────────────────────────
 function switchTab(tab){
   const tabs=['overview','approvals','individual','insights','integrity'];
@@ -1044,3 +1044,4 @@ _initQB();
 </script>
 </body>
 </html>
+ 
