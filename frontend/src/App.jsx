@@ -160,10 +160,12 @@ function WaitScreen({ waitId, trainee, onBack }) {
 }
 
 // ─── QUESTION SCREEN ──────────────────────────────────────────────
+const SESSION_DURATION_SECONDS = 25 * 60;
+
 function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) {
   const [idx, setIdx] = useState(0);
   const [answer, setAnswer] = useState("");
-  const [timeLeft, setTimeLeft] = useState(300);
+  const [timeLeft, setTimeLeft] = useState(SESSION_DURATION_SECONDS);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState("");
   const [results, setResults] = useState([]);
