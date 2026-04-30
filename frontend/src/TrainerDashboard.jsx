@@ -153,8 +153,8 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete }) {
         </select>
         {selectedName && <button className="btn-delete" onClick={() => onDelete(selectedName)}>✕ Delete</button>}
       </div>
-      {selectedName && traineeSession.length > 0 && (() => {
-        const sess = traineeSession;
+      {selectedName && traineeSessions.length > 0 && (() => {
+        const sess = traineeSessions;
         const lat = latest(sess);
         const avg = avgPct(sess);
         const grade = avg >= 80 ? "Excellent" : avg >= 60 ? "Good" : avg >= 40 ? "Needs improvement" : "Re-assessment";
