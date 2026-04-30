@@ -171,7 +171,16 @@ app.post("/api/session/finish", (req, res) => {
   const session = db.activeSessions[sessionToken];
   if (!session) return res.status(404).json({ error: "Session not found" });
 
-  const total = results.reduce((s, r) => s + (r.score || 0), 0);
+  // Enrich results with model answers for trainer view
+  const enrichedResults = results.map(r => {
+    const fullQuestion = getFullQuestion(r.questionId);
+    return {
+      ...r,
+      modelAnswer: fullQuestion?.key || "Model answer not available"
+    };
+  });
+
+  const total = enrichedResults.reduce((s, r) => s + (r.score || 0), 0);
   const pct = Math.round((total / 50) * 100);
   const log = session.proctorLog || [];
   const tabSwitches = log.filter(e => e.type === "TAB_HIDDEN" || e.type === "WINDOW_BLUR").length;
@@ -187,7 +196,7 @@ app.post("/api/session/finish", (req, res) => {
     date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
     score: total,
     pct,
-    results,
+    results: enrichedResults,
     proctorLog: log,
     suspicionScore,
     suspicionLevel,

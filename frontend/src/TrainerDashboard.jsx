@@ -173,6 +173,12 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete }) {
                   <div className="rc-question">{r.question}</div>
                   <div className="rc-label">Trainee answer</div>
                   <div className="rc-answer">{r.answer}</div>
+                  {r.modelAnswer && r.modelAnswer !== "Model answer not available" && (
+                    <>
+                      <div className="rc-label" style={{ marginTop: "12px", color: "var(--green)", fontWeight: 500 }}>✓ Model answer</div>
+                      <div className="rc-answer" style={{ backgroundColor: "rgba(58,125,10,0.06)", borderLeft: "3px solid rgba(58,125,10,0.4)", color: "#2d3d1f" }}>{r.modelAnswer}</div>
+                    </>
+                  )}
                   <div className="rc-label">Evaluator feedback</div>
                   <div className="rc-feedback">{r.feedback}</div>
                 </div>
