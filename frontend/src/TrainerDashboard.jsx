@@ -20,7 +20,34 @@ function ScorePill({ score, label }) {
 }
 
 // ─── OVERVIEW TAB ────────────────────────────────────────────────
-function OverviewTab({ sessions, onDelete, onQuickView }) {
+function OverviewTab({ sessions, onDelete, onQuickView, token }) {
+  const [downloadingAll, setDownloadingAll] = useState(false);
+
+  const handleBulkDownload = () => {
+    if (!token || downloadingAll) return;
+    setDownloadingAll(true);
+    fetch("/api/trainer/reports/all/download", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `All_Trainee_Reports_${new Date().getTime()}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+      setDownloadingAll(false);
+    })
+    .catch(err => {
+      console.error("Bulk download failed:", err);
+      setDownloadingAll(false);
+    });
+  };
+
   if (!sessions.length) return <div className="empty-state">No sessions recorded yet.</div>;
 
   const avg = Math.round(sessions.reduce((s, r) => s + r.pct, 0) / sessions.length);
@@ -67,7 +94,12 @@ function OverviewTab({ sessions, onDelete, onQuickView }) {
         </div>
       </div>
 
-      <div className="section-title">All trainees</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 1.5rem" }}>
+        <div className="section-title" style={{ margin: 0 }}>All trainees</div>
+        <button className="btn-approve" onClick={handleBulkDownload} disabled={downloadingAll} style={{ fontSize: 12, padding: "8px 12px" }}>
+          {downloadingAll ? "⏳ Generating..." : "📦 Download All Reports"}
+        </button>
+      </div>
       <div className="card">
         {Object.entries(byT).map(([name, sess]) => {
           const latest = sessions.filter(s => s.trainee === name).slice(-1)[0];

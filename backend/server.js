@@ -3,7 +3,9 @@ import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import { Document, Packer, Paragraph, Table, TableCell, TableRow, BorderStyle, WidthType, AlignmentType, TextRun, HeadingLevel, UnderlineType } from "docx";
+import { Document, Packer, Paragraph, Table, TableCell, TableRow, BorderStyle, WidthType, AlignmentType, TextRun, HeadingLevel, UnderlineType, VerticalAlign } from "docx";
+import archiver from "archiver";
+import { Readable } from "stream";
 import { pickSessionQuestions, getFullQuestion } from "./questions.js";
 
 const app = express();
@@ -274,20 +276,14 @@ app.delete("/api/trainer/trainee/:name", requireTrainer, (req, res) => {
   res.json({ ok: true, deleted: before - db.sessions.length });
 });
 
-// GET /api/trainer/trainee/:name/report — generate Word document report
-app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) => {
-  const name = decodeURIComponent(req.params.name);
-  const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === name.toLowerCase());
-
-  if (!traineeSessions.length) {
-    return res.status(404).json({ error: "No sessions found for this trainee" });
-  }
+// Helper function to generate trainee report document
+async function generateTraineeReportDoc(name, traineeSessions, db) {
+  if (!traineeSessions.length) return null;
 
   const latest = traineeSessions[traineeSessions.length - 1];
   const avgScore = Math.round(traineeSessions.reduce((s, r) => s + r.pct, 0) / traineeSessions.length);
   const grade = avgScore >= 80 ? "Excellent" : avgScore >= 60 ? "Good" : avgScore >= 40 ? "Needs improvement" : "Re-assessment";
 
-  // Build document content
   const sections = [];
 
   // Header
@@ -300,54 +296,97 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
   }));
 
   sections.push(new Paragraph({
-    text: `Generated on: ${new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`,
+    text: `Generated: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}`,
     alignment: AlignmentType.CENTER,
     size: 20,
+    color: "666666",
   }));
 
-  sections.push(new Paragraph({ text: "" })); // spacing
+  sections.push(new Paragraph({ text: "" }));
 
-  // Trainee Summary
+  // Metrics Grid (Summary)
   sections.push(new Paragraph({
-    text: "TRAINEE INFORMATION",
+    text: "SUMMARY",
     heading: HeadingLevel.HEADING_2,
     bold: true,
   }));
 
-  const summaryTable = new Table({
+  const metricsTable = new Table({
     rows: [
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Name", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: name })], width: { size: 30, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: "Cohort", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: latest.cohort || "N/A" })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+          new TableCell({
+            children: [new Paragraph({ text: "Name", bold: true, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: name, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: "Cohort", bold: true, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: latest.cohort || "N/A", size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+          }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Total Sessions", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: String(traineeSessions.length) })], width: { size: 30, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: "Average Score", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: `${avgScore}%` })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+          new TableCell({
+            children: [new Paragraph({ text: "Sessions", bold: true, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: String(traineeSessions.length), size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: "Avg Score", bold: true, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: `${avgScore}%`, size: 20, bold: true })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+          }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Grade", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: grade })], width: { size: 30, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: "Status", bold: true })], width: { size: 20, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: db.approvals[latest.id] === true ? "✓ APPROVED" : db.approvals[latest.id] === "denied" ? "✗ DENIED" : "⏳ PENDING" })], width: { size: 30, type: WidthType.PERCENTAGE } }),
+          new TableCell({
+            children: [new Paragraph({ text: "Status", bold: true, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: grade, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: "Approval", bold: true, size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: db.approvals[latest.id] === true ? "✓ APPROVED" : db.approvals[latest.id] === "denied" ? "✗ DENIED" : "⏳ PENDING", size: 20 })],
+            width: { size: 25, type: WidthType.PERCENTAGE },
+          }),
         ],
       }),
     ],
     width: { size: 100, type: WidthType.PERCENTAGE },
   });
 
-  sections.push(summaryTable);
-  sections.push(new Paragraph({ text: "" })); // spacing
+  sections.push(metricsTable);
+  sections.push(new Paragraph({ text: "" }));
 
-  // Integrity Analysis
+  // Integrity & Proctoring
   sections.push(new Paragraph({
     text: "INTEGRITY & PROCTORING ANALYSIS",
     heading: HeadingLevel.HEADING_2,
@@ -358,32 +397,40 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
     rows: [
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Metric", bold: true })], width: { size: 50, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: "Value", bold: true })], width: { size: 50, type: WidthType.PERCENTAGE } }),
-        ],
-      }),
-      ...traineeSessions.map(s => new TableRow({
-        cells: [
-          new TableCell({ children: [new Paragraph({ text: `Session ${traineeSessions.indexOf(s) + 1} (${s.date})` })] }),
-          new TableCell({ children: [new Paragraph({ text: s.suspicionLevel || "Clean" })] }),
-        ],
-      })),
-      new TableRow({
-        cells: [
-          new TableCell({ children: [new Paragraph({ text: "Tab Switches (Latest Session)", bold: true })], width: { size: 50, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: String(latest.tabSwitches || 0) })], width: { size: 50, type: WidthType.PERCENTAGE } }),
+          new TableCell({
+            children: [new Paragraph({ text: "Metric", bold: true })],
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ text: "Value", bold: true })],
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            shading: { fill: "E8E8E8" },
+          }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Paste Events (Latest Session)", bold: true })], width: { size: 50, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: String(latest.pastes || 0) })], width: { size: 50, type: WidthType.PERCENTAGE } }),
+          new TableCell({ children: [new Paragraph({ text: "Latest Session Status" })] }),
+          new TableCell({ children: [new Paragraph({ text: latest.suspicionLevel || "Clean" })] }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Copy Events (Latest Session)", bold: true })], width: { size: 50, type: WidthType.PERCENTAGE } }),
-          new TableCell({ children: [new Paragraph({ text: String(latest.copies || 0) })], width: { size: 50, type: WidthType.PERCENTAGE } }),
+          new TableCell({ children: [new Paragraph({ text: "Tab Switches" })] }),
+          new TableCell({ children: [new Paragraph({ text: String(latest.tabSwitches || 0) })] }),
+        ],
+      }),
+      new TableRow({
+        cells: [
+          new TableCell({ children: [new Paragraph({ text: "Paste Events" })] }),
+          new TableCell({ children: [new Paragraph({ text: String(latest.pastes || 0) })] }),
+        ],
+      }),
+      new TableRow({
+        cells: [
+          new TableCell({ children: [new Paragraph({ text: "Copy Events" })] }),
+          new TableCell({ children: [new Paragraph({ text: String(latest.copies || 0) })] }),
         ],
       }),
     ],
@@ -391,11 +438,11 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
   });
 
   sections.push(integrityTable);
-  sections.push(new Paragraph({ text: "" })); // spacing
+  sections.push(new Paragraph({ text: "" }));
 
-  // Latest Session Results
+  // Latest Session
   sections.push(new Paragraph({
-    text: `LATEST SESSION RESULTS — ${latest.date}`,
+    text: `LATEST SESSION — ${latest.date}`,
     heading: HeadingLevel.HEADING_2,
     bold: true,
   }));
@@ -403,75 +450,152 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
   sections.push(new Paragraph({
     text: `Session Score: ${latest.pct}% (${latest.score}/50)`,
     bold: true,
+    size: 22,
   }));
 
   sections.push(new Paragraph({ text: "" }));
 
-  // Questions and Answers
+  // Results
   latest.results.forEach((result, idx) => {
     sections.push(new Paragraph({
-      text: `Question ${idx + 1} — ${result.topic}`,
+      text: `Q${idx + 1} · ${result.topic}`,
       heading: HeadingLevel.HEADING_3,
       bold: true,
+      size: 24,
     }));
 
+    const scoreColor = result.score >= 7 ? "228B22" : result.score >= 5 ? "FF8C00" : "DC143C";
     sections.push(new Paragraph({
-      text: `Score: ${result.score}/10 (${result.scoreLabel})`,
+      text: `Score: ${result.score}/10 — ${result.scoreLabel}`,
       bold: true,
-      color: result.score >= 7 ? "228B22" : result.score >= 5 ? "FF8C00" : "DC143C",
+      color: scoreColor,
     }));
 
+    sections.push(new Paragraph({ text: "" }));
+
+    // Question
     sections.push(new Paragraph({
       text: "Question:",
       bold: true,
-      italics: true,
+      size: 22,
     }));
-    sections.push(new Paragraph(result.question));
+    sections.push(new Paragraph({
+      text: result.question,
+      size: 20,
+    }));
+    sections.push(new Paragraph({ text: "" }));
 
+    // Trainee Answer
     sections.push(new Paragraph({
       text: "Trainee Answer:",
       bold: true,
-      italics: true,
+      size: 22,
+      color: "333333",
     }));
-    sections.push(new Paragraph(result.answer || "[No answer provided]"));
+    sections.push(new Paragraph({
+      text: result.answer || "[No answer provided]",
+      size: 20,
+    }));
+    sections.push(new Paragraph({ text: "" }));
 
+    // Model Answer
     if (result.modelAnswer && result.modelAnswer !== "Model answer not available") {
       sections.push(new Paragraph({
-        text: "Model Answer:",
+        text: "✓ Model Answer:",
         bold: true,
-        italics: true,
+        size: 22,
         color: "228B22",
       }));
-      sections.push(new Paragraph(result.modelAnswer));
+      sections.push(new Paragraph({
+        text: result.modelAnswer,
+        size: 20,
+        shading: { fill: "F0F8F0" },
+      }));
+      sections.push(new Paragraph({ text: "" }));
     }
 
+    // Detailed Explanation
     if (result.detailedAnswer) {
       sections.push(new Paragraph({
-        text: "Detailed Explanation & Real-World Scenario:",
+        text: "📖 Detailed Explanation & Real-World Scenario:",
         bold: true,
-        italics: true,
+        size: 22,
         color: "1E5A96",
       }));
-      sections.push(new Paragraph(result.detailedAnswer));
+      sections.push(new Paragraph({
+        text: result.detailedAnswer,
+        size: 20,
+        shading: { fill: "F0F5FF" },
+      }));
+      sections.push(new Paragraph({ text: "" }));
     }
 
+    // Feedback
     sections.push(new Paragraph({
       text: "Evaluator Feedback:",
       bold: true,
-      italics: true,
+      size: 22,
     }));
-    sections.push(new Paragraph(result.feedback));
-
-    sections.push(new Paragraph({ text: "" })); // spacing between questions
+    sections.push(new Paragraph({
+      text: result.feedback,
+      size: 20,
+    }));
+    sections.push(new Paragraph({ text: "" }));
+    sections.push(new Paragraph({ text: "" }));
   });
 
-  // Create and send document
   const doc = new Document({ sections: [{ children: sections }] });
-  const buffer = await Packer.toBuffer(doc);
+  return await Packer.toBuffer(doc);
+}
 
-  res.setHeader("Content-Disposition", `attachment; filename="Trainee_Report_${name.replace(/\s+/g, "_")}_${new Date().getTime()}.docx"`);
-  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-  res.send(buffer);
+// GET /api/trainer/trainee/:name/report — generate Word document report
+app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === name.toLowerCase());
+
+  if (!traineeSessions.length) {
+    return res.status(404).json({ error: "No sessions found for this trainee" });
+  }
+
+  try {
+    const buffer = await generateTraineeReportDoc(name, traineeSessions, db);
+    res.setHeader("Content-Disposition", `attachment; filename="Trainee_Report_${name.replace(/\s+/g, "_")}.docx"`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    res.send(buffer);
+  } catch (err) {
+    console.error("Report generation error:", err);
+    res.status(500).json({ error: "Failed to generate report" });
+  }
+});
+
+// GET /api/trainer/reports/all/download — download all trainee reports as ZIP
+app.get("/api/trainer/reports/all/download", requireTrainer, async (req, res) => {
+  try {
+    const allTrainees = [...new Set(db.sessions.map(s => s.trainee))];
+
+    if (!allTrainees.length) {
+      return res.status(404).json({ error: "No trainee data available" });
+    }
+
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    res.setHeader("Content-Disposition", `attachment; filename="All_Trainee_Reports_${new Date().getTime()}.zip"`);
+    res.setHeader("Content-Type", "application/zip");
+
+    archive.pipe(res);
+
+    // Generate and add each trainee report to ZIP
+    for (const trainee of allTrainees) {
+      const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === trainee.toLowerCase());
+      const buffer = await generateTraineeReportDoc(trainee, traineeSessions, db);
+      archive.append(buffer, { name: `Trainee_Report_${trainee.replace(/\s+/g, "_")}.docx` });
+    }
+
+    archive.finalize();
+  } catch (err) {
+    console.error("Bulk report generation error:", err);
+    res.status(500).json({ error: "Failed to generate reports" });
+  }
 });
 
 app.listen(PORT, () => console.log(`✅ EvalPro backend running on http://localhost:${PORT}`));

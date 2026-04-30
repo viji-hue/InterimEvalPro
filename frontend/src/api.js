@@ -23,5 +23,5 @@ export const api = {
   getPending: (token) => req("GET", "/trainer/approvals/pending", null, token),
   approveSession: (token, id, action) => req("POST", `/trainer/approvals/${id}`, { action }, token),
   deleteTrainee: (token, name) => req("DELETE", `/trainer/trainee/${encodeURIComponent(name)}`, null, token),
-  downloadTraineeReport: (token, name) => `/api/trainer/trainee/${encodeURIComponent(name)}/report?auth=${token}`,
+  downloadAllReports: (token) => `/api/trainer/reports/all/download?auth=${token}`,
 };
