@@ -288,27 +288,22 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
 
   // Header
   sections.push(new Paragraph({
-    text: "TRAINEE EVALUATION REPORT",
+    children: [new TextRun({ text: "TRAINEE EVALUATION REPORT", bold: true, size: 32 })],
     heading: HeadingLevel.HEADING_1,
     alignment: AlignmentType.CENTER,
-    bold: true,
-    size: 32,
   }));
 
   sections.push(new Paragraph({
-    text: `Generated: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}`,
+    children: [new TextRun({ text: `Generated: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}`, size: 20, color: "666666" })],
     alignment: AlignmentType.CENTER,
-    size: 20,
-    color: "666666",
   }));
 
   sections.push(new Paragraph({ text: "" }));
 
   // Metrics Grid (Summary)
   sections.push(new Paragraph({
-    text: "SUMMARY",
+    children: [new TextRun({ text: "SUMMARY", bold: true })],
     heading: HeadingLevel.HEADING_2,
-    bold: true,
   }));
 
   const metricsTable = new Table({
@@ -316,21 +311,21 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       new TableRow({
         cells: [
           new TableCell({
-            children: [new Paragraph({ text: "Name", bold: true, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Name", bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: name, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: name, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
           }),
           new TableCell({
-            children: [new Paragraph({ text: "Cohort", bold: true, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Cohort", bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: latest.cohort || "N/A", size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: latest.cohort || "N/A", size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
           }),
         ],
@@ -338,21 +333,21 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       new TableRow({
         cells: [
           new TableCell({
-            children: [new Paragraph({ text: "Sessions", bold: true, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Sessions", bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: String(traineeSessions.length), size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: String(traineeSessions.length), size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
           }),
           new TableCell({
-            children: [new Paragraph({ text: "Avg Score", bold: true, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Avg Score", bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: `${avgScore}%`, size: 20, bold: true })],
+            children: [new Paragraph({ children: [new TextRun({ text: `${avgScore}%`, bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
           }),
         ],
@@ -360,21 +355,21 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       new TableRow({
         cells: [
           new TableCell({
-            children: [new Paragraph({ text: "Status", bold: true, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Status", bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: grade, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: grade, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
           }),
           new TableCell({
-            children: [new Paragraph({ text: "Approval", bold: true, size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Approval", bold: true, size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: db.approvals[latest.id] === true ? "✓ APPROVED" : db.approvals[latest.id] === "denied" ? "✗ DENIED" : "⏳ PENDING", size: 20 })],
+            children: [new Paragraph({ children: [new TextRun({ text: db.approvals[latest.id] === true ? "✓ APPROVED" : db.approvals[latest.id] === "denied" ? "✗ DENIED" : "⏳ PENDING", size: 20 })] })],
             width: { size: 25, type: WidthType.PERCENTAGE },
           }),
         ],
@@ -384,13 +379,12 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
   });
 
   sections.push(metricsTable);
-  sections.push(new Paragraph({ text: "" }));
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
 
   // Integrity & Proctoring
   sections.push(new Paragraph({
-    text: "INTEGRITY & PROCTORING ANALYSIS",
+    children: [new TextRun({ text: "INTEGRITY & PROCTORING ANALYSIS", bold: true })],
     heading: HeadingLevel.HEADING_2,
-    bold: true,
   }));
 
   const integrityTable = new Table({
@@ -398,12 +392,12 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       new TableRow({
         cells: [
           new TableCell({
-            children: [new Paragraph({ text: "Metric", bold: true })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Metric", bold: true })] })],
             width: { size: 50, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
           new TableCell({
-            children: [new Paragraph({ text: "Value", bold: true })],
+            children: [new Paragraph({ children: [new TextRun({ text: "Value", bold: true })] })],
             width: { size: 50, type: WidthType.PERCENTAGE },
             shading: { fill: "E8E8E8" },
           }),
@@ -411,26 +405,26 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Latest Session Status" })] }),
-          new TableCell({ children: [new Paragraph({ text: latest.suspicionLevel || "Clean" })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Latest Session Status" })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: latest.suspicionLevel || "Clean" })] })] }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Tab Switches" })] }),
-          new TableCell({ children: [new Paragraph({ text: String(latest.tabSwitches || 0) })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Tab Switches" })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(latest.tabSwitches || 0) })] })] }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Paste Events" })] }),
-          new TableCell({ children: [new Paragraph({ text: String(latest.pastes || 0) })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Paste Events" })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(latest.pastes || 0) })] })] }),
         ],
       }),
       new TableRow({
         cells: [
-          new TableCell({ children: [new Paragraph({ text: "Copy Events" })] }),
-          new TableCell({ children: [new Paragraph({ text: String(latest.copies || 0) })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Copy Events" })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(latest.copies || 0) })] })] }),
         ],
       }),
     ],
@@ -438,110 +432,85 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
   });
 
   sections.push(integrityTable);
-  sections.push(new Paragraph({ text: "" }));
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
 
   // Latest Session
   sections.push(new Paragraph({
-    text: `LATEST SESSION — ${latest.date}`,
+    children: [new TextRun({ text: `LATEST SESSION — ${latest.date}`, bold: true })],
     heading: HeadingLevel.HEADING_2,
-    bold: true,
   }));
 
   sections.push(new Paragraph({
-    text: `Session Score: ${latest.pct}% (${latest.score}/50)`,
-    bold: true,
-    size: 22,
+    children: [new TextRun({ text: `Session Score: ${latest.pct}% (${latest.score}/50)`, bold: true, size: 22 })],
   }));
 
-  sections.push(new Paragraph({ text: "" }));
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
 
   // Results
   latest.results.forEach((result, idx) => {
     sections.push(new Paragraph({
-      text: `Q${idx + 1} · ${result.topic}`,
+      children: [new TextRun({ text: `Q${idx + 1} · ${result.topic}`, bold: true, size: 24 })],
       heading: HeadingLevel.HEADING_3,
-      bold: true,
-      size: 24,
     }));
 
     const scoreColor = result.score >= 7 ? "228B22" : result.score >= 5 ? "FF8C00" : "DC143C";
     sections.push(new Paragraph({
-      text: `Score: ${result.score}/10 — ${result.scoreLabel}`,
-      bold: true,
-      color: scoreColor,
+      children: [new TextRun({ text: `Score: ${result.score}/10 — ${result.scoreLabel}`, bold: true, color: scoreColor })],
     }));
 
-    sections.push(new Paragraph({ text: "" }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
 
     // Question
     sections.push(new Paragraph({
-      text: "Question:",
-      bold: true,
-      size: 22,
+      children: [new TextRun({ text: "Question:", bold: true, size: 22 })],
     }));
     sections.push(new Paragraph({
-      text: result.question,
-      size: 20,
+      children: [new TextRun({ text: result.question, size: 20 })],
     }));
-    sections.push(new Paragraph({ text: "" }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
 
     // Trainee Answer
     sections.push(new Paragraph({
-      text: "Trainee Answer:",
-      bold: true,
-      size: 22,
-      color: "333333",
+      children: [new TextRun({ text: "Trainee Answer:", bold: true, size: 22, color: "333333" })],
     }));
     sections.push(new Paragraph({
-      text: result.answer || "[No answer provided]",
-      size: 20,
+      children: [new TextRun({ text: result.answer || "[No answer provided]", size: 20 })],
     }));
-    sections.push(new Paragraph({ text: "" }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
 
     // Model Answer
     if (result.modelAnswer && result.modelAnswer !== "Model answer not available") {
       sections.push(new Paragraph({
-        text: "✓ Model Answer:",
-        bold: true,
-        size: 22,
-        color: "228B22",
+        children: [new TextRun({ text: "✓ Model Answer:", bold: true, size: 22, color: "228B22" })],
       }));
       sections.push(new Paragraph({
-        text: result.modelAnswer,
-        size: 20,
+        children: [new TextRun({ text: result.modelAnswer, size: 20 })],
         shading: { fill: "F0F8F0" },
       }));
-      sections.push(new Paragraph({ text: "" }));
+      sections.push(new Paragraph({ children: [new TextRun("")] }));
     }
 
     // Detailed Explanation
     if (result.detailedAnswer) {
       sections.push(new Paragraph({
-        text: "📖 Detailed Explanation & Real-World Scenario:",
-        bold: true,
-        size: 22,
-        color: "1E5A96",
+        children: [new TextRun({ text: "📖 Detailed Explanation & Real-World Scenario:", bold: true, size: 22, color: "1E5A96" })],
       }));
       sections.push(new Paragraph({
-        text: result.detailedAnswer,
-        size: 20,
+        children: [new TextRun({ text: result.detailedAnswer, size: 20 })],
         shading: { fill: "F0F5FF" },
       }));
-      sections.push(new Paragraph({ text: "" }));
+      sections.push(new Paragraph({ children: [new TextRun("")] }));
     }
 
     // Feedback
     sections.push(new Paragraph({
-      text: "Evaluator Feedback:",
-      bold: true,
-      size: 22,
+      children: [new TextRun({ text: "Evaluator Feedback:", bold: true, size: 22 })],
     }));
     sections.push(new Paragraph({
-      text: result.feedback,
-      size: 20,
+      children: [new TextRun({ text: result.feedback, size: 20 })],
     }));
-    sections.push(new Paragraph({ text: "" }));
-    sections.push(new Paragraph({ text: "" }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
   });
 
   const doc = new Document({ sections: [{ children: sections }] });
