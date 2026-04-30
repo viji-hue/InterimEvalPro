@@ -138,11 +138,35 @@ function ApprovalsTab({ sessions, token, onRefresh }) {
 }
 
 // ─── INDIVIDUAL TAB ───────────────────────────────────────────────
-function IndividualTab({ sessions, selectedName, onSelect, onDelete }) {
+function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
   const names = [...new Set(sessions.map(s => s.trainee))];
   const traineeSessions = sessions.filter(s => s.trainee === selectedName);
   const latest = traineeSession => traineeSession[traineeSession.length - 1];
   const avgPct = traineeSession => Math.round(traineeSession.reduce((s, r) => s + r.pct, 0) / traineeSession.length);
+
+  const handleDownload = () => {
+    if (!selectedName || !token) return;
+    const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/report`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("Authorization", `Bearer ${token}`);
+    fetch(url, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `Trainee_Report_${selectedName.replace(/\s+/g, "_")}_${new Date().getTime()}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+    })
+    .catch(err => console.error("Download failed:", err));
+  };
 
   return (
     <div>
@@ -152,6 +176,7 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete }) {
           {names.map(n => <option key={n}>{n}</option>)}
         </select>
         {selectedName && <button className="btn-delete" onClick={() => onDelete(selectedName)}>✕ Delete</button>}
+        {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownload} style={{ fontSize: 12, padding: "8px 12px" }}>📄 Download Report</button>}
       </div>
       {selectedName && traineeSessions.length > 0 && (() => {
         const sess = traineeSessions;
@@ -177,6 +202,14 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete }) {
                     <>
                       <div className="rc-label" style={{ marginTop: "12px", color: "var(--green)", fontWeight: 500 }}>✓ Model answer</div>
                       <div className="rc-answer" style={{ backgroundColor: "rgba(58,125,10,0.06)", borderLeft: "3px solid rgba(58,125,10,0.4)", color: "#2d3d1f" }}>{r.modelAnswer}</div>
+                    </>
+                  )}
+                  {r.detailedAnswer && (
+                    <>
+                      <div className="rc-label" style={{ marginTop: "12px", color: "#1e5a96", fontWeight: 500 }}>📖 Detailed explanation & real-world scenario</div>
+                      <div style={{ backgroundColor: "rgba(30,90,150,0.05)", borderLeft: "3px solid rgba(30,90,150,0.4)", padding: "10px 12px", fontSize: "13px", lineHeight: "1.6", color: "#1a1a18", whiteSpace: "pre-wrap", fontFamily: "'Monaco', 'Menlo', monospace", overflowX: "auto" }}>
+                        {r.detailedAnswer}
+                      </div>
                     </>
                   )}
                   <div className="rc-label">Evaluator feedback</div>
@@ -410,7 +443,7 @@ export default function TrainerDashboard({ token, onExit }) {
         <div className="tab-content">
           {tab === "overview" && <OverviewTab sessions={sessions} onDelete={handleDelete} onQuickView={n => { setSelectedTrainee(n); setTab("individual"); }} />}
           {tab === "approvals" && <ApprovalsTab sessions={sessions} token={token} onRefresh={load} />}
-          {tab === "individual" && <IndividualTab sessions={sessions} selectedName={selectedTrainee} onSelect={setSelectedTrainee} onDelete={handleDelete} />}
+          {tab === "individual" && <IndividualTab sessions={sessions} selectedName={selectedTrainee} onSelect={setSelectedTrainee} onDelete={handleDelete} token={token} />}
           {tab === "insights" && <InsightsTab sessions={sessions} />}
           {tab === "integrity" && <IntegrityTab sessions={sessions} />}
         </div>
