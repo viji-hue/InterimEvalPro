@@ -506,6 +506,150 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
   return await Packer.toBuffer(doc);
 }
 
+// Helper function to generate trainee dashboard document (all sessions)
+async function generateTraineeDashboardDoc(name, traineeSessions, db) {
+  if (!traineeSessions.length) return null;
+
+  const avgScore = Math.round(traineeSessions.reduce((s, r) => s + r.pct, 0) / traineeSessions.length);
+  const grade = avgScore >= 80 ? "Excellent" : avgScore >= 60 ? "Good" : avgScore >= 40 ? "Needs improvement" : "Re-assessment";
+  const latest = traineeSessions[traineeSessions.length - 1];
+
+  const sections = [];
+
+  // Header
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: "TRAINEE DASHBOARD REPORT", bold: true, size: 32 })],
+    heading: HeadingLevel.HEADING_1,
+    alignment: AlignmentType.CENTER,
+  }));
+
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: `Generated: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}`, size: 20, color: "666666" })],
+    alignment: AlignmentType.CENTER,
+  }));
+
+  sections.push(new Paragraph({ text: "" }));
+
+  // Summary metrics
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: "SUMMARY", bold: true })],
+    heading: HeadingLevel.HEADING_2,
+  }));
+
+  const summaryTable = new Table({
+    rows: [
+      new TableRow({
+        cells: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Name", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: name })] })],
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Cohort", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: latest.cohort || "N/A" })] })],
+          }),
+        ],
+      }),
+      new TableRow({
+        cells: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Sessions", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: String(traineeSessions.length) })] })],
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Avg Score", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: `${avgScore}%`, bold: true })] })],
+          }),
+        ],
+      }),
+      new TableRow({
+        cells: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Grade", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: grade })] })],
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Approval", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: db.approvals[latest.id] === true ? "✓ APPROVED" : db.approvals[latest.id] === "denied" ? "✗ DENIED" : "⏳ PENDING" })] })],
+          }),
+        ],
+      }),
+    ],
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
+
+  sections.push(summaryTable);
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
+
+  // All sessions breakdown
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: "ALL SESSIONS", bold: true })],
+    heading: HeadingLevel.HEADING_2,
+  }));
+
+  traineeSessions.forEach((session, sessionIdx) => {
+    sections.push(new Paragraph({
+      children: [new TextRun({ text: `Session ${sessionIdx + 1} — ${session.date}`, bold: true })],
+      heading: HeadingLevel.HEADING_3,
+    }));
+
+    sections.push(new Paragraph({
+      children: [new TextRun({ text: `Score: ${session.pct}% (${session.score}/50)` })],
+    }));
+
+    // Session results
+    session.results.forEach((result, idx) => {
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Q${idx + 1}. ${result.topic} — ${result.scoreLabel} (${result.score}/10)`, bold: true, size: 22 })],
+      }));
+
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Question: ${result.question}` })],
+      }));
+
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Trainee Answer: ${result.answer || "[Skipped]"}` })],
+      }));
+
+      if (result.feedback) {
+        sections.push(new Paragraph({
+          children: [new TextRun({ text: `Feedback: ${result.feedback}` })],
+        }));
+      }
+
+      sections.push(new Paragraph({ children: [new TextRun("")] }));
+    });
+
+    sections.push(new Paragraph({
+      children: [new TextRun({ text: `Integrity: ${session.suspicionLevel || "Clean"}  |  Tab Switches: ${session.tabSwitches || 0}  |  Pastes: ${session.pastes || 0}` })],
+    }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+  });
+
+  const doc = new Document({ sections: [{ children: sections }] });
+  return await Packer.toBuffer(doc);
+}
+
 // GET /api/trainer/trainee/:name/report — generate Word document report
 app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) => {
   const name = decodeURIComponent(req.params.name);
@@ -519,7 +663,8 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
     const buffer = await generateTraineeReportDoc(name, traineeSessions, db);
     res.setHeader("Content-Disposition", `attachment; filename="Trainee_Report_${name.replace(/\s+/g, "_")}.docx"`);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-    res.send(buffer);
+    res.setHeader("Content-Length", buffer.length);
+    res.end(buffer);
   } catch (err) {
     console.error("Report generation error:", err);
     res.status(500).json({ error: "Failed to generate report" });
@@ -536,9 +681,15 @@ app.get("/api/trainer/reports/all/download", requireTrainer, async (req, res) =>
     }
 
     const archive = archiver("zip", { zlib: { level: 9 } });
-
+    
     res.setHeader("Content-Disposition", `attachment; filename="All_Trainee_Reports_${new Date().getTime()}.zip"`);
     res.setHeader("Content-Type", "application/zip");
+
+    // Handle errors
+    archive.on("error", (err) => {
+      console.error("Archive error:", err);
+      res.status(500).json({ error: "Failed to generate archive" });
+    });
 
     archive.pipe(res);
 
@@ -553,6 +704,27 @@ app.get("/api/trainer/reports/all/download", requireTrainer, async (req, res) =>
   } catch (err) {
     console.error("Bulk report generation error:", err);
     res.status(500).json({ error: "Failed to generate reports" });
+  }
+});
+
+// GET /api/trainer/trainee/:name/dashboard — download current dashboard view as Word document
+app.get("/api/trainer/trainee/:name/dashboard", requireTrainer, async (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === name.toLowerCase());
+
+  if (!traineeSessions.length) {
+    return res.status(404).json({ error: "No sessions found for this trainee" });
+  }
+
+  try {
+    const buffer = await generateTraineeDashboardDoc(name, traineeSessions, db);
+    res.setHeader("Content-Disposition", `attachment; filename="Dashboard_${name.replace(/\s+/g, "_")}_${new Date().getTime()}.docx"`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    res.setHeader("Content-Length", buffer.length);
+    res.end(buffer);
+  } catch (err) {
+    console.error("Dashboard download error:", err);
+    res.status(500).json({ error: "Failed to generate dashboard" });
   }
 });
 

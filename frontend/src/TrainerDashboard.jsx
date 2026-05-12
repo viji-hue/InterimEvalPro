@@ -179,9 +179,6 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
   const handleDownload = () => {
     if (!selectedName || !token) return;
     const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/report`;
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("Authorization", `Bearer ${token}`);
     fetch(url, {
       method: "GET",
       headers: { "Authorization": `Bearer ${token}` }
@@ -200,6 +197,27 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
     .catch(err => console.error("Download failed:", err));
   };
 
+  const handleDownloadDashboard = () => {
+    if (!selectedName || !token) return;
+    const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/dashboard`;
+    fetch(url, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `Dashboard_${selectedName.replace(/\s+/g, "_")}_${new Date().getTime()}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+    })
+    .catch(err => console.error("Download failed:", err));
+  };
+
   return (
     <div>
       <div style={{ padding: "1rem 1.5rem 0.5rem", display: "flex", gap: 8, alignItems: "center" }}>
@@ -208,7 +226,8 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
           {names.map(n => <option key={n}>{n}</option>)}
         </select>
         {selectedName && <button className="btn-delete" onClick={() => onDelete(selectedName)}>✕ Delete</button>}
-        {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownload} style={{ fontSize: 12, padding: "8px 12px" }}>📄 Download Report</button>}
+        {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownloadDashboard} style={{ fontSize: 12, padding: "8px 12px" }}>📊 Download Dashboard</button>}
+        {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownload} style={{ fontSize: 12, padding: "8px 12px" }}>📄 Latest Report</button>}
       </div>
       {selectedName && traineeSessions.length > 0 && (() => {
         const sess = traineeSessions;
