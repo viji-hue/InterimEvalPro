@@ -3,6 +3,7 @@ import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, BorderStyle, WidthType, AlignmentType, TextRun, HeadingLevel, UnderlineType, VerticalAlign } from "docx";
 import archiver from "archiver";
 import { Readable } from "stream";
@@ -10,6 +11,9 @@ import { pickSessionQuestions, getFullQuestion } from "./questions.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// ─── Initialize Google Generative AI ────────────────────────────────
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ─── Middleware ────────────────────────────────────────────────────
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173", credentials: true }));
@@ -97,17 +101,9 @@ app.post("/api/session/answer", async (req, res) => {
   let score = 0, scoreLabel = "Irrelevant", feedback = "";
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,  // API key hidden server-side
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system: `You are a strict senior QA lead evaluating a trainee's Selenium track assessment answer.
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: `You are a strict senior QA lead evaluating a trainee's Selenium track assessment answer.
 
 SCORING RUBRIC (only use these exact scores):
 - 10: Complete, accurate AND includes real-world example (code, project context, framework usage)
@@ -125,18 +121,11 @@ RULES:
 4. Feedback must say exactly WHY the score was given
 
 Respond ONLY with valid JSON, no markdown:
-{"score":<0|2|5|7|10>,"scoreLabel":"<Full marks|Good answer|Surface answer|Mostly wrong|Irrelevant>","feedback":"<3-4 sentences: what was correct, what example was given or missing, what to study>"}`,
-        messages: [{
-          role: "user",
-          content: `QUESTION: ${fullQ.q}\n\nMODEL ANSWER: ${modelAnswer}\n\nTRAINEE ANSWER: ${answer}`
-        }]
-      })
+{"score":<0|2|5|7|10>,"scoreLabel":"<Full marks|Good answer|Surface answer|Mostly wrong|Irrelevant>","feedback":"<3-4 sentences: what was correct, what example was given or missing, what to study>"}`
     });
 
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-
-    const text = data.content?.find(c => c.type === "text")?.text || "{}";
+    const result = await model.generateContent(`QUESTION: ${fullQ.q}\n\nMODEL ANSWER: ${modelAnswer}\n\nTRAINEE ANSWER: ${answer}`);
+    const text = result.response.text();
     const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
     score = typeof parsed.score === "number" ? parsed.score : 0;
     scoreLabel = parsed.scoreLabel || "Irrelevant";
