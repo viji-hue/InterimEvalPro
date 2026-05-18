@@ -7,7 +7,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, BorderStyle, WidthType, AlignmentType, TextRun, HeadingLevel, UnderlineType, VerticalAlign } from "docx";
 import archiver from "archiver";
 import { Readable } from "stream";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { pickSessionQuestions, getFullQuestion } from "./questions.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -264,6 +270,210 @@ app.delete("/api/trainer/trainee/:name", requireTrainer, (req, res) => {
   db.sessions = db.sessions.filter(s => s.trainee.toLowerCase() !== name.toLowerCase());
   res.json({ ok: true, deleted: before - db.sessions.length });
 });
+
+// Helper function to generate consolidated report with all trainees
+async function generateConsolidatedReportDoc(db) {
+  if (!db.sessions.length) return null;
+
+  const allTrainees = [...new Set(db.sessions.map(s => s.trainee))];
+  const sections = [];
+
+  // Header
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: "COMPREHENSIVE TRAINEE EVALUATION REPORT", bold: true, size: 32 })],
+    heading: HeadingLevel.HEADING_1,
+    alignment: AlignmentType.CENTER,
+  }));
+
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: `Generated: ${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}`, size: 20, color: "666666" })],
+    alignment: AlignmentType.CENTER,
+  }));
+
+  sections.push(new Paragraph({ text: "" }));
+
+  // Overall Summary
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: "OVERALL SUMMARY", bold: true, size: 28 })],
+    heading: HeadingLevel.HEADING_1,
+  }));
+
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
+
+  const totalSessions = db.sessions.length;
+  const overallAvg = Math.round(db.sessions.reduce((s, r) => s + r.pct, 0) / totalSessions);
+  const passCount = db.sessions.filter(s => s.pct >= 60).length;
+  const excellentCount = db.sessions.filter(s => s.pct >= 80).length;
+
+  const summaryTable = new Table({
+    rows: [
+      new TableRow({
+        cells: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Total Trainees", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: String(allTrainees.length) })] })],
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Total Sessions", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: String(totalSessions) })] })],
+          }),
+        ],
+      }),
+      new TableRow({
+        cells: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Overall Avg Score", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: `${overallAvg}%` })] })],
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: "Pass Rate (≥60%)", bold: true })] })],
+            shading: { fill: "E8E8E8" },
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: `${Math.round(passCount / totalSessions * 100)}%` })] })],
+          }),
+        ],
+      }),
+    ],
+    width: { size: 100, type: WidthType.PERCENTAGE },
+  });
+
+  sections.push(summaryTable);
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
+
+  // Individual Trainee Sections
+  sections.push(new Paragraph({
+    children: [new TextRun({ text: "INDIVIDUAL TRAINEE REPORTS", bold: true, size: 28 })],
+    heading: HeadingLevel.HEADING_1,
+  }));
+
+  sections.push(new Paragraph({ children: [new TextRun("")] }));
+
+  for (const trainee of allTrainees) {
+    const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === trainee.toLowerCase());
+    const latest = traineeSessions[traineeSessions.length - 1];
+    const avgScore = Math.round(traineeSessions.reduce((s, r) => s + r.pct, 0) / traineeSessions.length);
+    const grade = avgScore >= 80 ? "Excellent" : avgScore >= 60 ? "Good" : avgScore >= 40 ? "Needs improvement" : "Re-assessment";
+
+    // Trainee Header
+    sections.push(new Paragraph({
+      children: [new TextRun({ text: `${trainee} — ${traineeSessions.length} session(s)`, bold: true, size: 26 })],
+      heading: HeadingLevel.HEADING_2,
+    }));
+
+    // Trainee Summary Table
+    const traineeTable = new Table({
+      rows: [
+        new TableRow({
+          cells: [
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: "Cohort", bold: true })] })],
+              shading: { fill: "E8E8E8" },
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: latest.cohort || "N/A" })] })],
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: "Avg Score", bold: true })] })],
+              shading: { fill: "E8E8E8" },
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: `${avgScore}%`, bold: true })] })],
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: "Status", bold: true })] })],
+              shading: { fill: "E8E8E8" },
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: grade })] })],
+            }),
+          ],
+        }),
+        new TableRow({
+          cells: [
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: "Latest Score", bold: true })] })],
+              shading: { fill: "E8E8E8" },
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: `${latest.pct}%` })] })],
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: "Approval", bold: true })] })],
+              shading: { fill: "E8E8E8" },
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: db.approvals[latest.id] === true ? "✓ APPROVED" : db.approvals[latest.id] === "denied" ? "✗ DENIED" : "⏳ PENDING" })] })],
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: "Date", bold: true })] })],
+              shading: { fill: "E8E8E8" },
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: latest.date || "N/A" })] })],
+            }),
+          ],
+        }),
+      ],
+      width: { size: 100, type: WidthType.PERCENTAGE },
+    });
+
+    sections.push(traineeTable);
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+
+    // Latest Session Details
+    sections.push(new Paragraph({
+      children: [new TextRun({ text: `Latest Session (${latest.date})`, bold: true, size: 22 })],
+      heading: HeadingLevel.HEADING_3,
+    }));
+
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+
+    // Results for latest session
+    latest.results.forEach((result, idx) => {
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Q${idx + 1} · ${result.topic}`, bold: true, size: 20 })],
+      }));
+
+      const scoreColor = result.score >= 7 ? "228B22" : result.score >= 5 ? "FF8C00" : "DC143C";
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Score: ${result.score}/10 — ${result.scoreLabel}`, bold: true, color: scoreColor })],
+      }));
+
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Q: ${result.question}`, size: 18 })],
+      }));
+
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `A: ${result.answer || "[No answer provided]"}`, size: 18 })],
+      }));
+
+      sections.push(new Paragraph({
+        children: [new TextRun({ text: `Feedback: ${result.feedback}`, size: 18, italic: true })],
+      }));
+
+      sections.push(new Paragraph({ children: [new TextRun("")] }));
+    });
+
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+    sections.push(new Paragraph({ children: [new TextRun("─".repeat(80))] }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+    sections.push(new Paragraph({ children: [new TextRun("")] }));
+  }
+
+  const doc = new Document({ sections: [{ children: sections }] });
+  return await Packer.toBuffer(doc);
+}
 
 // Helper function to generate trainee report document
 async function generateTraineeReportDoc(name, traineeSessions, db) {
@@ -727,5 +937,42 @@ app.get("/api/trainer/trainee/:name/dashboard", requireTrainer, async (req, res)
     res.status(500).json({ error: "Failed to generate dashboard" });
   }
 });
+
+// GET /api/trainer/consolidated-report — generate and save consolidated report with all trainees to frontend folder
+app.get("/api/trainer/consolidated-report", requireTrainer, async (req, res) => {
+  try {
+    if (!db.sessions.length) {
+      return res.status(404).json({ error: "No session data available" });
+    }
+
+    const buffer = await generateConsolidatedReportDoc(db);
+    const timestamp = new Date().getTime();
+    const filename = `Consolidated_Trainee_Report_${timestamp}.docx`;
+    const frontendPath = path.join(__dirname, "../frontend", filename);
+
+    // Ensure frontend directory exists
+    const frontendDir = path.join(__dirname, "../frontend");
+    if (!fs.existsSync(frontendDir)) {
+      fs.mkdirSync(frontendDir, { recursive: true });
+    }
+
+    // Save file to frontend folder
+    fs.writeFileSync(frontendPath, buffer);
+
+    res.json({
+      ok: true,
+      filename: filename,
+      path: `/frontend/${filename}`,
+      message: "Consolidated report generated and saved successfully"
+    });
+  } catch (err) {
+    console.error("Consolidated report generation error:", err);
+    res.status(500).json({ error: "Failed to generate consolidated report" });
+  }
+});
+
+// Serve static files from frontend folder (including reports)
+app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
+
 
 app.listen(PORT, () => console.log(`✅ EvalPro backend running on http://localhost:${PORT}`));

@@ -22,6 +22,7 @@ function ScorePill({ score, label }) {
 // ─── OVERVIEW TAB ────────────────────────────────────────────────
 function OverviewTab({ sessions, onDelete, onQuickView, token }) {
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [generatingConsolidated, setGeneratingConsolidated] = useState(false);
 
   const handleBulkDownload = () => {
     if (!token || downloadingAll) return;
@@ -46,6 +47,20 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
       console.error("Bulk download failed:", err);
       setDownloadingAll(false);
     });
+  };
+
+  const handleGenerateConsolidated = async () => {
+    if (!token || generatingConsolidated) return;
+    setGeneratingConsolidated(true);
+    try {
+      const result = await api.generateConsolidatedReport(token);
+      alert(`✓ Consolidated report saved!\n\nFile: ${result.filename}\nLocation: Frontend folder`);
+      setGeneratingConsolidated(false);
+    } catch (err) {
+      console.error("Consolidated report generation failed:", err);
+      alert("Failed to generate consolidated report. Check console for details.");
+      setGeneratingConsolidated(false);
+    }
   };
 
   if (!sessions.length) return <div className="empty-state">No sessions recorded yet.</div>;
@@ -94,11 +109,16 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 1.5rem", gap: "10px", flexWrap: "wrap" }}>
         <div className="section-title" style={{ margin: 0 }}>All trainees</div>
-        <button className="btn-approve" onClick={handleBulkDownload} disabled={downloadingAll} style={{ fontSize: 12, padding: "8px 12px" }}>
-          {downloadingAll ? "⏳ Generating..." : "📦 Download All Reports"}
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button className="btn-approve" onClick={handleGenerateConsolidated} disabled={generatingConsolidated} style={{ fontSize: 12, padding: "8px 12px" }}>
+            {generatingConsolidated ? "⏳ Generating..." : "📄 Save Consolidated Report"}
+          </button>
+          <button className="btn-approve" onClick={handleBulkDownload} disabled={downloadingAll} style={{ fontSize: 12, padding: "8px 12px" }}>
+            {downloadingAll ? "⏳ Generating..." : "📦 Download All Reports"}
+          </button>
+        </div>
       </div>
       <div className="card">
         {Object.entries(byT).map(([name, sess]) => {
