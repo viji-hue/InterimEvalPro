@@ -859,11 +859,45 @@ async function generateTraineeDashboardDoc(name, traineeSessions, db) {
   return await Packer.toBuffer(doc);
 }
 
+function formatWorksheet(worksheet) {
+  worksheet["!cols"] = [
+    { wch: 20 }, // Trainee Name
+    { wch: 14 }, // Session Date
+    { wch: 18 }, // Session ID
+    { wch: 6 },  // Q No
+    { wch: 80 }, // Question
+    { wch: 100 },// Trainee Answer
+    { wch: 100 },// Model Answer
+    { wch: 8 },  // Score
+    { wch: 12 }, // Score Label
+    { wch: 18 }, // Integrity
+    { wch: 12 }, // Tab Switches
+    { wch: 10 }, // Pastes
+    { wch: 10 }, // Copies
+  ];
+  worksheet["!autofilter"] = { ref: "A1:M1" };
+}
+
 async function generateTraineeExcelReport(name, traineeSessions) {
   if (!traineeSessions.length) return null;
 
-  const rows = [];
+  const rows = [
+    { "Trainee Name": `Trainee: ${name}`, "Session Date": `Sessions: ${traineeSessions.length}` },
+    {},
+  ];
+
   traineeSessions.forEach((session) => {
+    rows.push({
+      "Trainee Name": "Session Summary",
+      "Session Date": session.date,
+      "Session ID": session.id,
+      "Q No": "",
+      "Question": `Integrity: ${session.suspicionLevel || "Clean"}`,
+      "Trainee Answer": `Tab switches: ${session.tabSwitches || 0}`,
+      "Model Answer": `Pastes: ${session.pastes || 0}`,
+      "Score": `Copies: ${session.copies || 0}`,
+    });
+
     session.results.forEach((result, idx) => {
       rows.push({
         "Trainee Name": name,
@@ -881,21 +915,7 @@ async function generateTraineeExcelReport(name, traineeSessions) {
         "Copies": session.copies || 0,
       });
     });
-    rows.push({
-      "Trainee Name": name,
-      "Session Date": session.date,
-      "Session ID": session.id,
-      "Q No": "",
-      "Question": "Session integrity summary",
-      "Trainee Answer": `Integrity: ${session.suspicionLevel || "Clean"} | Tab switches: ${session.tabSwitches || 0} | Pastes: ${session.pastes || 0} | Copies: ${session.copies || 0}`,
-      "Model Answer": "",
-      "Score": "",
-      "Score Label": "",
-      "Integrity": session.suspicionLevel || "Clean",
-      "Tab Switches": session.tabSwitches || 0,
-      "Pastes": session.pastes || 0,
-      "Copies": session.copies || 0,
-    });
+
     rows.push({});
   });
 
@@ -904,7 +924,8 @@ async function generateTraineeExcelReport(name, traineeSessions) {
     header: ["Trainee Name", "Session Date", "Session ID", "Q No", "Question", "Trainee Answer", "Model Answer", "Score", "Score Label", "Integrity", "Tab Switches", "Pastes", "Copies"],
     skipHeader: false,
   });
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+  formatWorksheet(worksheet);
+  XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(name));
   return XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
 }
 
@@ -1027,6 +1048,7 @@ async function generateAllTraineesExcelReport(db) {
       skipHeader: false,
     });
 
+    formatWorksheet(worksheet);
     XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(trainee));
   });
 

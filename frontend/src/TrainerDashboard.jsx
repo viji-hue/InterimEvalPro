@@ -74,7 +74,7 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
         throw new Error(`File too large (${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB). Maximum: 500MB. Please clear old sessions or reduce the number of trainees.`);
       }
 
-      if (contentType && !contentType.includes("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") && !contentType.includes("application/octet-stream")) {
+      if (contentType && !["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "application/octet-stream"].some(ct => contentType.includes(ct))) {
         throw new Error("Invalid file format received from server");
       }
 
