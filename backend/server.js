@@ -869,13 +869,21 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
 
   try {
     const buffer = await generateTraineeReportDoc(name, traineeSessions, db);
-    res.setHeader("Content-Disposition", `attachment; filename="Trainee_Report_${name.replace(/\s+/g, "_")}.docx"`);
+    if (!buffer) {
+      return res.status(500).json({ error: "Failed to generate report document" });
+    }
+    
+    const filename = `Trainee_Report_${name.replace(/\s+/g, "_")}.docx`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     res.setHeader("Content-Length", buffer.length);
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.end(buffer);
   } catch (err) {
     console.error("Report generation error:", err);
-    res.status(500).json({ error: "Failed to generate report" });
+    res.status(500).json({ error: "Failed to generate report", details: err.message });
   }
 });
 
@@ -889,29 +897,62 @@ app.get("/api/trainer/reports/all/download", requireTrainer, async (req, res) =>
     }
 
     const archive = archiver("zip", { zlib: { level: 9 } });
+    const filename = `All_Trainee_Reports_${new Date().getTime()}.zip`;
     
-    res.setHeader("Content-Disposition", `attachment; filename="All_Trainee_Reports_${new Date().getTime()}.zip"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
 
-    // Handle errors
+    let hasError = false;
+
+    // Handle archive errors
     archive.on("error", (err) => {
       console.error("Archive error:", err);
-      res.status(500).json({ error: "Failed to generate archive" });
+      hasError = true;
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to generate archive", details: err.message });
+      } else {
+        res.destroy();
+      }
+    });
+
+    // Track archive finish
+    archive.on("warning", (err) => {
+      if (err.code === "ENOENT") {
+        console.warn("Archive warning:", err);
+      } else {
+        throw err;
+      }
+    });
+
+    archive.on("finish", () => {
+      console.log(`Archive completed: ${filename} (${archive.pointer()} bytes)`);
     });
 
     archive.pipe(res);
 
     // Generate and add each trainee report to ZIP
     for (const trainee of allTrainees) {
+      if (hasError) break;
       const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === trainee.toLowerCase());
-      const buffer = await generateTraineeReportDoc(trainee, traineeSessions, db);
-      archive.append(buffer, { name: `Trainee_Report_${trainee.replace(/\s+/g, "_")}.docx` });
+      try {
+        const buffer = await generateTraineeReportDoc(trainee, traineeSessions, db);
+        if (buffer) {
+          archive.append(buffer, { name: `Trainee_Report_${trainee.replace(/\s+/g, "_")}.docx` });
+        }
+      } catch (traineeErr) {
+        console.error(`Error generating report for ${trainee}:`, traineeErr);
+      }
     }
 
     archive.finalize();
   } catch (err) {
     console.error("Bulk report generation error:", err);
-    res.status(500).json({ error: "Failed to generate reports" });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to generate reports", details: err.message });
+    }
   }
 });
 
@@ -926,13 +967,21 @@ app.get("/api/trainer/trainee/:name/dashboard", requireTrainer, async (req, res)
 
   try {
     const buffer = await generateTraineeDashboardDoc(name, traineeSessions, db);
-    res.setHeader("Content-Disposition", `attachment; filename="Dashboard_${name.replace(/\s+/g, "_")}_${new Date().getTime()}.docx"`);
+    if (!buffer) {
+      return res.status(500).json({ error: "Failed to generate dashboard document" });
+    }
+    
+    const filename = `Dashboard_${name.replace(/\s+/g, "_")}_${new Date().getTime()}.docx`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     res.setHeader("Content-Length", buffer.length);
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.end(buffer);
   } catch (err) {
     console.error("Dashboard download error:", err);
-    res.status(500).json({ error: "Failed to generate dashboard" });
+    res.status(500).json({ error: "Failed to generate dashboard", details: err.message });
   }
 });
 

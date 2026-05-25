@@ -24,29 +24,95 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [generatingConsolidated, setGeneratingConsolidated] = useState(false);
 
-  const handleBulkDownload = () => {
+  const handleBulkDownload = async () => {
     if (!token || downloadingAll) return;
     setDownloadingAll(true);
-    fetch("/api/trainer/reports/all/download", {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${token}` }
-    })
-    .then(res => res.blob())
-    .then(blob => {
-      const downloadUrl = window.URL.createObjectURL(blob);
+    
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB limit
+    const startTime = Date.now();
+    const TIMEOUT = 120000; // 2 minutes timeout
+    
+    try {
+      const response = await fetch("/api/trainer/reports/all/download", {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` },
+        signal: AbortSignal.timeout(TIMEOUT)
+      });
+
+      // Check if response is OK
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(error.error || `HTTP Error: ${response.status}`);
+      }
+
+      // Check content type
+      const contentType = response.headers.get("content-type");
+      const contentLength = response.headers.get("content-length");
+      
+      if (contentLength && parseInt(contentLength) > MAX_FILE_SIZE) {
+        throw new Error(`File too large (${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB). Maximum: 500MB. Please clear old sessions or reduce the number of trainees.`);
+      }
+
+      if (contentType && !contentType.includes("application/zip") && !contentType.includes("application/octet-stream")) {
+        throw new Error("Invalid file format received from server");
+      }
+
+      const blob = await response.blob();
+      
+      // Validate blob
+      if (!blob || blob.size === 0) {
+        throw new Error("Failed to download file: received empty response");
+      }
+
+      if (blob.size > MAX_FILE_SIZE) {
+        throw new Error(`Downloaded file too large (${(blob.size / 1024 / 1024).toFixed(2)}MB). Insufficient memory. Please try again later or reduce the data volume.`);
+      }
+
+      // Validate blob can be created as object URL
+      let downloadUrl;
+      try {
+        downloadUrl = window.URL.createObjectURL(blob);
+      } catch (urlErr) {
+        throw new Error(`Memory error while preparing download: ${urlErr.message}. Please close other applications and try again.`);
+      }
+
+      // Create download link
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = `All_Trainee_Reports_${new Date().getTime()}.zip`;
       document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
+      
+      // Trigger download
+      try {
+        a.click();
+      } catch (clickErr) {
+        throw new Error(`Failed to start download: ${clickErr.message}`);
+      }
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+      }, 100);
+      
       setDownloadingAll(false);
-    })
-    .catch(err => {
+    } catch (err) {
       console.error("Bulk download failed:", err);
+      let errorMsg = "Failed to download all reports";
+      
+      if (err.name === "AbortError") {
+        errorMsg = "Download timed out. The file is too large or the server is slow. Please try again or reduce the number of trainees.";
+      } else if (err.message.includes("memory") || err.message.includes("Memory")) {
+        errorMsg = "Insufficient memory to download. Please close other applications and try again.";
+      } else if (err.message.includes("too large")) {
+        errorMsg = err.message;
+      } else {
+        errorMsg = `Error: ${err.message || "Unknown error. Check browser console."}`;
+      }
+      
+      alert(`❌ ${errorMsg}`);
       setDownloadingAll(false);
-    });
+    }
   };
 
   const handleGenerateConsolidated = async () => {
@@ -196,46 +262,130 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
   const latest = traineeSession => traineeSession[traineeSession.length - 1];
   const avgPct = traineeSession => Math.round(traineeSession.reduce((s, r) => s + r.pct, 0) / traineeSession.length);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!selectedName || !token) return;
-    const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/report`;
-    fetch(url, {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${token}` }
-    })
-    .then(res => res.blob())
-    .then(blob => {
+    
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB limit per file
+    const TIMEOUT = 60000; // 1 minute timeout
+    
+    try {
+      const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/report`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` },
+        signal: AbortSignal.timeout(TIMEOUT)
+      });
+
+      // Check response status
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(error.error || `HTTP Error: ${response.status}`);
+      }
+
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength) > MAX_FILE_SIZE) {
+        throw new Error(`File too large (${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB). Maximum: 100MB.`);
+      }
+
+      const blob = await response.blob();
+      
+      // Validate blob
+      if (!blob || blob.size === 0) {
+        throw new Error("Failed to download report: empty response");
+      }
+
+      if (blob.size > MAX_FILE_SIZE) {
+        throw new Error(`File too large (${(blob.size / 1024 / 1024).toFixed(2)}MB). Insufficient memory.`);
+      }
+
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = `Trainee_Report_${selectedName.replace(/\s+/g, "_")}_${new Date().getTime()}.docx`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
-    })
-    .catch(err => console.error("Download failed:", err));
+      
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+      }, 100);
+    } catch (err) {
+      console.error("Download failed:", err);
+      let errorMsg = `Failed to download report for ${selectedName}`;
+      
+      if (err.name === "AbortError") {
+        errorMsg = "Download timed out. Please try again.";
+      } else if (err.message.includes("too large")) {
+        errorMsg = err.message;
+      } else {
+        errorMsg = `Error: ${err.message}`;
+      }
+      
+      alert(`❌ ${errorMsg}`);
+    }
   };
 
-  const handleDownloadDashboard = () => {
+  const handleDownloadDashboard = async () => {
     if (!selectedName || !token) return;
-    const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/dashboard`;
-    fetch(url, {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${token}` }
-    })
-    .then(res => res.blob())
-    .then(blob => {
+    
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB limit per file
+    const TIMEOUT = 60000; // 1 minute timeout
+    
+    try {
+      const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/dashboard`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` },
+        signal: AbortSignal.timeout(TIMEOUT)
+      });
+
+      // Check response status
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(error.error || `HTTP Error: ${response.status}`);
+      }
+
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength) > MAX_FILE_SIZE) {
+        throw new Error(`File too large (${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB). Maximum: 100MB.`);
+      }
+
+      const blob = await response.blob();
+      
+      // Validate blob
+      if (!blob || blob.size === 0) {
+        throw new Error("Failed to download dashboard: empty response");
+      }
+
+      if (blob.size > MAX_FILE_SIZE) {
+        throw new Error(`File too large (${(blob.size / 1024 / 1024).toFixed(2)}MB). Insufficient memory.`);
+      }
+
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = `Dashboard_${selectedName.replace(/\s+/g, "_")}_${new Date().getTime()}.docx`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
-    })
-    .catch(err => console.error("Download failed:", err));
+      
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+      }, 100);
+    } catch (err) {
+      console.error("Dashboard download failed:", err);
+      let errorMsg = `Failed to download dashboard for ${selectedName}`;
+      
+      if (err.name === "AbortError") {
+        errorMsg = "Download timed out. Please try again.";
+      } else if (err.message.includes("too large")) {
+        errorMsg = err.message;
+      } else {
+        errorMsg = `Error: ${err.message}`;
+      }
+      
+      alert(`❌ ${errorMsg}`);
+    }
   };
 
   return (
