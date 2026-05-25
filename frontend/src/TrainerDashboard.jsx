@@ -737,7 +737,7 @@ export default function TrainerDashboard({ token, onExit }) {
       </div>
       {loading ? <div style={{ padding: "2rem", display: "flex", justifyContent: "center" }}><Spinner /></div> : (
         <div className="tab-content">
-          {tab === "overview" && <OverviewTab sessions={sessions} onDelete={handleDelete} onQuickView={n => { setSelectedTrainee(n); setTab("individual"); }} />}
+          {tab === "overview" && <OverviewTab sessions={sessions} onDelete={handleDelete} onQuickView={n => { setSelectedTrainee(n); setTab("individual"); }} token={token} />}
           {tab === "approvals" && <ApprovalsTab sessions={sessions} token={token} onRefresh={load} />}
           {tab === "individual" && <IndividualTab sessions={sessions} selectedName={selectedTrainee} onSelect={setSelectedTrainee} onDelete={handleDelete} token={token} />}
           {tab === "insights" && <InsightsTab sessions={sessions} />}
