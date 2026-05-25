@@ -74,7 +74,7 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
         throw new Error(`File too large (${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB). Maximum: 500MB. Please clear old sessions or reduce the number of trainees.`);
       }
 
-      if (contentType && !contentType.includes("application/zip") && !contentType.includes("application/octet-stream")) {
+      if (contentType && !contentType.includes("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") && !contentType.includes("application/octet-stream")) {
         throw new Error("Invalid file format received from server");
       }
 
@@ -100,7 +100,7 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
       // Create download link
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = `All_Trainee_Reports_${new Date().getTime()}.zip`;
+      a.download = `All_Trainee_Reports_${new Date().getTime()}.xlsx`;
       document.body.appendChild(a);
       
       // Trigger download
@@ -203,7 +203,7 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
             {generatingConsolidated ? "⏳ Generating..." : "📄 Save Consolidated Report"}
           </button>
           <button className="btn-approve" onClick={handleBulkDownload} disabled={downloadingAll} style={{ fontSize: 12, padding: "8px 12px" }}>
-            {downloadingAll ? "⏳ Generating..." : "📦 Download All Reports"}
+            {downloadingAll ? "⏳ Generating..." : "� Download All Excel"}
           </button>
         </div>
       </div>

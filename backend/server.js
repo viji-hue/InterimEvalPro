@@ -972,70 +972,86 @@ app.get("/api/trainer/trainee/:name/excel", requireTrainer, async (req, res) => 
 });
 
 // GET /api/trainer/reports/all/download — download all trainee reports as ZIP
+function sanitizeSheetName(name) {
+  return name.replace(/[:\\/?\[\]*]/g, "_").slice(0, 31) || "Sheet1";
+}
+
+async function generateAllTraineesExcelReport(db) {
+  const allTrainees = [...new Set(db.sessions.map(s => s.trainee))];
+  if (!allTrainees.length) return null;
+
+  const workbook = XLSX.utils.book_new();
+
+  allTrainees.forEach((trainee) => {
+    const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === trainee.toLowerCase());
+    const rows = [];
+
+    traineeSessions.forEach((session) => {
+      session.results.forEach((result, idx) => {
+        rows.push({
+          "Trainee Name": trainee,
+          "Session Date": session.date,
+          "Session ID": session.id,
+          "Q No": idx + 1,
+          "Question": result.question,
+          "Trainee Answer": result.answer || "[Skipped]",
+          "Model Answer": result.modelAnswer || "Model answer not available",
+          "Score": result.score,
+          "Score Label": result.scoreLabel,
+          "Integrity": session.suspicionLevel || "Clean",
+          "Tab Switches": session.tabSwitches || 0,
+          "Pastes": session.pastes || 0,
+          "Copies": session.copies || 0,
+        });
+      });
+      rows.push({
+        "Trainee Name": trainee,
+        "Session Date": session.date,
+        "Session ID": session.id,
+        "Q No": "",
+        "Question": "Session integrity summary",
+        "Trainee Answer": `Integrity: ${session.suspicionLevel || "Clean"} | Tab switches: ${session.tabSwitches || 0} | Pastes: ${session.pastes || 0} | Copies: ${session.copies || 0}`,
+        "Model Answer": "",
+        "Score": "",
+        "Score Label": "",
+        "Integrity": session.suspicionLevel || "Clean",
+        "Tab Switches": session.tabSwitches || 0,
+        "Pastes": session.pastes || 0,
+        "Copies": session.copies || 0,
+      });
+      rows.push({});
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows, {
+      header: ["Trainee Name", "Session Date", "Session ID", "Q No", "Question", "Trainee Answer", "Model Answer", "Score", "Score Label", "Integrity", "Tab Switches", "Pastes", "Copies"],
+      skipHeader: false,
+    });
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(trainee));
+  });
+
+  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+}
+
 app.get("/api/trainer/reports/all/download", requireTrainer, async (req, res) => {
   try {
-    const allTrainees = [...new Set(db.sessions.map(s => s.trainee))];
-
-    if (!allTrainees.length) {
+    const buffer = await generateAllTraineesExcelReport(db);
+    if (!buffer) {
       return res.status(404).json({ error: "No trainee data available" });
     }
 
-    const archive = archiver("zip", { zlib: { level: 9 } });
-    const filename = `All_Trainee_Reports_${new Date().getTime()}.zip`;
-    
+    const filename = `All_Trainee_Reports_${new Date().getTime()}.xlsx`;
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Length", buffer.length);
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
-
-    let hasError = false;
-
-    // Handle archive errors
-    archive.on("error", (err) => {
-      console.error("Archive error:", err);
-      hasError = true;
-      if (!res.headersSent) {
-        res.status(500).json({ error: "Failed to generate archive", details: err.message });
-      } else {
-        res.destroy();
-      }
-    });
-
-    // Track archive finish
-    archive.on("warning", (err) => {
-      if (err.code === "ENOENT") {
-        console.warn("Archive warning:", err);
-      } else {
-        throw err;
-      }
-    });
-
-    archive.on("finish", () => {
-      console.log(`Archive completed: ${filename} (${archive.pointer()} bytes)`);
-    });
-
-    archive.pipe(res);
-
-    // Generate and add each trainee report to ZIP
-    for (const trainee of allTrainees) {
-      if (hasError) break;
-      const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === trainee.toLowerCase());
-      try {
-        const buffer = await generateTraineeReportDoc(trainee, traineeSessions, db);
-        if (buffer) {
-          archive.append(buffer, { name: `Trainee_Report_${trainee.replace(/\s+/g, "_")}.docx` });
-        }
-      } catch (traineeErr) {
-        console.error(`Error generating report for ${trainee}:`, traineeErr);
-      }
-    }
-
-    archive.finalize();
+    res.end(buffer);
   } catch (err) {
-    console.error("Bulk report generation error:", err);
+    console.error("Bulk Excel generation error:", err);
     if (!res.headersSent) {
-      res.status(500).json({ error: "Failed to generate reports", details: err.message });
+      res.status(500).json({ error: "Failed to generate Excel report", details: err.message });
     }
   }
 });
