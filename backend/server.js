@@ -859,11 +859,31 @@ async function generateTraineeDashboardDoc(name, traineeSessions, db) {
   return await Packer.toBuffer(doc);
 }
 
+function styleHeaderRow(worksheet) {
+  if (!worksheet || !worksheet["!ref"]) return;
+  const range = XLSX.utils.decode_range(worksheet["!ref"]);
+  for (let col = range.s.c; col <= range.e.c; col += 1) {
+    const address = XLSX.utils.encode_cell({ c: col, r: 0 });
+    if (!worksheet[address]) continue;
+    worksheet[address].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4F81BD" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin", color: { rgb: "FFFFFF" } },
+        bottom: { style: "thin", color: { rgb: "FFFFFF" } },
+        left: { style: "thin", color: { rgb: "FFFFFF" } },
+        right: { style: "thin", color: { rgb: "FFFFFF" } },
+      },
+    };
+  }
+}
+
 function formatWorksheet(worksheet) {
   worksheet["!cols"] = [
     { wch: 20 }, // Trainee Name
-    { wch: 14 }, // Session Date
-    { wch: 18 }, // Session ID
+    { wch: 16 }, // Session Date
+    { wch: 22 }, // Session ID
     { wch: 6 },  // Q No
     { wch: 80 }, // Question
     { wch: 100 },// Trainee Answer
@@ -876,6 +896,7 @@ function formatWorksheet(worksheet) {
     { wch: 10 }, // Copies
   ];
   worksheet["!autofilter"] = { ref: "A1:M1" };
+  styleHeaderRow(worksheet);
 }
 
 async function generateTraineeExcelReport(name, traineeSessions) {
@@ -926,7 +947,7 @@ async function generateTraineeExcelReport(name, traineeSessions) {
   });
   formatWorksheet(worksheet);
   XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(name));
-  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer", cellStyles: true });
 }
 
 // GET /api/trainer/trainee/:name/report — generate Word document report
@@ -1052,7 +1073,7 @@ async function generateAllTraineesExcelReport(db) {
     XLSX.utils.book_append_sheet(workbook, worksheet, sanitizeSheetName(trainee));
   });
 
-  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer", cellStyles: true });
 }
 
 app.get("/api/trainer/reports/all/download", requireTrainer, async (req, res) => {
