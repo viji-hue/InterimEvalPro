@@ -684,7 +684,6 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       }));
       sections.push(new Paragraph({
         children: [new TextRun({ text: result.modelAnswer, size: 20 })],
-        shading: { fill: "F0F8F0" },
       }));
       sections.push(new Paragraph({ children: [new TextRun("")] }));
     }
@@ -696,7 +695,6 @@ async function generateTraineeReportDoc(name, traineeSessions, db) {
       }));
       sections.push(new Paragraph({
         children: [new TextRun({ text: result.detailedAnswer, size: 20 })],
-        shading: { fill: "F0F5FF" },
       }));
       sections.push(new Paragraph({ children: [new TextRun("")] }));
     }
