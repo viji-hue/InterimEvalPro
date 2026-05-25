@@ -867,7 +867,7 @@ function styleHeaderRow(worksheet) {
     if (!worksheet[address]) continue;
     worksheet[address].s = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "4F81BD" } },
+      fill: { fgColor: { rgb: "1F4E79" } },
       alignment: { horizontal: "center", vertical: "center", wrapText: true },
       border: {
         top: { style: "thin", color: { rgb: "FFFFFF" } },
@@ -876,6 +876,43 @@ function styleHeaderRow(worksheet) {
         right: { style: "thin", color: { rgb: "FFFFFF" } },
       },
     };
+  }
+}
+
+function styleDataRows(worksheet) {
+  if (!worksheet || !worksheet["!ref"]) return;
+  const range = XLSX.utils.decode_range(worksheet["!ref"]);
+  const headerMap = {};
+  for (let col = range.s.c; col <= range.e.c; col += 1) {
+    const headerAddress = XLSX.utils.encode_cell({ c: col, r: range.s.r });
+    if (worksheet[headerAddress]) headerMap[col] = String(worksheet[headerAddress].v || "");
+  }
+
+  for (let row = range.s.r + 1; row <= range.e.r; row += 1) {
+    const isStriped = (row % 2) === 0;
+    for (let col = range.s.c; col <= range.e.c; col += 1) {
+      const address = XLSX.utils.encode_cell({ c: col, r: row });
+      const cell = worksheet[address];
+      if (!cell) continue;
+
+      const isTextColumn = ["Question", "Trainee Answer", "Model Answer"].includes(headerMap[col]);
+      const alignment = {
+        horizontal: "left",
+        vertical: "top",
+        wrapText: true,
+      };
+
+      const fill = isStriped ? { fgColor: { rgb: "DCE6F1" } } : undefined;
+      cell.s = {
+        ...(cell.s || {}),
+        alignment,
+        ...(fill ? { fill } : {}),
+      };
+
+      if (isTextColumn) {
+        cell.s.alignment.wrapText = true;
+      }
+    }
   }
 }
 
@@ -897,6 +934,7 @@ function formatWorksheet(worksheet) {
   ];
   worksheet["!autofilter"] = { ref: "A1:M1" };
   styleHeaderRow(worksheet);
+  styleDataRows(worksheet);
 }
 
 async function generateTraineeExcelReport(name, traineeSessions) {
