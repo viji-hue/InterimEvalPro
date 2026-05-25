@@ -1157,7 +1157,7 @@ app.get("/api/trainer/consolidated-report", requireTrainer, async (req, res) => 
     });
   } catch (err) {
     console.error("Consolidated report generation error:", err);
-    res.status(500).json({ error: "Failed to generate consolidated report" });
+    res.status(500).json({ error: "Failed to generate consolidated report", details: err?.message || String(err) });
   }
 });
 
