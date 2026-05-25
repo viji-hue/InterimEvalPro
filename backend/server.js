@@ -6,6 +6,7 @@ import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, BorderStyle, WidthType, AlignmentType, TextRun, HeadingLevel, UnderlineType, VerticalAlign } from "docx";
 import archiver from "archiver";
+import XLSX from "xlsx";
 import { Readable } from "stream";
 import fs from "fs";
 import path from "path";
@@ -858,6 +859,55 @@ async function generateTraineeDashboardDoc(name, traineeSessions, db) {
   return await Packer.toBuffer(doc);
 }
 
+async function generateTraineeExcelReport(name, traineeSessions) {
+  if (!traineeSessions.length) return null;
+
+  const rows = [];
+  traineeSessions.forEach((session) => {
+    session.results.forEach((result, idx) => {
+      rows.push({
+        "Trainee Name": name,
+        "Session Date": session.date,
+        "Session ID": session.id,
+        "Q No": idx + 1,
+        "Question": result.question,
+        "Trainee Answer": result.answer || "[Skipped]",
+        "Model Answer": result.modelAnswer || "Model answer not available",
+        "Score": result.score,
+        "Score Label": result.scoreLabel,
+        "Integrity": session.suspicionLevel || "Clean",
+        "Tab Switches": session.tabSwitches || 0,
+        "Pastes": session.pastes || 0,
+        "Copies": session.copies || 0,
+      });
+    });
+    rows.push({
+      "Trainee Name": name,
+      "Session Date": session.date,
+      "Session ID": session.id,
+      "Q No": "",
+      "Question": "Session integrity summary",
+      "Trainee Answer": `Integrity: ${session.suspicionLevel || "Clean"} | Tab switches: ${session.tabSwitches || 0} | Pastes: ${session.pastes || 0} | Copies: ${session.copies || 0}`,
+      "Model Answer": "",
+      "Score": "",
+      "Score Label": "",
+      "Integrity": session.suspicionLevel || "Clean",
+      "Tab Switches": session.tabSwitches || 0,
+      "Pastes": session.pastes || 0,
+      "Copies": session.copies || 0,
+    });
+    rows.push({});
+  });
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(rows, {
+    header: ["Trainee Name", "Session Date", "Session ID", "Q No", "Question", "Trainee Answer", "Model Answer", "Score", "Score Label", "Integrity", "Tab Switches", "Pastes", "Copies"],
+    skipHeader: false,
+  });
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+}
+
 // GET /api/trainer/trainee/:name/report — generate Word document report
 app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) => {
   const name = decodeURIComponent(req.params.name);
@@ -884,6 +934,40 @@ app.get("/api/trainer/trainee/:name/report", requireTrainer, async (req, res) =>
   } catch (err) {
     console.error("Report generation error:", err);
     res.status(500).json({ error: "Failed to generate report", details: err.message });
+  }
+});
+
+app.get("/api/trainer/trainee/:name/excel", requireTrainer, async (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  const traineeSessions = db.sessions.filter(s => s.trainee.toLowerCase() === name.toLowerCase());
+
+  if (!traineeSessions.length) {
+    return res.status(404).json({ error: "No sessions found for this trainee" });
+  }
+
+  try {
+    const buffer = await generateTraineeExcelReport(name, traineeSessions);
+    if (!buffer) {
+      return res.status(500).json({ error: "Failed to generate Excel report" });
+    }
+
+    const filename = `Trainee_Report_${name.replace(/\s+/g, "_")}_${new Date().getTime()}.xlsx`;
+    const frontendDir = path.join(__dirname, "../frontend");
+    if (!fs.existsSync(frontendDir)) {
+      fs.mkdirSync(frontendDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(frontendDir, filename), buffer);
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Length", buffer.length);
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.end(buffer);
+  } catch (err) {
+    console.error("Excel report generation error:", err);
+    res.status(500).json({ error: "Failed to generate Excel report", details: err.message });
   }
 });
 

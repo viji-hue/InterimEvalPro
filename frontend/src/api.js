@@ -24,5 +24,6 @@ export const api = {
   approveSession: (token, id, action) => req("POST", `/trainer/approvals/${id}`, { action }, token),
   deleteTrainee: (token, name) => req("DELETE", `/trainer/trainee/${encodeURIComponent(name)}`, null, token),
   downloadAllReports: (token) => `/api/trainer/reports/all/download?auth=${token}`,
+  downloadTraineeExcel: (token, name) => `/api/trainer/trainee/${encodeURIComponent(name)}/excel?auth=${token}`,
   generateConsolidatedReport: (token) => req("GET", "/trainer/consolidated-report", null, token),
 };
