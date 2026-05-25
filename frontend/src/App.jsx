@@ -171,16 +171,59 @@ function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) 
   const [results, setResults] = useState([]);
   const [scoreSoFar, setScoreSoFar] = useState(0);
 
+  const questionsRef = useRef(questions);
+  const resultsRef = useRef([]);
+  const scoreRef = useRef(0);
+  const finishRef = useRef(null);
+  const intervalRef = useRef(null);
+  const mountedRef = useRef(false);
+
   const proctor = useProctor(sessionToken, true);
   proctor.currentQ.current = idx;
 
+  useEffect(() => {
+    questionsRef.current = questions;
+  }, [questions]);
+
+  useEffect(() => {
+    resultsRef.current = results;
+  }, [results]);
+
+  useEffect(() => {
+    scoreRef.current = scoreSoFar;
+  }, [scoreSoFar]);
+
+  useEffect(() => {
+    finishRef.current = finish;
+  }, [finish]);
+
   // Timer
   useEffect(() => {
-    const t = setInterval(() => setTimeLeft(p => {
-      if (p <= 1) { clearInterval(t); handleAutoFinish(); return 0; }
-      return p - 1;
-    }), 1000);
-    return () => clearInterval(t);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    intervalRef.current = setInterval(() => {
+      setTimeLeft(p => {
+        if (p <= 1) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          const remaining = questionsRef.current.slice(resultsRef.current.length).map(q => ({ questionId: q.id, topic: q.topic, question: q.q, answer: "[Time expired]", score: 0, scoreLabel: "Irrelevant", feedback: "Time expired." }));
+          finishRef.current?.([...resultsRef.current, ...remaining]);
+          return 0;
+        }
+        return p - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
 
   // Detect paste by text jump
@@ -224,14 +267,9 @@ function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) 
     else await finish(newResults);
   }
 
-  async function handleAutoFinish() {
-    const remaining = questions.slice(results.length).map(q => ({ questionId: q.id, topic: q.topic, question: q.q, answer: "[Time expired]", score: 0, scoreLabel: "Irrelevant", feedback: "Time expired." }));
-    await finish([...results, ...remaining]);
-  }
-
   async function finish(finalResults) {
     try { await api.finishSession(sessionToken, finalResults); } catch {}
-    onFinish(finalResults, scoreSoFar);
+    onFinish(finalResults, scoreRef.current);
   }
 
   const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
