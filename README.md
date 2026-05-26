@@ -1,4 +1,4 @@
-# EvalPro — Selenium Track Assessment
+# EvalPro — Assessment Platform
 React + Node.js. Credentials and model answers live ONLY on the server.
 
 ## Quick Start
@@ -24,7 +24,7 @@ npm run dev   # http://localhost:5173
 
 ## Add Questions
 Edit backend/questions.js — add to QUESTION_BANK array with id, topic, difficulty, q, key, evalHints.
-Topics: "Core Java" | "Functional Testing" | "SQL" | "Selenium"
+Topics: "Core Java" | "Functional Testing" | "SQL" | "Selenium" | "Spring Boot" | "REST API" | "Data JPA" | "Angular"
 
 ## Deploy
 1. cd frontend && npm run build

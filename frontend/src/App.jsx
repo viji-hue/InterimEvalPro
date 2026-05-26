@@ -90,11 +90,11 @@ function LoginScreen({ onTrainee, onTrainer }) {
       <div className="login-card">
         <div className="brand">
           <div className="brand-logo">EvalPro</div>
-          <div className="brand-tag">SELENIUM TRACK · BU STANDARD</div>
+          <div className="brand-tag">INTERIM ASSESSMENT · BU STANDARD</div>
         </div>
         <div className="login-hero">
           <h1>Interim<br /><em>Assessment</em></h1>
-          <p>Timed 5-question sessions on Core Java, Functional Testing, SQL & Selenium/TestNG — evaluated against business unit standards.</p>
+          <p>Timed 5-question sessions covering Core Java, Functional Testing, SQL, Selenium, Spring Boot, REST API, Data JPA & Angular — evaluated against business unit standards.</p>
         </div>
         <div className="form-body">
           <div className="form-row">

@@ -110,7 +110,7 @@ app.post("/api/session/answer", async (req, res) => {
   try {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
-      systemInstruction: `You are a strict senior QA lead evaluating a trainee's Selenium track assessment answer.
+      systemInstruction: `You are a strict senior QA lead evaluating a trainee's interim assessment answer across Java, testing, SQL, Selenium, Spring Boot, REST APIs, Data JPA, and Angular.
 
 SCORING RUBRIC (only use these exact scores):
 - 10: Complete, accurate AND includes real-world example (code, project context, framework usage)

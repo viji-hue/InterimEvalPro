@@ -4,7 +4,7 @@ import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler,
 import { api } from "./api.js";
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, CategoryScale, LinearScale, BarElement);
 
-const TOPICS = ["Core Java", "Functional Testing", "SQL", "Selenium"];
+const TOPICS = ["Core Java", "Functional Testing", "SQL", "Selenium", "Spring Boot", "REST API", "Data JPA", "Angular"];
 
 const fetchWithTimeout = async (url, options = {}, timeout = 60000) => {
   const controller = new AbortController();
@@ -547,7 +547,11 @@ function InsightsTab({ sessions }) {
     "Core Java": `Run a 2-hour Java fundamentals workshop with live coding in TestNG context.`,
     "Functional Testing": `Hold a test design workshop: write real test cases for a login module using EP, BVA, and exploratory techniques.`,
     "SQL": `Conduct a hands-on SQL lab using a test database — JOINs, aggregations, data cleanup queries tied to test data setup.`,
-    "Selenium": `Assign a mini POM project: BasePage, 2 page classes, TestNG suite, @DataProvider for login tests.`
+    "Selenium": `Assign a mini POM project: BasePage, 2 page classes, TestNG suite, @DataProvider for login tests.`,
+    "Spring Boot": `Run a Spring Boot bootcamp: create a starter project, configure properties, and expose a CRUD endpoint with validation.`,
+    "REST API": `Hold a contract-first API workshop: design endpoints, status codes, request/response models, and Postman checks.`,
+    "Data JPA": `Run a repository lab: map entities, define relationships, create derived queries, and troubleshoot persistence issues.`,
+    "Angular": `Assign a frontend integration task: build a component, service, and API binding flow with cleanup and error handling.`
   };
 
   let a1 = `<strong>${worst.topic}</strong> is weakest at ${worst.avg}/10. `;
@@ -574,7 +578,7 @@ function InsightsTab({ sessions }) {
     const failing = [...new Set(sessions.filter(s => s.pct < 60).map(s => s.trainee))].slice(0, 4).join(", ");
     actions.push(`Only ${passRate}% pass rate. Trainees below 60%: <strong>${failing}</strong>. Schedule 20-min individual reviews — go through wrong answers together, assign homework before approving next session.`);
   } else {
-    actions.push(`Cohort passing. Push to excellence: assign a capstone task combining all 4 topics — SQL test data, Core Java utilities, functional test design, Selenium execution. Score with the same rubric.`);
+    actions.push(`Cohort passing. Push to excellence: assign a capstone task combining all 8 topics — SQL test data, Core Java utilities, functional test design, Selenium execution, Spring Boot, REST API, Data JPA, and Angular. Score with the same rubric.`);
   }
 
   return (

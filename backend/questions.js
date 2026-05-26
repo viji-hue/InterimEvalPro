@@ -192,27 +192,67 @@ export const QUESTION_BANK = [
     q: "What is the difference between driver.close() and driver.quit()? Describe a real bug each would cause in a TestNG suite.",
     key: "close() closes only the current browser window/tab but keeps the WebDriver session alive. quit() closes all windows and terminates the WebDriver process entirely. Bug with close(): In @AfterMethod, if test opened a popup window and switched to it, close() only closes the popup — main window stays open, next test's @BeforeMethod finds a stale session with wrong window focus, causing NoSuchWindowException. Bug with quit(): If called in @AfterMethod with @DataProvider running 5 iterations, quit() after iteration 1 destroys the driver — iterations 2-5 throw SessionNotFoundException.",
     evalHints: ["current window", "all windows", "session alive", "NoSuchWindowException", "SessionNotFoundException", "DataProvider iterations", "AfterMethod"]
+  },
+
+  // ── SPRING BOOT ────────────────────────────────────────────────
+  {
+    id: "sb1",
+    topic: "Spring Boot",
+    difficulty: "medium",
+    q: "What is Spring Boot auto-configuration and why is it useful in building a REST service? Give one practical example.",
+    key: "Spring Boot auto-configuration uses starter dependencies and conditional annotations to automatically configure beans based on the application classpath and properties. It reduces boilerplate, makes startup faster, and keeps services consistent across environments. Example: adding spring-boot-starter-web auto-configures DispatcherServlet, Jackson, and an embedded Tomcat server, so you can expose REST endpoints without manually wiring those components.",
+    evalHints: ["auto-configuration", "starter dependencies", "DispatcherServlet", "embedded Tomcat", "boilerplate", "classpath"]
+  },
+
+  // ── REST API ───────────────────────────────────────────────────
+  {
+    id: "ra1",
+    topic: "REST API",
+    difficulty: "medium",
+    q: "Explain the difference between REST and SOAP, and describe how you would design a POST /employees endpoint for a new service.",
+    key: "REST is HTTP-based, stateless, and resource-oriented, while SOAP uses XML envelopes and stricter contracts. A POST /employees endpoint should accept a JSON payload, validate the request, create the employee, and return 201 Created with a Location header and the created resource JSON. For invalid input, return 400 Bad Request; for duplicates, return 409 Conflict if that rule is enforced.",
+    evalHints: ["stateless", "HTTP", "POST /employees", "201 Created", "Location header", "400 Bad Request", "409 Conflict", "resource-oriented"]
+  },
+
+  // ── DATA JPA ───────────────────────────────────────────────────
+  {
+    id: "dj1",
+    topic: "Data JPA",
+    difficulty: "medium",
+    q: "What is the role of @Entity, @Id, and JpaRepository? How would you use them in a service that stores employee details?",
+    key: "@Entity maps a Java class to a database table, @Id marks the primary key, and JpaRepository provides CRUD and query methods for that entity. In a service, define an Employee entity with @Entity and @Id, inject an EmployeeRepository that extends JpaRepository<Employee, Long>, and call save() to persist data, findAll() to read, or custom derived queries for filtering. This removes manual JDBC code and centralizes persistence logic.",
+    evalHints: ["@Entity", "@Id", "JpaRepository", "CRUD", "save()", "findAll()", "manual JDBC", "derived queries"]
+  },
+
+  // ── ANGULAR ───────────────────────────────────────────────────
+  {
+    id: "an1",
+    topic: "Angular",
+    difficulty: "medium",
+    q: "What are Angular components, templates, and services? Explain how a service can fetch data from a REST API and pass it to a component.",
+    key: "Components contain the business logic and control a view, templates define the UI and bindings, and services encapsulate reusable logic such as API calls. An Angular service uses HttpClient.get('/api/employees') to fetch data, returns an Observable, and a component subscribes to it in ngOnInit to populate the UI. This keeps API logic out of the component and makes the code easier to test and maintain.",
+    evalHints: ["component", "template", "service", "HttpClient", "Observable", "ngOnInit", "subscribe", "reusable logic"]
   }
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// Pick 5 questions — 1 guaranteed per topic, topics shuffled
-// Each session gets a different random set within each topic
+// Pick 5 questions — 4 core topics are always included, plus 1
+// random question from Spring Boot / REST API / Data JPA / Angular
 // ─────────────────────────────────────────────────────────────────
 export function pickSessionQuestions() {
-  const topics = ["Core Java", "Functional Testing", "SQL", "Selenium"];
+  const coreTopics = ["Core Java", "Functional Testing", "SQL", "Selenium"];
+  const extraTopics = ["Spring Boot", "REST API", "Data JPA", "Angular"];
   const picked = [];
 
-  topics.forEach(topic => {
+  coreTopics.forEach(topic => {
     const pool = QUESTION_BANK.filter(q => q.topic === topic);
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     if (chosen) picked.push(chosen);
   });
 
-  // Fill 5th from any topic not already picked
-  const usedIds = new Set(picked.map(q => q.id));
-  const remaining = QUESTION_BANK.filter(q => !usedIds.has(q.id)).sort(() => Math.random() - 0.5);
-  if (remaining.length) picked.push(remaining[0]);
+  const extraPool = extraTopics.flatMap(topic => QUESTION_BANK.filter(q => q.topic === topic));
+  const extraChoice = extraPool[Math.floor(Math.random() * extraPool.length)];
+  if (extraChoice) picked.push(extraChoice);
 
   // Return only question text + id + topic — NO model answers
   return picked.sort(() => Math.random() - 0.5).map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
