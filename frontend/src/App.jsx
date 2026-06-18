@@ -165,6 +165,10 @@ const SESSION_DURATION_SECONDS = 25 * 60;
 function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) {
   const [idx, setIdx] = useState(0);
   const [answer, setAnswer] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  const [voiceMode, setVoiceMode] = useState("append"); // 'append' or 'replace'
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [timeLeft, setTimeLeft] = useState(SESSION_DURATION_SECONDS);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState("");
@@ -237,6 +241,60 @@ function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) 
     const txt = e.clipboardData?.getData("text") || "";
     proctor.emit("PASTE", `Pasted ${txt.trim().split(/\s+/).length} words at Q${idx + 1}`);
   }
+
+  // --- Voice input (Web Speech API)
+  function initRecognition() {
+    if (recognitionRef.current) return recognitionRef.current;
+    const Win = window;
+    const SpeechRec = Win.SpeechRecognition || Win.webkitSpeechRecognition;
+    if (!SpeechRec) return null;
+    const r = new SpeechRec();
+    r.lang = "en-IN";
+    r.interimResults = true;
+    r.continuous = true;
+    r.maxAlternatives = 1;
+
+    r.onresult = (ev) => {
+      let final = "";
+      let interim = "";
+      for (let i = ev.resultIndex; i < ev.results.length; ++i) {
+        const res = ev.results[i];
+        if (res.isFinal) final += (res[0].transcript || "");
+        else interim += (res[0].transcript || "");
+      }
+      setInterimTranscript(interim);
+      if (final) {
+        setInterimTranscript("");
+        if (voiceMode === "replace") setAnswer(final.trim());
+        else setAnswer(a => (a ? a + " " : "") + final.trim());
+      }
+    };
+
+    r.onerror = () => { setIsListening(false); };
+    r.onend = () => { setIsListening(false); };
+    recognitionRef.current = r;
+    return r;
+  }
+
+  function startListening() {
+    const r = initRecognition();
+    if (!r) { alert("Voice input not supported in this browser."); return; }
+    try {
+      r.start();
+      setIsListening(true);
+    } catch (e) { /* ignore already-started errors */ }
+  }
+
+  function stopListening() {
+    const r = recognitionRef.current;
+    if (r) try { r.stop(); } catch (e) {}
+    setIsListening(false);
+    setInterimTranscript("");
+  }
+
+  useEffect(() => {
+    return () => { try { recognitionRef.current?.stop(); } catch (e) {} };
+  }, []);
   useEffect(() => { setAnswer(""); lastLen.current = 0; }, [idx]);
 
   // Alert banner
@@ -248,6 +306,8 @@ function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) 
   function showAlert(msg) { setAlert(msg); setTimeout(() => setAlert(""), 4000); }
 
   async function submitAnswer(skipped = false) {
+    // ensure any active speech recognition is stopped before submitting
+    try { stopListening(); } catch (e) {}
     const ans = skipped ? "[Skipped]" : answer.trim();
     if (!skipped && !ans) { showAlert("Please type an answer or skip."); return; }
     setLoading(true);
@@ -299,6 +359,21 @@ function QuestionScreen({ sessionToken, questions, trainee, cohort, onFinish }) 
         <div className="q-topic-pill">{q.topic} · {q.difficulty}</div>
         <div className="q-text">{q.q}</div>
         <textarea className="q-textarea" value={answer} onChange={e => setAnswer(e.target.value)} onInput={onInput} onPaste={onPaste} placeholder="Type your answer here. Include code snippets or real-world examples where relevant." />
+
+        <div className="voice-controls" style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+          <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13 }}>
+            <span style={{ fontSize: 13 }}>Voice mode</span>
+            <select value={voiceMode} onChange={e => setVoiceMode(e.target.value)} style={{ padding: "6px 8px" }}>
+              <option value="append">Append to answer</option>
+              <option value="replace">Replace answer</option>
+            </select>
+          </label>
+          <button className={"btn-ghost"} onClick={() => isListening ? stopListening() : startListening()} style={{ padding: "8px 10px" }}>
+            {isListening ? "⏹ Stop voice" : "🎤 Start voice"}
+          </button>
+          <div style={{ color: "#666", fontSize: 13 }}>{interimTranscript ? `…${interimTranscript}` : ""}</div>
+          <div style={{ marginLeft: "auto", fontSize: 12, color: "#888" }}>Browser must support Web Speech API</div>
+        </div>
       </div>
       {loading && <div className="q-loader"><Spinner /> Evaluating your answer…</div>}
       <div className="q-footer">

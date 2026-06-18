@@ -145,9 +145,154 @@ export const QUESTION_BANK = [
 
   // ── SELENIUM ──────────────────────────────────────────────────
   {
+    id: "sel0",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "What is Browser Automation? Explain the differences between manual testing and automated testing with Selenium.",
+    key: "Browser Automation is using programmatic tools to simulate user actions (click, type, scroll) in a web browser without manual intervention. Manual testing: tester performs actions by hand, slower, prone to human error, non-repeatable. Automated testing with Selenium: scripts perform actions, faster, repeatable, consistent, catches regressions early. Selenium is ideal for regression testing, high-volume test suites, and CI/CD pipelines where tests must run frequently.",
+    detailedAnswer: "REAL-WORLD SCENARIO: Acme Corp releases new features every 2 weeks. They have 500 test cases to verify existing functionality doesn't break.\n\nMANUAL TESTING (2005 approach):\n- Tester reads 500 test cases from Excel\n- Manually clicks through each one, taking notes\n- Documents results: PASS/FAIL\n- Time: 5 days (full-time tester)\n- Cost: $500 (salary)\n- Risk: Tester skips boring tests, or makes mistakes on repetitive clicking\n- Result: 1/week regression cycles possible\n\nAUTOMATED TESTING WITH SELENIUM (Today):\n- Engineers write 500 Selenium scripts once\n- Scripts run automatically overnight\n- Generate HTML report with screenshots\n- Time: 2 hours (overnight, unattended)\n- Cost: $0 per run (already paid for automation, upfront investment)\n- Risk: None — tests never skip, never tire\n- Result: 1/day regression cycles possible (release faster!)\n\nWHEN TO AUTOMATE WITH SELENIUM:\n✓ Repetitive test cases (login, form submission, search)\n✓ Regression testing (same tests, every sprint)\n✓ High-volume scenarios (10000 data combinations)\n✓ CI/CD pipelines (run tests on every code commit)\n\nWHEN MANUAL TESTING STILL MATTERS:\n✓ One-off exploratory testing\n✓ UI/UX review (is the button in the right place?)\n✓ Accessibility testing (screen reader compatibility)\n✓ Performance testing (user perception of speed)\n\nKEY INSIGHT: Use BOTH! Automation handles regression at scale, manual testing handles edge cases humans notice.",
+    evalHints: ["simulate user actions", "repeatable", "CI/CD", "regressions", "overnight", "cost-effective", "consistency"]
+  },
+  {
+    id: "sel0b",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "What is Selenium? Provide an overview of Selenium's role in test automation.",
+    key: "Selenium is an open-source framework for automating web browsers. It provides APIs to programmatically control Firefox, Chrome, Safari, and Edge browsers across Windows, Mac, and Linux. Selenium enables writing test scripts in Java, Python, C#, JavaScript, Ruby, and others. In test automation, Selenium is used to: simulate user interactions (click, type, scroll), verify web page content and behavior, test across different browsers (cross-browser compatibility), and integrate with CI/CD pipelines for continuous testing. It's industry-standard for functional and regression testing of web applications.",
+    evalHints: ["open-source", "web browsers", "cross-browser", "multiple languages", "user interactions", "functional testing", "CI/CD"]
+  },
+  {
+    id: "sel0c",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "Explain the history and evolution of Selenium. How has Selenium WebDriver changed testing practices?",
+    key: "Selenium began as Selenese (JavaScript-based) in 2004, then Selenium RC (Selenium Remote Control) added proxy-based automation. Selenium WebDriver (2008+) introduced native browser drivers, removing proxy complexity and improving performance. Current Selenium 4 (2021+) standardized the WebDriver protocol, added better wait strategies, and improved cross-browser support. Evolution impact: Testing shifted from brittle Selenese scripts to reliable page object models, wait times are now explicit rather than implicit, and WebDriver protocol became a W3C standard that all browsers support.",
+    evalHints: ["Selenese", "Selenium RC", "WebDriver", "Selenium 4", "W3C", "page object models", "native drivers"]
+  },
+  {
+    id: "sel0d",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "Describe the main components of Selenium. How do WebDriver, RemoteWebDriver, and Browser Drivers (ChromeDriver, GeckoDriver) work together?",
+    key: "Selenium components: 1) Selenium Core (JavaScript for browser interaction), 2) WebDriver (client library — Java/Python/etc), 3) RemoteWebDriver (client that communicates over HTTP), 4) Browser Drivers (ChromeDriver for Chrome, GeckoDriver for Firefox, etc). Workflow: Test script creates WebDriver instance → sends commands via JSON-RPC → ChromeDriver receives and executes in browser → browser performs action → driver sends response back. RemoteWebDriver allows running tests on remote machines or Selenium Grid for parallel execution.",
+    evalHints: ["Selenium Core", "WebDriver", "RemoteWebDriver", "ChromeDriver", "JSON-RPC", "Selenium Grid", "parallel"]
+  },
+  {
+    id: "sel0e",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "What programming languages are supported by Selenium? Name at least 4 and explain why multi-language support is valuable.",
+    key: "Supported languages: Java (most popular, JUnit/TestNG ecosystem), Python (simple syntax, data science integration), C# (.NET integration), JavaScript/Node.js (frontend team familiarity), Ruby (Rails ecosystem). Multi-language support is valuable because: test engineers can use their existing language skill, backend teams can write tests in their native language without learning Java, organizations with polyglot teams don't need to standardize on one language, and it attracts diverse talent to test automation roles.",
+    evalHints: ["Java", "Python", "C#", "JavaScript", "Ruby", "language choice", "team expertise", "ecosystem"]
+  },
+  {
+    id: "sel0f",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "What are the advantages and limitations of using Selenium for test automation? When would you NOT use Selenium?",
+    key: "Advantages: open-source (free), supports multiple browsers and OS, multiple languages, large community, integrates with CI/CD. Limitations: only for web applications (not mobile native apps), no built-in reporting (need TestNG/Reports), slow compared to unit tests, flaky tests from timing/synchronization issues, maintenance overhead (tests break on UI changes). Use INSTEAD of Selenium for: mobile native app testing (Appium), desktop applications (WinAppDriver), API testing (REST Assured), performance testing (JMeter), unit testing (JUnit).",
+    evalHints: ["open-source", "cross-browser", "web-only", "maintenance", "CI/CD", "no built-in reporting", "flaky", "timing issues"]
+  },
+  {
+    id: "sel0g",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "Describe the Selenium WebDriver Architecture. How does the JSON-RPC protocol work between client and browser driver?",
+    key: "Architecture: Test script (client) → WebDriver (client library) → JSON-RPC over HTTP → Browser Driver (e.g., ChromeDriver) → Browser binary (Chrome, Firefox). JSON-RPC workflow: 1) Script calls driver.findElement(By.id('btn')) → 2) WebDriver serializes to JSON {using: 'id', value: 'btn'} → 3) HTTP POST to http://localhost:4444/session/{sessionId}/element → 4) ChromeDriver parses JSON, finds element in browser DOM → 5) Returns {value: {ELEMENT: '0'}} → 6) WebDriver deserializes and returns WebElement object to script. This standardization (W3C protocol) allows any language to drive any browser.",
+    evalHints: ["JSON-RPC", "HTTP", "session", "element reference", "W3C", "serialization", "browser binary"]
+  },
+  {
+    id: "sel0h",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "What is the setup process for Selenium? Explain the steps to install JDK, Eclipse, and Selenium WebDriver.",
+    key: "Setup steps: 1) Download and install JDK (Java 8+) from oracle.com, set JAVA_HOME environment variable. 2) Download Eclipse IDE from eclipse.org, launch and create new Java project. 3) Download Selenium JAR files (or use Maven: add selenium-java dependency in pom.xml). 4) Add JAR files to project classpath (Build Path in Eclipse). 5) Create a test class, import org.openqa.selenium.*, instantiate new ChromeDriver(). 6) Download ChromeDriver matching your Chrome version from chromedriver.chromium.org, add to PATH or specify in code: System.setProperty('webdriver.chrome.driver', '/path/to/chromedriver'). 7) Write first test, run as JUnit test.",
+    evalHints: ["JDK", "JAVA_HOME", "Eclipse", "Maven", "JAR", "ChromeDriver", "webdriver.chrome.driver", "PATH"]
+  },
+  {
+    id: "sel0i",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "Write a 'Hello World' Selenium program. Show the code to launch Chrome, navigate to Google, and close the browser.",
+    key: "Code:\n```\nimport org.openqa.selenium.WebDriver;\nimport org.openqa.selenium.chrome.ChromeDriver;\n\npublic class HelloWorld {\n  public static void main(String[] args) {\n    System.setProperty('webdriver.chrome.driver', '/path/to/chromedriver');\n    WebDriver driver = new ChromeDriver();\n    driver.navigate().to('https://www.google.com');\n    System.out.println('Title: ' + driver.getTitle());\n    driver.quit();\n  }\n}\n```\nOutput: Title: Google\nExplanation: System.setProperty() tells WebDriver where ChromeDriver is located. new ChromeDriver() launches Chrome. navigate().to() opens URL. getTitle() fetches page title. quit() closes browser and terminates driver session.",
+    evalHints: ["System.setProperty", "ChromeDriver", "navigate", "getTitle", "quit", "main method", "WebDriver interface"]
+  },
+  {
     id: "sel1",
     topic: "Selenium",
     difficulty: "easy",
+    q: "Explain Locating GUI Elements in Selenium. What are locators and why are they critical to writing reliable tests?",
+    key: "Locators are strategies to identify HTML elements on a web page. Selenium WebDriver supports 8 locator strategies: ID, Name, ClassName, TagName, CSS Selector, XPath, LinkText, PartialLinkText. Locators are critical because: every action (click, type, verify) requires finding the target element, poor locators break when UI changes, unreliable locators cause flaky tests. Best practice: use ID (most stable), then Name, then CSS Selector, and resort to XPath only when necessary. Avoid using element position or complex absolute paths.",
+    evalHints: ["By.id", "By.name", "By.className", "By.xpath", "By.cssSelector", "element identification", "stable locator", "flaky test"]
+  },
+  {
+    id: "sel1a",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "Describe how to find elements by ID, Name, LinkText, and PartialLinkText. Provide examples for each.",
+    key: "1) By ID: By.id('login-btn') — finds <button id='login-btn'>. 2) By Name: By.name('email') — finds <input name='email'>. 3) By LinkText: By.linkText('Sign Up') — finds <a>Sign Up</a> (exact match only). 4) By PartialLinkText: By.partialLinkText('Sign') — finds <a>Sign Up</a> or <a>Signing In</a> (partial match). Examples:\n```\ndriver.findElement(By.id('submit')).click();\ndriver.findElement(By.name('password')).sendKeys('pass123');\ndriver.findElement(By.linkText('Forgot Password')).click();\ndriver.findElement(By.partialLinkText('Contact')).click(); // finds 'Contact Us'\n```\nID and Name are reliable for forms. LinkText/PartialLinkText are useful for navigation links but fragile if link text changes.",
+    evalHints: ["By.id", "By.name", "By.linkText", "By.partialLinkText", "form elements", "navigation links", "exact match", "partial match"]
+  },
+  {
+    id: "sel1b",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "Describe how to find elements by ClassName and CSS Selector. Provide examples including Tag, ID, Class, and Attribute selectors.",
+    key: "1) By ClassName: By.className('error-message') — finds <div class='error-message'>. (single class only, space splits classes). 2) CSS Selector: By.cssSelector() — flexible syntax:\n- Tag only: 'button' → all buttons\n- ID: '#login-btn' → element with id='login-btn'\n- Class: '.error-message' → elements with class\n- Attribute: 'input[type=\"password\"]' → input with type attribute\n- Combination: 'form#signup input[name=\"email\"]' → email input in signup form\n- Child: 'div > button' → button direct child of div\n- Descendant: 'div button' → button anywhere inside div\n- nth-child: 'tr td:nth-child(2)' → second column of table\nExamples:\n```\ndriver.findElement(By.className('active')).click();\ndriver.findElement(By.cssSelector('button.submit')).click();\ndriver.findElement(By.cssSelector('input[placeholder=\"Email\"]')).sendKeys('test@test.com');\ndriver.findElement(By.cssSelector('form > button:last-child')).click();\n```\nCSS Selector is preferred for performance and readability.",
+    evalHints: ["By.className", "By.cssSelector", "# ID", ". class", "[attribute]", "child combinator >", "descendant", "nth-child"]
+  },
+  {
+    id: "sel1c",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "What is Shadow DOM and how do you handle it in Selenium? Provide an example.",
+    key: "Shadow DOM is an encapsulated DOM tree within a web component, hidden from regular locators. Standard XPath/CSS selectors don't penetrate Shadow DOM. In JavaScript, document.querySelector('#host').shadowRoot.querySelector('#shadow-element') accesses Shadow DOM. Selenium solutions: 1) Use JavaScript execution: driver.executeScript(\"return document.querySelector('#host').shadowRoot.querySelector('#shadow-element')\") → cast result to WebElement. 2) Expand Shadow DOM (if component's expand button exists, click it to show elements in regular DOM). 3) Use WebComponentLocator library. Example:\n```\nWebElement shadowElement = (WebElement) driver.executeScript(\n  \"return document.querySelector('custom-element').shadowRoot.querySelector('.button')\"\n);\nshadowElement.click();\n```",
+    evalHints: ["encapsulated", "shadowRoot", "executeScript", "WebComponent", "penetrate", "expand", "JavaScript", "WebElementFromJS"]
+  },
+  {
+    id: "sel1d",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "What are Relative Locators? Explain above, below, near, toLeft, and toRight. Provide real-world examples.",
+    key: "Relative Locators (Selenium 4+) locate elements based on proximity to another element. Syntax: driver.findElement(RelativeLocator.with(By.tagName('button')).above(By.xpath(\"//input[@id='password']\"))). Strategies:\n1) above(): finds element above the reference → locate label above input\n2) below(): finds element below the reference → locate error text below input\n3) near(): finds element near the reference (within 50 pixels) → locate icon near button\n4) toLeftOf(): finds element to the left → locate checkbox label to left of checkbox\n5) toRightOf(): finds element to the right → locate validation message to right of input\nExamples:\n```\nWebElement submitBtn = driver.findElement(RelativeLocator.with(By.tagName('button')).toRightOf(By.id('cancel-btn')));\nWebElement passwordLabel = driver.findElement(RelativeLocator.with(By.tagName('label')).above(By.name('password')));\nWebElement errorMsg = driver.findElement(RelativeLocator.with(By.className('error')).below(By.id('email')));\n```",
+    evalHints: ["above", "below", "near", "toLeftOf", "toRightOf", "RelativeLocator", "proximity", "Selenium 4"]
+  },
+  {
+    id: "sel1e",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "What are Chained Locators? How do you use parent-child relationships to locate elements?",
+    key: "Chained Locators combine multiple locators to find nested elements. Syntax: driver.findElement(By.cssSelector('selector1 > selector2 > selector3')) or using WebElement chains: WebElement parent = driver.findElement(By.id('container')); WebElement child = parent.findElement(By.className('item')); Examples:\n```\n// Find submit button inside a specific form\ndriver.findElement(By.cssSelector('form#login-form button[type=\"submit\"]'));\n\n// Find table cell in a specific row\nWebElement row = driver.findElement(By.xpath(\"//tr[td[1]='John']\"));\nWebElement cell = row.findElement(By.xpath(\"./td[2]\")); // relative XPath\n\n// Find input field inside a specific div\nWebElement container = driver.findElement(By.id('form-container'));\nWebElement email = container.findElement(By.name('email'));\n```\nChained locators are more reliable than long absolute paths because they narrow the search scope to a specific context.",
+    evalHints: ["parent-child", "container", "relative path", "./", "nested", "scope", "WebElement.findElement"]
+  },
+  {
+    id: "sel1f",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "Explain XPath syntax. What is the difference between single slash (/) and double slash (//)? Provide examples.",
+    key: "XPath uses path expressions to navigate XML/HTML: 1) Single slash (/) — ABSOLUTE path, starts from root. Example: /html/body/div[1]/button — starts from <html>, navigates down exact path. FRAGILE: breaks if any intermediate element changes. 2) Double slash (//) — RELATIVE path, searches anywhere in document. Example: //button[@id='submit'] — finds ANY button with id='submit' regardless of parent elements. PREFERRED. Examples:\n```\n// Absolute (fragile)\n/html/body/div[1]/form/input[1]\n\n// Relative (recommended)\n//input[@type='email']\n//button[text()='Submit']\n//tr/td[1] // first td in any tr\n\n// Mixed\n//form[@id='login']//input[@name='email'] // input anywhere inside login form\n```\nBest practice: Always use // (relative) with specific attributes or text() functions.",
+    evalHints: ["absolute path", "relative path", "from root", "anywhere", "fragile", "/", "//", "@attribute"]
+  },
+  {
+    id: "sel1g",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "Explain XPath functions: contains(), starts-with(), text(), and last(). Provide examples.",
+    key: "1) text() — matches element text content. Example: //button[text()='Click Me'] finds button with exact text. 2) contains() — partial text/attribute match. Example: //button[contains(text(),'Click')] finds button containing 'Click'. 3) starts-with() — text/attribute starts with value. Example: //input[starts-with(@id,'email')] finds input with id starting with 'email' (email1, email2, etc). 4) last() — selects last element in list. Example: //tr[last()] finds last table row. Examples:\n```\n//button[contains(text(),'Submit')] // button text contains 'Submit'\n//input[contains(@class,'form-')] // input class contains 'form-'\n//input[starts-with(@name,'txt')] // input name starts with 'txt'\n//td[contains(text(),'John')] and //span[starts-with(@id,'alert')]\n//tr[last()]//td // last column of last row\n//table//tr[position()>1 and position()<5] // rows 2-4\n```",
+    evalHints: ["text()", "contains()", "starts-with()", "last()", "@attribute", "position()", "partial match", "function"]
+  },
+  {
+    id: "sel1h",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "Describe the process of launching different browsers in Selenium. How do you configure ChromeDriver, FirefoxDriver, and SafariDriver?",
+    key: "WebDriver initialization for different browsers:\n1) Chrome: System.setProperty('webdriver.chrome.driver', '/path/chromedriver'); WebDriver driver = new ChromeDriver();\n2) Firefox: System.setProperty('webdriver.gecko.driver', '/path/geckodriver'); WebDriver driver = new FirefoxDriver();\n3) Safari: WebDriver driver = new SafariDriver(); (no setProperty needed, driver path auto-detected)\n4) Edge: System.setProperty('webdriver.edge.driver', '/path/msedgedriver'); WebDriver driver = new EdgeDriver();\n5) Browser options for customization:\n```\nChromeOptions options = new ChromeOptions();\noptions.addArguments('--headless'); // run without UI\noptions.addArguments('--disable-notifications');\nWebDriver driver = new ChromeDriver(options);\n```\nBest practice: Use WebDriverManager library (io.github.bonigarcia:webdrivermanager) to auto-download and manage driver versions.",
+    evalHints: ["System.setProperty", "ChromeDriver", "FirefoxDriver", "SafariDriver", "EdgeDriver", "options", "headless", "WebDriverManager"]
+  },
+  {
+    id: "sel2",
+    topic: "Selenium",
+    difficulty: "medium",
     q: "Explain the different types of locators in Selenium WebDriver. Rank them by reliability and performance, and explain when to use XPath over CSS Selector.",
     key: "Reliability ranking: ID (best — unique, fast), Name, CSS Selector (fast, readable), XPath (powerful but slower), Class, LinkText/PartialLinkText (fragile). CSS Selector preferred for: performance, readability, child/sibling traversal. Use XPath when: element has no ID/class, need to locate by text content (//button[text()='Submit']), need to traverse to parent (//input/../label), or when CSS cannot express the path. Avoid absolute XPath (//html/body/div[1]) — breaks on any DOM change.",
     detailedAnswer: "REAL-WORLD SCENARIO: You're automating tests for an e-commerce site. The developer changes the HTML structure and your tests break.\n\nLOCATOR RELIABILITY (Test in This Order):\n1. ID — BEST (almost never changes)\n   `driver.findElement(By.id('login-btn')).click();` ✓ Safe\n\n2. Name — Good (stable, used in forms)\n   `driver.findElement(By.name('email')).sendKeys('test@test.com');` ✓ Good\n\n3. CSS Selector — RECOMMENDED for automation\n   `driver.findElement(By.cssSelector('.product-card > button.add-to-cart')).click();` ✓ Fast & readable\n   CSS is faster than XPath in Firefox/Edge/Safari\n\n4. XPath — Powerful but fragile\n   `driver.findElement(By.xpath(\"//button[@class='add-to-cart']\")).click();` ⚠ Use cautiously\n\nWHEN CSS FAILS, USE XPATH:\n✗ Problem: Button has no ID/class, only text 'Submit'\n✓ Solution: `//button[text()='Submit']` — XPath has text() function\n\n✗ Problem: Need to find a label's input field (traversing UP the DOM)\n✓ Solution: `//label[text()='Email']/../input` — XPath has parent (..) \nCSS cannot traverse upward!\n\n✗ Problem: Complex conditional search\n✓ Solution: `//tr[td[1]='John'][td[3]='Active']` — find row where col1=John AND col3=Active\n\nAVOID (Breaks on Any HTML Change):\n❌ `//html/body/div[1]/div[2]/button[3]` — Absolute XPath\nBetter: `//div[@class='header']//button[contains(text(),'Login')]` — Relative XPath\n\nPERFORMANCE: CSS Selector > Relative XPath > Absolute XPath\nRELIABILITY: ID > Name > CSS > XPath with text/conditions\n\nBEST PRACTICE: Use ID > Name > CSS in that order. Resort to XPath ONLY when the others fail.",
@@ -236,26 +381,18 @@ export const QUESTION_BANK = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// Pick 5 questions — 4 core topics are always included, plus 1
-// random question from Spring Boot / REST API / Data JPA / Angular
+// Pick 5 questions from Selenium topics (covering all key areas)
 // ─────────────────────────────────────────────────────────────────
 export function pickSessionQuestions() {
-  const coreTopics = ["Core Java", "Functional Testing", "SQL", "Selenium"];
-  const extraTopics = ["Spring Boot", "REST API", "Data JPA", "Angular"];
-  const picked = [];
-
-  coreTopics.forEach(topic => {
-    const pool = QUESTION_BANK.filter(q => q.topic === topic);
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
-    if (chosen) picked.push(chosen);
-  });
-
-  const extraPool = extraTopics.flatMap(topic => QUESTION_BANK.filter(q => q.topic === topic));
-  const extraChoice = extraPool[Math.floor(Math.random() * extraPool.length)];
-  if (extraChoice) picked.push(extraChoice);
+  // All Selenium questions from the updated question bank
+  const seleniumPool = QUESTION_BANK.filter(q => q.topic === "Selenium");
+  
+  // Shuffle and pick 5 unique questions
+  const shuffled = seleniumPool.sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, 5);
 
   // Return only question text + id + topic — NO model answers
-  return picked.sort(() => Math.random() - 0.5).map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
+  return picked.map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
 }
 
 // Return full question with key — only used server-side for AI evaluation
