@@ -315,6 +315,46 @@ export const QUESTION_BANK = [
     evalHints: ["implicit 0", "ExpectedConditions", "polling interval", "mixing pitfall", "15 seconds", "Fluent pollingEvery", "ignoring"]
   },
   {
+    id: "sel3a",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "What is the difference between getWindowHandle() and getWindowHandles() in Selenium?",
+    key: "getWindowHandle() returns the unique handle of the current browser window as a String, while getWindowHandles() returns a set of handles for all open browser windows/tabs. Use getWindowHandle() when you want to identify the current window, and getWindowHandles() when you need to switch between multiple windows opened during a test.",
+    evalHints: ["current window", "all windows", "String", "Set<String>", "switchTo window"]
+  },
+  {
+    id: "sel3b",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "How do you switch to a new browser window in Selenium after clicking a link or button?",
+    key: "First capture the current window handle, perform the action that opens the new window, then collect all handles using getWindowHandles(), iterate through them, and switch to the one that is not the original handle. After finishing the work, switch back to the parent window if required.",
+    evalHints: ["parent handle", "new tab", "window handles", "switchTo", "for each"]
+  },
+  {
+    id: "sel3c",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "How do you handle frames or iframes in Selenium?",
+    key: "Use driver.switchTo().frame() to move into an iframe by index, name, ID, or WebElement. After interacting with the elements inside the frame, switch back using driver.switchTo().defaultContent() or switchTo().parentFrame() to continue working with the main page.",
+    evalHints: ["switchTo frame", "iframe", "defaultContent", "parentFrame", "WebElement"]
+  },
+  {
+    id: "sel3d",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "What are the different types of waits in Selenium and when would you use each?",
+    key: "Implicit wait applies globally to all element searches, explicit wait waits for a specific condition on a particular element, and fluent wait allows you to customize polling interval and ignored exceptions. In a robust framework, explicit or fluent waits are preferred over implicit wait to avoid flaky and slow tests.",
+    evalHints: ["implicit", "explicit", "fluent", "ExpectedConditions", "polling interval"]
+  },
+  {
+    id: "sel3e",
+    topic: "Selenium",
+    difficulty: "easy",
+    q: "What is the difference between findElement() and findElements() in Selenium?",
+    key: "findElement() returns the first matching WebElement and throws NoSuchElementException if nothing is found, while findElements() returns a list of matching elements and returns an empty list when no match exists. Use findElement() for single expected elements and findElements() when you expect multiple results such as rows or links.",
+    evalHints: ["single element", "multiple elements", "NoSuchElementException", "List<WebElement>", "empty list"]
+  },
+  {
     id: "sel4",
     topic: "Selenium",
     difficulty: "medium",
