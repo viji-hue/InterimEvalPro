@@ -61,28 +61,163 @@ export const QUESTION_BANK = [
   {
     id: "ts1",
     topic: "TypeScript",
-    difficulty: "easy",
-    q: "A team is building a Playwright test suite for a checkout flow and wants fewer runtime errors. How would TypeScript help them write safer and more maintainable tests?",
-    key: "TypeScript is a typed superset of JavaScript that compiles to JavaScript. It improves editor support, catches errors earlier, and makes Playwright test code easier to maintain. Benefits include type safety for locators and page objects, better autocomplete, and fewer runtime surprises during test execution.",
-    evalHints: ["typed superset", "JavaScript", "type safety", "autocomplete", "Playwright"]
+    difficulty: "medium",
+    q: "You're writing a Playwright test in TypeScript where you need to hover over a product card to reveal a 'Quick Buy' button, then click it. Show how TypeScript typing helps prevent bugs when performing mouse actions on dynamic elements.",
+    key: "Use TypeScript to define an interface for page elements with proper locators and action methods. For mouse actions: (1) Define a typed locator using page.locator() or page.getByRole(). (2) Use await page.locator('product-card').hover() to trigger the button visibility. (3) Click with await page.locator('button:has-text(\"Quick Buy\")').click(). TypeScript catches type errors at compile-time—if you forget 'await' or pass wrong element types, TypeScript prevents runtime failures. Use custom types: interface Product { name: string; addToCart(): Promise<void> } to ensure all product interactions are properly typed and documented.",
+    detailedAnswer: "SCENARIO: E-commerce site where hovering over a product reveals hidden action buttons.\n\nTYPESCRIPT APPROACH WITH TYPED PAGE OBJECT:\n```typescript\ninterface ProductCard {
+  nameLocator: Locator;
+  quickBuyButton: Locator;
+}
+
+class ProductPage {
+  private page: Page;
+  
+  constructor(page: Page) {
+    this.page = page;
+  }
+  
+  async getProduct(productName: string): Promise<ProductCard> {
+    const card = this.page.locator(`[data-product=\"${productName}\"]`);
+    return {
+      nameLocator: card.locator('.product-name'),
+      quickBuyButton: card.locator('button:has-text(\"Quick Buy\")')
+    };
+  }
+  
+  async hoverAndClickQuickBuy(productName: string): Promise<void> {
+    const product = await this.getProduct(productName);
+    await product.nameLocator.hover(); // Mouse action: hover
+    await product.quickBuyButton.click(); // Click revealed button
+  }
+}
+```
+
+WHAT TYPESCRIPT PREVENTS:
+- Missing 'await': TypeScript requires Promise handling, preventing async bugs
+- Wrong locator type: Locator type ensures only valid methods (.click(), .hover()) are available
+- Forgotten state checks: Type safety reminds you to verify element visibility before interaction
+
+JAVASCRIPT ALTERNATIVE (Less Safe):
+```javascript
+// No type hints—easy to make mistakes
+const getProduct = (name) => {
+  return { button: page.locator(...) }
+};
+await getProduct().click(); // ❌ ERROR: forget to access .button
+```",
+    evalHints: ["hover action", "click action", "Locator type", "Promise", "await", "interface", "Page Object", "mouse events"]
   },
 
   // ── PLAYWRIGHT OVERVIEW ──────────────────────────────────────
   {
     id: "pw1",
-    topic: "Playwright Overview",
-    difficulty: "easy",
-    q: "You are asked to automate a login flow that occasionally loads slowly. How would you use Playwright to make the test reliable without adding fragile waits?",
-    key: "Playwright is an open-source automation framework for web browsers that supports Chromium, Firefox, and WebKit. Its main features include cross-browser testing, auto-waiting, built-in locators, assertion support, tracing, screenshots, and test parallelization. It is widely used for reliable end-to-end testing.",
-    evalHints: ["cross-browser", "auto-waiting", "locators", "assertions", "trace"]
+    topic: "Playwright",
+    difficulty: "medium",
+    q: "In a Playwright test, you need to click a dropdown menu, then click an option that appears after the click. The option sometimes takes 500ms to render. Write the test code showing how Playwright handles this mouse action scenario reliably.",
+    key: "Playwright has built-in auto-waiting that waits for elements to be actionable (visible, not covered, enabled) before interacting with them. Use page.click('selector') or page.locator('selector').click()—Playwright automatically waits up to 30 seconds (default timeout) for the element to appear and become clickable. For the dropdown: (1) await page.click('[data-testid=\"dropdown\"]') waits for dropdown to be clickable. (2) await page.click('[data-testid=\"option-submit\"]') automatically waits for option to render—no explicit sleep() needed. Playwright's auto-waiting detects when an element transitions from invisible/disabled to clickable, making tests reliable without fragile hardcoded waits.",
+    detailedAnswer: "SCENARIO: Dashboard has a dropdown menu. Clicking it reveals action options that render asynchronously.\n\nPLAYWRIGHT AUTO-WAITING APPROACH:\n```typescript
+// ✓ RELIABLE - Playwright waits automatically
+await page.click('[data-testid=\"status-dropdown\"]');
+await page.click('[data-testid=\"option-approve\"]'); // Waits for option to render
+
+// Or using getByRole() for better readability:
+await page.getByRole('button', { name: /Status/i }).click(); // Auto-waits
+await page.getByRole('menuitem', { name: /Approve/i }).click(); // Auto-waits
+```
+
+WHAT PLAYWRIGHT DOES BEHIND THE SCENES:
+1. For first click: Waits until [data-testid=\"status-dropdown\"] is visible, enabled, and not covered by another element
+2. After dropdown renders: Waits until [data-testid=\"option-approve\"] appears in DOM and becomes clickable
+3. Performs the click only when element is ready
+
+AVOID THIS (Fragile):
+```typescript
+// ❌ FRAGILE - Hard-coded wait
+page.click('[data-testid=\"status-dropdown\"]');
+await page.waitForTimeout(500); // If render time varies, fails!
+page.click('[data-testid=\"option-approve\"]');
+```
+
+PLAYWRIGHT TIMEOUT HANDLING:
+```typescript
+// Custom timeout for specific clicks
+await page.click('button', { timeout: 5000 }); // Wait up to 5 seconds
+
+// Test-wide timeout
+await page.locator('menu-option').first().click({ timeout: 10000 });
+```",
+    evalHints: ["auto-waiting", "click action", "actionable state", "dropdown menu", "timeout", "getByRole", "reliable waits", "async rendering"]
   },
   {
     id: "pw2",
-    topic: "Playwright Overview",
-    difficulty: "medium",
-    q: "A company is choosing between Playwright and Selenium for a new web app that needs stable cross-browser tests. How would you justify using Playwright in a short recommendation?",
-    key: "Playwright offers a modern API, built-in auto-waiting, strong support for modern web features, easier handling of frames and network events, and a better developer experience with built-in tooling. Selenium is more mature and widely adopted, but Playwright generally provides less boilerplate and more reliable element interaction out of the box.",
-    evalHints: ["modern API", "auto-waiting", "frames", "network events", "developer experience", "Selenium"]
+    topic: "Playwright",
+    difficulty: "hard",
+    q: "Your test needs to perform a complex user interaction: move the mouse to a product image (hover), then drag it to a wishlist zone. Write Playwright code showing how you'd handle these chained mouse actions, and explain what would fail in Selenium doing the same task.",
+    key: "In Playwright: (1) await page.locator('product-image').hover() moves mouse to element. (2) await page.locator('product-image').dragTo(page.locator('wishlist-zone')) chains the drag action. Playwright's Action API supports complex interactions with proper event ordering—hover fires mouseover/mouseenter, drag fires mousedown, mousemove, mouseup events in correct sequence. In Selenium, you'd need: Actions(driver).move_to_element(elem).pause(500).drag_and_drop(elem, target).perform() with explicit pauses and more boilerplate. Playwright's API is cleaner and handles timing better. Playwright also supports: page.mouse.move(x, y), page.mouse.down(), page.mouse.up() for pixel-level control or page.touchscreen.tap() for touch events.",
+    detailedAnswer: "SCENARIO: E-commerce site where users add products to wishlist by dragging product images.\n\nPLAYWRIGHT SOLUTION WITH CHAINED MOUSE ACTIONS:\n```typescript
+const productImage = page.locator('[data-testid=\"product-image\"]');
+const wishlistZone = page.locator('[data-testid=\"wishlist-drop-zone\"]');
+
+// Method 1: High-level dragTo() - Recommended
+await productImage.dragTo(wishlistZone);
+
+// Method 2: Fine-grained mouse control
+const productBox = await productImage.boundingBox();
+const wishlistBox = await wishlistZone.boundingBox();
+
+if (productBox && wishlistBox) {
+  const startX = productBox.x + productBox.width / 2;
+  const startY = productBox.y + productBox.height / 2;
+  const endX = wishlistBox.x + wishlistBox.width / 2;
+  const endY = wishlistBox.y + wishlistBox.height / 2;
+  
+  // Pixel-level mouse control
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(endX, endY, { steps: 10 }); // Smooth drag with 10 steps
+  await page.mouse.up();
+}
+
+// Method 3: Hover + separate interaction
+await productImage.hover();
+await page.waitForTimeout(300); // Let hover state settle
+await productImage.dragTo(wishlistZone);
+```
+
+EVENT FIRING ORDER (Playwright handles automatically):
+1. mouseover → productImage
+2. mouseenter → productImage
+3. mousedown → productImage
+4. mousemove (10 steps) → between productImage and wishlistZone
+5. mouseover → wishlistZone
+6. mouseenter → wishlistZone
+7. mouseup → wishlistZone
+
+SELENIUM EQUIVALENT (More verbose, error-prone):
+```python
+# Selenium requires explicit action chaining
+actions = ActionChains(driver)
+product = driver.find_element(By.ID, 'product-image')
+wishlist = driver.find_element(By.ID, 'wishlist-zone')
+
+actions.move_to_element(product) \
+       .pause(0.5) \
+       .drag_and_drop(product, wishlist) \
+       .perform()
+```
+
+SELENIUM PROBLEMS:
+- Requires explicit pause() to let hover state settle
+- Less intuitive API (perform() must be called separately)
+- Event ordering is harder to control
+- Drag distance/smoothness is implicit
+
+PLAYWRIGHT ADVANTAGES:
+- dragTo() handles event sequencing automatically
+- mouse.move(x, y, { steps: 10 }) provides smooth drag simulation
+- Built-in waiting for actionable state
+- Cleaner, more declarative API",
+    evalHints: ["dragTo() action", "hover action", "mouse.move()", "mouse.down()", "mouse.up()", "boundingBox()", "event ordering", "Action API", "Selenium comparison", "steps parameter"]
   },
 
   // ── FUNCTIONAL TESTING ────────────────────────────────────────
