@@ -63,48 +63,8 @@ export const QUESTION_BANK = [
     topic: "TypeScript",
     difficulty: "medium",
     q: "You're writing a Playwright test in TypeScript where you need to hover over a product card to reveal a 'Quick Buy' button, then click it. Show how TypeScript typing helps prevent bugs when performing mouse actions on dynamic elements.",
-    key: "Use TypeScript to define an interface for page elements with proper locators and action methods. For mouse actions: (1) Define a typed locator using page.locator() or page.getByRole(). (2) Use await page.locator('product-card').hover() to trigger the button visibility. (3) Click with await page.locator('button:has-text(\"Quick Buy\")').click(). TypeScript catches type errors at compile-time—if you forget 'await' or pass wrong element types, TypeScript prevents runtime failures. Use custom types: interface Product { name: string; addToCart(): Promise<void> } to ensure all product interactions are properly typed and documented.",
-    detailedAnswer: "SCENARIO: E-commerce site where hovering over a product reveals hidden action buttons.\n\nTYPESCRIPT APPROACH WITH TYPED PAGE OBJECT:\n```typescript\ninterface ProductCard {
-  nameLocator: Locator;
-  quickBuyButton: Locator;
-}
-
-class ProductPage {
-  private page: Page;
-  
-  constructor(page: Page) {
-    this.page = page;
-  }
-  
-  async getProduct(productName: string): Promise<ProductCard> {
-    const card = this.page.locator(`[data-product=\"${productName}\"]`);
-    return {
-      nameLocator: card.locator('.product-name'),
-      quickBuyButton: card.locator('button:has-text(\"Quick Buy\")')
-    };
-  }
-  
-  async hoverAndClickQuickBuy(productName: string): Promise<void> {
-    const product = await this.getProduct(productName);
-    await product.nameLocator.hover(); // Mouse action: hover
-    await product.quickBuyButton.click(); // Click revealed button
-  }
-}
-```
-
-WHAT TYPESCRIPT PREVENTS:
-- Missing 'await': TypeScript requires Promise handling, preventing async bugs
-- Wrong locator type: Locator type ensures only valid methods (.click(), .hover()) are available
-- Forgotten state checks: Type safety reminds you to verify element visibility before interaction
-
-JAVASCRIPT ALTERNATIVE (Less Safe):
-```javascript
-// No type hints—easy to make mistakes
-const getProduct = (name) => {
-  return { button: page.locator(...) }
-};
-await getProduct().click(); // ❌ ERROR: forget to access .button
-```",
+    key: "Use TypeScript to define an interface for page elements with proper locators and action methods. For mouse actions: (1) Define a typed locator using page.locator() or page.getByRole(). (2) Use await page.locator('product-card').hover() to trigger the button visibility. (3) Click with await page.locator('button:has-text(\\\"Quick Buy\\\")').click(). TypeScript catches type errors at compile-time—if you forget 'await' or pass wrong element types, TypeScript prevents runtime failures. Use custom types: interface Product { name: string; addToCart(): Promise<void> } to ensure all product interactions are properly typed and documented.",
+    detailedAnswer: "SCENARIO: E-commerce site where hovering over a product reveals hidden action buttons.\\n\\nTYPESCRIPT APPROACH WITH TYPED PAGE OBJECT:\\n```typescript\\ninterface ProductCard {\\n  nameLocator: Locator;\\n  quickBuyButton: Locator;\\n}\\n\\nclass ProductPage {\\n  private page: Page;\\n  \\n  constructor(page: Page) {\\n    this.page = page;\\n  }\\n  \\n  async getProduct(productName: string): Promise<ProductCard> {\\n    const card = this.page.locator(`[data-product=\\\\\\\"${productName}\\\\\\\"]`);\\n    return {\\n      nameLocator: card.locator('.product-name'),\\n      quickBuyButton: card.locator('button:has-text(\\\\\\\"Quick Buy\\\\\\\")')\\n    };\\n  }\\n  \\n  async hoverAndClickQuickBuy(productName: string): Promise<void> {\\n    const product = await this.getProduct(productName);\\n    await product.nameLocator.hover(); // Mouse action: hover\\n    await product.quickBuyButton.click(); // Click revealed button\\n  }\\n}\\n```\\n\\nWHAT TYPESCRIPT PREVENTS:\\n- Missing 'await': TypeScript requires Promise handling, preventing async bugs\\n- Wrong locator type: Locator type ensures only valid methods (.click(), .hover()) are available\\n- Forgotten state checks: Type safety reminds you to verify element visibility before interaction\\n\\nJAVASCRIPT ALTERNATIVE (Less Safe):\\n```javascript\\n// No type hints—easy to make mistakes\\nconst getProduct = (name) => {\\n  return { button: page.locator(...) }\\n};\\nawait getProduct().click(); // ✘ ERROR: forget to access .button\\n```",
     evalHints: ["hover action", "click action", "Locator type", "Promise", "await", "interface", "Page Object", "mouse events"]
   },
 
