@@ -62,7 +62,7 @@ export const QUESTION_BANK = [
     id: "ts1",
     topic: "TypeScript",
     difficulty: "easy",
-    q: "What is TypeScript and why is it useful in Playwright automation projects?",
+    q: "A team is building a Playwright test suite for a checkout flow and wants fewer runtime errors. How would TypeScript help them write safer and more maintainable tests?",
     key: "TypeScript is a typed superset of JavaScript that compiles to JavaScript. It improves editor support, catches errors earlier, and makes Playwright test code easier to maintain. Benefits include type safety for locators and page objects, better autocomplete, and fewer runtime surprises during test execution.",
     evalHints: ["typed superset", "JavaScript", "type safety", "autocomplete", "Playwright"]
   },
@@ -72,7 +72,7 @@ export const QUESTION_BANK = [
     id: "pw1",
     topic: "Playwright Overview",
     difficulty: "easy",
-    q: "What is Playwright and what are its main features for end-to-end testing?",
+    q: "You are asked to automate a login flow that occasionally loads slowly. How would you use Playwright to make the test reliable without adding fragile waits?",
     key: "Playwright is an open-source automation framework for web browsers that supports Chromium, Firefox, and WebKit. Its main features include cross-browser testing, auto-waiting, built-in locators, assertion support, tracing, screenshots, and test parallelization. It is widely used for reliable end-to-end testing.",
     evalHints: ["cross-browser", "auto-waiting", "locators", "assertions", "trace"]
   },
@@ -80,7 +80,7 @@ export const QUESTION_BANK = [
     id: "pw2",
     topic: "Playwright Overview",
     difficulty: "medium",
-    q: "How does Playwright compare with other automation frameworks such as Selenium?",
+    q: "A company is choosing between Playwright and Selenium for a new web app that needs stable cross-browser tests. How would you justify using Playwright in a short recommendation?",
     key: "Playwright offers a modern API, built-in auto-waiting, strong support for modern web features, easier handling of frames and network events, and a better developer experience with built-in tooling. Selenium is more mature and widely adopted, but Playwright generally provides less boilerplate and more reliable element interaction out of the box.",
     evalHints: ["modern API", "auto-waiting", "frames", "network events", "developer experience", "Selenium"]
   },
