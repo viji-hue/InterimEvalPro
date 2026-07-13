@@ -457,7 +457,7 @@ export const QUESTION_BANK = [
 export function pickSessionQuestions() {
   const requiredMix = [
     { topic: "TypeScript", count: 1 },
-    { topic: "Playwright Overview", count: 2 },
+    { topic: "Playwright", count: 2 },
     { topic: "Functional Testing", count: 1 },
     { topic: "SQL", count: 1 }
   ];

@@ -19,8 +19,24 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// ─── Validate environment variables ─────────────────────────────────
+const requiredEnvVars = ["GEMINI_API_KEY", "JWT_SECRET"];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`❌ ERROR: Missing environment variable: ${envVar}`);
+    console.error(`Please set ${envVar} in the .env file`);
+    process.exit(1);
+  }
+}
+
 // ─── Initialize Google Generative AI ────────────────────────────────
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+let genAI;
+try {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+} catch (err) {
+  console.error("❌ ERROR: Failed to initialize Google Generative AI:", err.message);
+  process.exit(1);
+}
 
 // ─── Middleware ────────────────────────────────────────────────────
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173", credentials: true }));
@@ -140,6 +156,13 @@ Respond ONLY with valid JSON, no markdown:
 
   } catch (err) {
     console.error("AI eval error:", err.message);
+    
+    // Check if it's an API key error
+    if (err.message?.includes("API") || err.message?.includes("401") || err.message?.includes("authentication")) {
+      console.error("❌ API Key Issue: The Gemini API key may be invalid, expired, or the API quota exceeded");
+      console.error("Error details:", err.message);
+    }
+    
     // Fallback: keyword-based local scoring
     const ansLower = answer.toLowerCase();
     const matched = evalHints.filter(h => ansLower.includes(h.toLowerCase())).length;
