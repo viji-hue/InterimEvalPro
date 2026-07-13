@@ -57,6 +57,34 @@ export const QUESTION_BANK = [
     evalHints: ["multiple inheritance", "constructor", "abstract method", "concrete method", "BasePage extends", "interface implements"]
   },
 
+  // ── TYPE SCRIPT ──────────────────────────────────────────────
+  {
+    id: "ts1",
+    topic: "TypeScript",
+    difficulty: "easy",
+    q: "What is TypeScript and why is it useful in Playwright automation projects?",
+    key: "TypeScript is a typed superset of JavaScript that compiles to JavaScript. It improves editor support, catches errors earlier, and makes Playwright test code easier to maintain. Benefits include type safety for locators and page objects, better autocomplete, and fewer runtime surprises during test execution.",
+    evalHints: ["typed superset", "JavaScript", "type safety", "autocomplete", "Playwright"]
+  },
+
+  // ── PLAYWRIGHT OVERVIEW ──────────────────────────────────────
+  {
+    id: "pw1",
+    topic: "Playwright Overview",
+    difficulty: "easy",
+    q: "What is Playwright and what are its main features for end-to-end testing?",
+    key: "Playwright is an open-source automation framework for web browsers that supports Chromium, Firefox, and WebKit. Its main features include cross-browser testing, auto-waiting, built-in locators, assertion support, tracing, screenshots, and test parallelization. It is widely used for reliable end-to-end testing.",
+    evalHints: ["cross-browser", "auto-waiting", "locators", "assertions", "trace"]
+  },
+  {
+    id: "pw2",
+    topic: "Playwright Overview",
+    difficulty: "medium",
+    q: "How does Playwright compare with other automation frameworks such as Selenium?",
+    key: "Playwright offers a modern API, built-in auto-waiting, strong support for modern web features, easier handling of frames and network events, and a better developer experience with built-in tooling. Selenium is more mature and widely adopted, but Playwright generally provides less boilerplate and more reliable element interaction out of the box.",
+    evalHints: ["modern API", "auto-waiting", "frames", "network events", "developer experience", "Selenium"]
+  },
+
   // ── FUNCTIONAL TESTING ────────────────────────────────────────
   {
     id: "ft1",
@@ -421,15 +449,22 @@ export const QUESTION_BANK = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// Pick 5 questions from Selenium topics (covering all key areas)
+// Pick 5 questions from the requested mix: 1 TypeScript,
+// 2 Playwright Overview, 1 Functional Testing, and 1 SQL.
 // ─────────────────────────────────────────────────────────────────
 export function pickSessionQuestions() {
-  // All Selenium questions from the updated question bank
-  const seleniumPool = QUESTION_BANK.filter(q => q.topic === "Selenium");
-  
-  // Shuffle and pick 5 unique questions
-  const shuffled = seleniumPool.sort(() => Math.random() - 0.5);
-  const picked = shuffled.slice(0, 5);
+  const requiredMix = [
+    { topic: "TypeScript", count: 1 },
+    { topic: "Playwright Overview", count: 2 },
+    { topic: "Functional Testing", count: 1 },
+    { topic: "SQL", count: 1 }
+  ];
+
+  const picked = requiredMix.flatMap(({ topic, count }) => {
+    const pool = QUESTION_BANK.filter(q => q.topic === topic);
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  });
 
   // Return only question text + id + topic — NO model answers
   return picked.map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
