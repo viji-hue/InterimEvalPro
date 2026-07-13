@@ -35,17 +35,6 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [generatingConsolidated, setGeneratingConsolidated] = useState(false);
 
-  const fetchWithTimeout = async (url, options = {}, timeout = 60000) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeout);
-    const signal = options.signal || controller.signal;
-    try {
-      return await fetch(url, { ...options, signal });
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-
   const handleBulkDownload = async () => {
     if (!token || downloadingAll) return;
     setDownloadingAll(true);
