@@ -74,38 +74,8 @@ export const QUESTION_BANK = [
     topic: "Playwright",
     difficulty: "medium",
     q: "In a Playwright test, you need to click a dropdown menu, then click an option that appears after the click. The option sometimes takes 500ms to render. Write the test code showing how Playwright handles this mouse action scenario reliably.",
-    key: "Playwright has built-in auto-waiting that waits for elements to be actionable (visible, not covered, enabled) before interacting with them. Use page.click('selector') or page.locator('selector').click()—Playwright automatically waits up to 30 seconds (default timeout) for the element to appear and become clickable. For the dropdown: (1) await page.click('[data-testid=\"dropdown\"]') waits for dropdown to be clickable. (2) await page.click('[data-testid=\"option-submit\"]') automatically waits for option to render—no explicit sleep() needed. Playwright's auto-waiting detects when an element transitions from invisible/disabled to clickable, making tests reliable without fragile hardcoded waits.",
-    detailedAnswer: "SCENARIO: Dashboard has a dropdown menu. Clicking it reveals action options that render asynchronously.\n\nPLAYWRIGHT AUTO-WAITING APPROACH:\n```typescript
-// ✓ RELIABLE - Playwright waits automatically
-await page.click('[data-testid=\"status-dropdown\"]');
-await page.click('[data-testid=\"option-approve\"]'); // Waits for option to render
-
-// Or using getByRole() for better readability:
-await page.getByRole('button', { name: /Status/i }).click(); // Auto-waits
-await page.getByRole('menuitem', { name: /Approve/i }).click(); // Auto-waits
-```
-
-WHAT PLAYWRIGHT DOES BEHIND THE SCENES:
-1. For first click: Waits until [data-testid=\"status-dropdown\"] is visible, enabled, and not covered by another element
-2. After dropdown renders: Waits until [data-testid=\"option-approve\"] appears in DOM and becomes clickable
-3. Performs the click only when element is ready
-
-AVOID THIS (Fragile):
-```typescript
-// ❌ FRAGILE - Hard-coded wait
-page.click('[data-testid=\"status-dropdown\"]');
-await page.waitForTimeout(500); // If render time varies, fails!
-page.click('[data-testid=\"option-approve\"]');
-```
-
-PLAYWRIGHT TIMEOUT HANDLING:
-```typescript
-// Custom timeout for specific clicks
-await page.click('button', { timeout: 5000 }); // Wait up to 5 seconds
-
-// Test-wide timeout
-await page.locator('menu-option').first().click({ timeout: 10000 });
-```",
+    key: "Playwright has built-in auto-waiting that waits for elements to be actionable (visible, not covered, enabled) before interacting with them. Use page.click('selector') or page.locator('selector').click()—Playwright automatically waits up to 30 seconds (default timeout) for the element to appear and become clickable. For the dropdown: (1) await page.click('[data-testid=\\\"dropdown\\\"]') waits for dropdown to be clickable. (2) await page.click('[data-testid=\\\"option-submit\\\"]') automatically waits for option to render—no explicit sleep() needed. Playwright's auto-waiting detects when an element transitions from invisible/disabled to clickable, making tests reliable without fragile hardcoded waits.",
+    detailedAnswer: "SCENARIO: Dashboard has a dropdown menu. Clicking it reveals action options that render asynchronously.\\n\\nPLAYWRIGHT AUTO-WAITING APPROACH:\\n```typescript\\n// ✓ RELIABLE - Playwright waits automatically\\nawait page.click('[data-testid=\\\\\\\"status-dropdown\\\\\\\"]');\\nawait page.click('[data-testid=\\\\\\\"option-approve\\\\\\\"]'); // Waits for option to render\\n\\n// Or using getByRole() for better readability:\\nawait page.getByRole('button', { name: /Status/i }).click(); // Auto-waits\\nawait page.getByRole('menuitem', { name: /Approve/i }).click(); // Auto-waits\\n```\\n\\nWHAT PLAYWRIGHT DOES BEHIND THE SCENES:\\n1. For first click: Waits until [data-testid=\\\\\\\"status-dropdown\\\\\\\"] is visible, enabled, and not covered by another element\\n2. After dropdown renders: Waits until [data-testid=\\\\\\\"option-approve\\\\\\\"] appears in DOM and becomes clickable\\n3. Performs the click only when element is ready\\n\\nAVOID THIS (Fragile):\\n```typescript\\n// ✘ FRAGILE - Hard-coded wait\\npage.click('[data-testid=\\\\\\\"status-dropdown\\\\\\\"]');\\nawait page.waitForTimeout(500); // If render time varies, fails!\\npage.click('[data-testid=\\\\\\\"option-approve\\\\\\\"]');\\n```\\n\\nPLAYWRIGHT TIMEOUT HANDLING:\\n```typescript\\n// Custom timeout for specific clicks\\nawait page.click('button', { timeout: 5000 }); // Wait up to 5 seconds\\n\\n// Test-wide timeout\\nawait page.locator('menu-option').first().click({ timeout: 10000 });\\n```",
     evalHints: ["auto-waiting", "click action", "actionable state", "dropdown menu", "timeout", "getByRole", "reliable waits", "async rendering"]
   },
   {
