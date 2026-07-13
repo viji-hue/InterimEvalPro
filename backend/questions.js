@@ -84,69 +84,7 @@ export const QUESTION_BANK = [
     difficulty: "hard",
     q: "Your test needs to perform a complex user interaction: move the mouse to a product image (hover), then drag it to a wishlist zone. Write Playwright code showing how you'd handle these chained mouse actions, and explain what would fail in Selenium doing the same task.",
     key: "In Playwright: (1) await page.locator('product-image').hover() moves mouse to element. (2) await page.locator('product-image').dragTo(page.locator('wishlist-zone')) chains the drag action. Playwright's Action API supports complex interactions with proper event ordering—hover fires mouseover/mouseenter, drag fires mousedown, mousemove, mouseup events in correct sequence. In Selenium, you'd need: Actions(driver).move_to_element(elem).pause(500).drag_and_drop(elem, target).perform() with explicit pauses and more boilerplate. Playwright's API is cleaner and handles timing better. Playwright also supports: page.mouse.move(x, y), page.mouse.down(), page.mouse.up() for pixel-level control or page.touchscreen.tap() for touch events.",
-    detailedAnswer: "SCENARIO: E-commerce site where users add products to wishlist by dragging product images.\n\nPLAYWRIGHT SOLUTION WITH CHAINED MOUSE ACTIONS:\n```typescript
-const productImage = page.locator('[data-testid=\"product-image\"]');
-const wishlistZone = page.locator('[data-testid=\"wishlist-drop-zone\"]');
-
-// Method 1: High-level dragTo() - Recommended
-await productImage.dragTo(wishlistZone);
-
-// Method 2: Fine-grained mouse control
-const productBox = await productImage.boundingBox();
-const wishlistBox = await wishlistZone.boundingBox();
-
-if (productBox && wishlistBox) {
-  const startX = productBox.x + productBox.width / 2;
-  const startY = productBox.y + productBox.height / 2;
-  const endX = wishlistBox.x + wishlistBox.width / 2;
-  const endY = wishlistBox.y + wishlistBox.height / 2;
-  
-  // Pixel-level mouse control
-  await page.mouse.move(startX, startY);
-  await page.mouse.down();
-  await page.mouse.move(endX, endY, { steps: 10 }); // Smooth drag with 10 steps
-  await page.mouse.up();
-}
-
-// Method 3: Hover + separate interaction
-await productImage.hover();
-await page.waitForTimeout(300); // Let hover state settle
-await productImage.dragTo(wishlistZone);
-```
-
-EVENT FIRING ORDER (Playwright handles automatically):
-1. mouseover → productImage
-2. mouseenter → productImage
-3. mousedown → productImage
-4. mousemove (10 steps) → between productImage and wishlistZone
-5. mouseover → wishlistZone
-6. mouseenter → wishlistZone
-7. mouseup → wishlistZone
-
-SELENIUM EQUIVALENT (More verbose, error-prone):
-```python
-# Selenium requires explicit action chaining
-actions = ActionChains(driver)
-product = driver.find_element(By.ID, 'product-image')
-wishlist = driver.find_element(By.ID, 'wishlist-zone')
-
-actions.move_to_element(product) \
-       .pause(0.5) \
-       .drag_and_drop(product, wishlist) \
-       .perform()
-```
-
-SELENIUM PROBLEMS:
-- Requires explicit pause() to let hover state settle
-- Less intuitive API (perform() must be called separately)
-- Event ordering is harder to control
-- Drag distance/smoothness is implicit
-
-PLAYWRIGHT ADVANTAGES:
-- dragTo() handles event sequencing automatically
-- mouse.move(x, y, { steps: 10 }) provides smooth drag simulation
-- Built-in waiting for actionable state
-- Cleaner, more declarative API",
+    detailedAnswer: "SCENARIO: E-commerce site where users add products to wishlist by dragging product images.\\n\\nPLAYWRIGHT SOLUTION WITH CHAINED MOUSE ACTIONS:\\n```typescript\\nconst productImage = page.locator('[data-testid=\\\\\\\"product-image\\\\\\\"]');\\nconst wishlistZone = page.locator('[data-testid=\\\\\\\"wishlist-drop-zone\\\\\\\"]');\\n\\n// Method 1: High-level dragTo() - Recommended\\nawait productImage.dragTo(wishlistZone);\\n\\n// Method 2: Fine-grained mouse control\\nconst productBox = await productImage.boundingBox();\\nconst wishlistBox = await wishlistZone.boundingBox();\\n\\nif (productBox && wishlistBox) {\\n  const startX = productBox.x + productBox.width / 2;\\n  const startY = productBox.y + productBox.height / 2;\\n  const endX = wishlistBox.x + wishlistBox.width / 2;\\n  const endY = wishlistBox.y + wishlistBox.height / 2;\\n  \\n  // Pixel-level mouse control\\n  await page.mouse.move(startX, startY);\\n  await page.mouse.down();\\n  await page.mouse.move(endX, endY, { steps: 10 }); // Smooth drag with 10 steps\\n  await page.mouse.up();\\n}\\n\\n// Method 3: Hover + separate interaction\\nawait productImage.hover();\\nawait page.waitForTimeout(300); // Let hover state settle\\nawait productImage.dragTo(wishlistZone);\\n```\\n\\nEVENT FIRING ORDER (Playwright handles automatically):\\n1. mouseover → productImage\\n2. mouseenter → productImage\\n3. mousedown → productImage\\n4. mousemove (10 steps) → between productImage and wishlistZone\\n5. mouseover → wishlistZone\\n6. mouseenter → wishlistZone\\n7. mouseup → wishlistZone\\n\\nSELENIUM EQUIVALENT (More verbose, error-prone):\\n```python\\n# Selenium requires explicit action chaining\\nactions = ActionChains(driver)\\nproduct = driver.find_element(By.ID, 'product-image')\\nwishlist = driver.find_element(By.ID, 'wishlist-zone')\\n\\nactions.move_to_element(product) \\\\\\n       .pause(0.5) \\\\\\n       .drag_and_drop(product, wishlist) \\\\\\n       .perform()\\n```\\n\\nSELENIUM PROBLEMS:\\n- Requires explicit pause() to let hover state settle\\n- Less intuitive API (perform() must be called separately)\\n- Event ordering is harder to control\\n- Drag distance/smoothness is implicit\\n\\nPLAYWRIGHT ADVANTAGES:\\n- dragTo() handles event sequencing automatically\\n- mouse.move(x, y, { steps: 10 }) provides smooth drag simulation\\n- Built-in waiting for actionable state\\n- Cleaner, more declarative API",
     evalHints: ["dragTo() action", "hover action", "mouse.move()", "mouse.down()", "mouse.up()", "boundingBox()", "event ordering", "Action API", "Selenium comparison", "steps parameter"]
   },
 
