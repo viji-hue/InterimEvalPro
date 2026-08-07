@@ -15,9 +15,20 @@ test('pickSessionQuestions returns the requested five-question mix', () => {
 
   assert.deepEqual(counts, {
     'TypeScript': 1,
-    'Playwright Overview': 2,
+    Playwright: 2,
     'Functional Testing': 1,
     'SQL': 1,
+  });
+});
+
+test('SQL questions are scenario-based and use a single shared schema', () => {
+  const sqlQuestions = QUESTION_BANK.filter(q => q.topic === 'SQL');
+
+  assert.equal(sqlQuestions.length, 5);
+  sqlQuestions.forEach(q => {
+    const text = `${q.q} ${q.detailedAnswer || ''}`.toLowerCase();
+    assert.match(text, /scenario|business|dashboard|report|team|analysis/);
+    assert.ok(text.includes('employees') || text.includes('departments') || text.includes('projects'));
   });
 });
 

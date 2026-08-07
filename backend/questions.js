@@ -135,42 +135,46 @@ export const QUESTION_BANK = [
     id: "sql1",
     topic: "SQL",
     difficulty: "medium",
-    q: "What is the difference between INNER JOIN, LEFT JOIN, and RIGHT JOIN? Write a SQL query to fetch all employees and their department names, including employees without a department.",
-    key: "INNER JOIN: returns only rows with matching values in both tables. LEFT JOIN: all rows from left table + matches from right (NULL for no match). RIGHT JOIN: all rows from right table + matches from left. Query: SELECT e.emp_name, d.dept_name FROM employees e LEFT JOIN departments d ON e.dept_id = d.dept_id; — LEFT JOIN used because employees without department still appear with dept_name as NULL.",
-    detailedAnswer: "REAL-WORLD SCENARIO: Your test data setup creates 100 employees, but contractor/interns don't have departments assigned yet. Queries to verify data:\n\nDATABASE STRUCTURE:\nemployees table: (id, name, dept_id)\n- 1, John, 5 (dept_id exists)\n- 2, Jane, 5\n- 3, Alex, NULL (contractor — no department!)\n- 4, Sam, NULL\n\ndepartments table: (id, name)\n- 5, Engineering\n- 6, Sales (nobody assigned)\n\n❌ INNER JOIN (LOSES CONTRACTORS!):\n```\nSELECT e.emp_name, d.dept_name \nFROM employees e \nINNER JOIN departments d ON e.dept_id = d.dept_id;\n```\nResult: 2 rows (John, Jane only!) — Alex and Sam are MISSING\nWhy: INNER JOIN only returns matching pairs. Since Alex/Sam have NULL dept_id, there's no match.\n\n✓ LEFT JOIN (KEEPS CONTRACTORS!):\n```\nSELECT e.emp_name, d.dept_name \nFROM employees e \nLEFT JOIN departments d ON e.dept_id = d.dept_id;\n```\nResult: 4 rows\n- John, Engineering\n- Jane, Engineering\n- Alex, NULL ← contractor appears with no department\n- Sam, NULL ← contractor appears with no department\nWhy: LEFT JOIN returns ALL employees + matched departments. Unmatched rows get NULL.\n\n⚠ RIGHT JOIN (Rarely used, confusing):\n```\nSELECT e.emp_name, d.dept_name \nFROM employees e \nRIGHT JOIN departments d ON e.dept_id = d.dept_id;\n```\nResult: 3 rows\n- John, Engineering\n- Jane, Engineering\n- NULL, Sales ← Sales department with no employee!\nWhy: RIGHT JOIN returns ALL departments + matched employees.\n\n🎯 TEST DATA IMPLICATIONS:\nIf you're setting up test data and forget contractors:\n- INNER JOIN hides the bug (you won't catch missing contractors in tests)\n- LEFT JOIN catches it (NULL values alert you to incomplete data)\n- As a tester, ALWAYS use LEFT JOIN when validating test data setup\n\nKEY INSIGHT: In test frameworks, use LEFT JOIN to verify data completeness. If you get unexpected NULLs, your test data setup is incomplete!",
-    evalHints: ["matching rows", "all left", "NULL", "LEFT JOIN", "ON clause", "employees without department"]
+    q: "Scenario: The HR team needs a list of active employees in the Engineering department who earn more than 80000. Write a query against the company.employees schema to return their names, department, and salary.",
+    key: "SELECT name, department, salary FROM company.employees WHERE status = 'Active' AND department = 'Engineering' AND salary > 80000 ORDER BY salary DESC;",
+    detailedAnswer: "Use the single company.employees schema for this scenario. The query filters on status, department, and salary to return only the matching employees for the HR report.",
+    evalHints: ["WHERE", "status", "department", "salary", "ORDER BY"]
   },
   {
     id: "sql2",
     topic: "SQL",
     difficulty: "medium",
-    q: "Explain GROUP BY and HAVING with examples. Write a query to find all departments where the average salary exceeds 50000.",
-    key: "GROUP BY aggregates rows into groups by column value. HAVING filters those groups (like WHERE but for aggregated results). WHERE filters before grouping, HAVING filters after. Query: SELECT dept_id, AVG(salary) as avg_sal FROM employees GROUP BY dept_id HAVING AVG(salary) > 50000 ORDER BY avg_sal DESC; — HAVING must be used here because WHERE cannot filter on aggregate functions.",
-    evalHints: ["aggregate", "HAVING vs WHERE", "AVG", "GROUP BY", "after grouping", "filter groups"]
+    q: "Scenario: Finance wants the average salary by department for all active employees. Write a query using the company.employees schema to return department and average salary, sorted from highest to lowest.",
+    key: "SELECT department, ROUND(AVG(salary), 2) AS avg_salary FROM company.employees WHERE status = 'Active' GROUP BY department ORDER BY avg_salary DESC;",
+    detailedAnswer: "This is a grouped reporting question. The company.employees schema contains one table, and the query uses GROUP BY with an aggregate to build the finance summary.",
+    evalHints: ["GROUP BY", "AVG", "aggregate", "ORDER BY", "active employees"]
   },
   {
     id: "sql3",
     topic: "SQL",
     difficulty: "easy",
-    q: "What are PRIMARY KEY, FOREIGN KEY, and UNIQUE constraints? Why are they important when setting up test data in automation?",
-    key: "PRIMARY KEY: uniquely identifies each row, cannot be NULL, one per table. FOREIGN KEY: references PRIMARY KEY in another table, enforces referential integrity. UNIQUE: no duplicate values allowed, can be NULL, multiple per table. In test automation: violations cause insert failures that are hard to debug — test data scripts must respect PK uniqueness (use sequences/timestamps), FK relationships (insert parent before child), and UNIQUE constraints to avoid flaky data setup failures.",
-    evalHints: ["unique identifier", "NULL", "referential integrity", "parent child", "insert order", "test data setup", "flaky"]
+    q: "Scenario: A manager wants to see who earns more than the average salary of their own department. Write a query against the company.employees schema to identify those employees.",
+    key: "SELECT e.name, e.department, e.salary FROM company.employees e WHERE e.salary > (SELECT AVG(salary) FROM company.employees WHERE department = e.department);",
+    detailedAnswer: "This uses a correlated subquery with the same company.employees schema. The inner query calculates the department average, while the outer query compares each employee's salary to it.",
+    evalHints: ["subquery", "correlated", "AVG", "department average", "salary comparison"]
   },
   {
     id: "sql4",
     topic: "SQL",
     difficulty: "medium",
-    q: "What is the difference between DELETE, TRUNCATE, and DROP? Which command would you use to clean test data after each test run, and why?",
-    key: "DELETE: removes specific rows with WHERE clause, fully logged, supports rollback. TRUNCATE: removes all rows, minimal logging, faster, cannot use WHERE, resets identity, supports rollback in some DBs. DROP: removes entire table structure and data permanently. For test cleanup: use DELETE with WHERE test_run_id = @runId to remove only the current run's data (safe, targeted). Use TRUNCATE to reset entire tables between full test suite runs. Never use DROP in automation — it destroys the schema.",
-    evalHints: ["WHERE clause", "rollback", "faster", "identity reset", "schema", "test_run_id", "targeted"]
+    q: "Scenario: The operations team needs the highest-paid employee in each department. Write a query using the company.employees schema to return department, employee name, and salary.",
+    key: "SELECT department, name, salary FROM company.employees e WHERE salary = (SELECT MAX(salary) FROM company.employees WHERE department = e.department);",
+    detailedAnswer: "This scenario uses the company.employees schema and a correlated subquery to find the top salary in each department without needing a second table.",
+    evalHints: ["MAX", "subquery", "top salary", "department"]
   },
   {
     id: "sql5",
     topic: "SQL",
     difficulty: "hard",
-    q: "What is a SQL subquery vs a JOIN? Write a query to find all employees who earn more than the average salary of their department.",
-    key: "Subquery: a query nested inside another query, executed first, result used by outer query. JOIN: combines rows from multiple tables based on related columns — generally more performant than correlated subqueries. Query using correlated subquery: SELECT e.emp_name, e.salary, e.dept_id FROM employees e WHERE e.salary > (SELECT AVG(salary) FROM employees WHERE dept_id = e.dept_id); — correlated because inner query references outer query's e.dept_id, runs once per outer row.",
-    evalHints: ["nested", "correlated", "AVG", "dept_id", "inner query", "outer query", "performance"]
+    q: "Scenario: Leadership wants a month-wise hiring trend for the last 12 months. Write a query against the company.employees schema to show the month and number of hires.",
+    key: "SELECT TO_CHAR(hire_date, 'YYYY-MM') AS hire_month, COUNT(*) AS hires FROM company.employees WHERE hire_date >= CURRENT_DATE - INTERVAL '12 months' GROUP BY TO_CHAR(hire_date, 'YYYY-MM') ORDER BY hire_month;",
+    detailedAnswer: "This scenario stays within the company.employees schema and demonstrates date-based aggregation for a business report.",
+    evalHints: ["date aggregation", "hire_date", "COUNT", "GROUP BY", "monthly trend"]
   },
 
   // ── SELENIUM ──────────────────────────────────────────────────
