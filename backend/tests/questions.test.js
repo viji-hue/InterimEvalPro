@@ -2,38 +2,32 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { pickSessionQuestions, QUESTION_BANK } from '../questions.js';
 
-test('pickSessionQuestions returns the requested five-question mix', () => {
+test('pickSessionQuestions returns five SQL questions only', () => {
   const questions = pickSessionQuestions();
 
   assert.equal(questions.length, 5);
   assert.ok(questions.every(q => typeof q.q === 'string' && q.q.length > 0));
-
-  const counts = questions.reduce((acc, q) => {
-    acc[q.topic] = (acc[q.topic] || 0) + 1;
-    return acc;
-  }, {});
-
-  assert.deepEqual(counts, {
-    'TypeScript': 1,
-    Playwright: 2,
-    'Functional Testing': 1,
-    'SQL': 1,
-  });
+  assert.ok(questions.every(q => q.topic === 'SQL'));
+  assert.ok(questions.every(q => q.q.includes('Initial schema')));
 });
 
-test('SQL questions are scenario-based and use a single shared schema', () => {
+test('SQL questions are scenario-based and use a shared schema with tables, columns, and links', () => {
   const sqlQuestions = QUESTION_BANK.filter(q => q.topic === 'SQL');
 
   assert.equal(sqlQuestions.length, 5);
   sqlQuestions.forEach(q => {
     const text = `${q.q} ${q.detailedAnswer || ''}`.toLowerCase();
-    assert.match(text, /scenario|business|dashboard|report|team|analysis/);
-    assert.ok(text.includes('employees') || text.includes('departments') || text.includes('projects'));
+    assert.match(text, /scenario|finance|hr|operations|leadership/);
+    assert.ok(text.includes('employees'));
+    assert.ok(text.includes('departments'));
+    assert.ok(text.includes('projects'));
+    assert.ok(text.includes('employee_projects'));
+    assert.ok(text.includes('fk') || text.includes('links'));
   });
 });
 
-test('QUESTION_BANK includes the required TypeScript and Playwright questions', () => {
-  const requiredIds = ['ts1', 'pw1', 'pw2', 'ft1', 'sql1'];
+test('QUESTION_BANK includes the required SQL questions', () => {
+  const requiredIds = ['sql1', 'sql2', 'sql3', 'sql4', 'sql5'];
   const foundIds = requiredIds.filter(id => QUESTION_BANK.some(q => q.id === id));
 
   assert.deepEqual(foundIds, requiredIds);

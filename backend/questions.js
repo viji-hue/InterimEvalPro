@@ -135,45 +135,45 @@ export const QUESTION_BANK = [
     id: "sql1",
     topic: "SQL",
     difficulty: "medium",
-    q: "Scenario: The HR team needs a list of active employees in the Engineering department who earn more than 80000. Write a query against the company.employees schema to return their names, department, and salary.",
-    key: "SELECT name, department, salary FROM company.employees WHERE status = 'Active' AND department = 'Engineering' AND salary > 80000 ORDER BY salary DESC;",
-    detailedAnswer: "Use the single company.employees schema for this scenario. The query filters on status, department, and salary to return only the matching employees for the HR report.",
-    evalHints: ["WHERE", "status", "department", "salary", "ORDER BY"]
+    q: "Initial schema (company_db): employees(employee_id PK, first_name, last_name, department_id FK -> departments.department_id, salary, hire_date, status); departments(department_id PK, department_name, location); projects(project_id PK, project_name, department_id FK -> departments.department_id); employee_projects(employee_id FK -> employees.employee_id, project_id FK -> projects.project_id, role). Links: employees.department_id -> departments.department_id, projects.department_id -> departments.department_id, employee_projects.employee_id -> employees.employee_id, employee_projects.project_id -> projects.project_id. Scenario: The HR team needs a list of active employees in the Engineering department who earn more than 80000. Write a query to return employee name, department, and salary.",
+    key: "SELECT e.first_name, e.last_name, d.department_name, e.salary FROM company_db.employees e JOIN company_db.departments d ON e.department_id = d.department_id WHERE e.status = 'Active' AND d.department_name = 'Engineering' AND e.salary > 80000 ORDER BY e.salary DESC;",
+    detailedAnswer: "Use the shared company_db schema for this scenario. The query joins employees and departments, then filters for active Engineering staff with salaries above 80000.",
+    evalHints: ["JOIN", "WHERE", "status", "department", "salary", "ORDER BY"]
   },
   {
     id: "sql2",
     topic: "SQL",
     difficulty: "medium",
-    q: "Scenario: Finance wants the average salary by department for all active employees. Write a query using the company.employees schema to return department and average salary, sorted from highest to lowest.",
-    key: "SELECT department, ROUND(AVG(salary), 2) AS avg_salary FROM company.employees WHERE status = 'Active' GROUP BY department ORDER BY avg_salary DESC;",
-    detailedAnswer: "This is a grouped reporting question. The company.employees schema contains one table, and the query uses GROUP BY with an aggregate to build the finance summary.",
+    q: "Initial schema (company_db): employees(employee_id PK, first_name, last_name, department_id FK -> departments.department_id, salary, hire_date, status); departments(department_id PK, department_name, location); projects(project_id PK, project_name, department_id FK -> departments.department_id); employee_projects(employee_id FK -> employees.employee_id, project_id FK -> projects.project_id, role). Links: employees.department_id -> departments.department_id, projects.department_id -> departments.department_id, employee_projects.employee_id -> employees.employee_id, employee_projects.project_id -> projects.project_id. Scenario: Finance wants the average salary by department for all active employees. Write a query to return department and average salary, sorted from highest to lowest.",
+    key: "SELECT d.department_name, ROUND(AVG(e.salary), 2) AS avg_salary FROM company_db.employees e JOIN company_db.departments d ON e.department_id = d.department_id WHERE e.status = 'Active' GROUP BY d.department_name ORDER BY avg_salary DESC;",
+    detailedAnswer: "This is a grouped reporting question using the shared company_db schema. The query aggregates employee salaries by department to build the finance summary.",
     evalHints: ["GROUP BY", "AVG", "aggregate", "ORDER BY", "active employees"]
   },
   {
     id: "sql3",
     topic: "SQL",
     difficulty: "easy",
-    q: "Scenario: A manager wants to see who earns more than the average salary of their own department. Write a query against the company.employees schema to identify those employees.",
-    key: "SELECT e.name, e.department, e.salary FROM company.employees e WHERE e.salary > (SELECT AVG(salary) FROM company.employees WHERE department = e.department);",
-    detailedAnswer: "This uses a correlated subquery with the same company.employees schema. The inner query calculates the department average, while the outer query compares each employee's salary to it.",
+    q: "Initial schema (company_db): employees(employee_id PK, first_name, last_name, department_id FK -> departments.department_id, salary, hire_date, status); departments(department_id PK, department_name, location); projects(project_id PK, project_name, department_id FK -> departments.department_id); employee_projects(employee_id FK -> employees.employee_id, project_id FK -> projects.project_id, role). Links: employees.department_id -> departments.department_id, projects.department_id -> departments.department_id, employee_projects.employee_id -> employees.employee_id, employee_projects.project_id -> projects.project_id. Scenario: A manager wants to see who earns more than the average salary of their own department. Write a query to identify those employees.",
+    key: "SELECT e.first_name, e.last_name, d.department_name, e.salary FROM company_db.employees e JOIN company_db.departments d ON e.department_id = d.department_id WHERE e.salary > (SELECT AVG(salary) FROM company_db.employees WHERE department_id = e.department_id);",
+    detailedAnswer: "This uses a correlated subquery with the same company_db schema. The inner query calculates the department average, while the outer query compares each employee's salary to it.",
     evalHints: ["subquery", "correlated", "AVG", "department average", "salary comparison"]
   },
   {
     id: "sql4",
     topic: "SQL",
     difficulty: "medium",
-    q: "Scenario: The operations team needs the highest-paid employee in each department. Write a query using the company.employees schema to return department, employee name, and salary.",
-    key: "SELECT department, name, salary FROM company.employees e WHERE salary = (SELECT MAX(salary) FROM company.employees WHERE department = e.department);",
-    detailedAnswer: "This scenario uses the company.employees schema and a correlated subquery to find the top salary in each department without needing a second table.",
+    q: "Initial schema (company_db): employees(employee_id PK, first_name, last_name, department_id FK -> departments.department_id, salary, hire_date, status); departments(department_id PK, department_name, location); projects(project_id PK, project_name, department_id FK -> departments.department_id); employee_projects(employee_id FK -> employees.employee_id, project_id FK -> projects.project_id, role). Links: employees.department_id -> departments.department_id, projects.department_id -> departments.department_id, employee_projects.employee_id -> employees.employee_id, employee_projects.project_id -> projects.project_id. Scenario: The operations team needs the highest-paid employee in each department. Write a query to return department, employee name, and salary.",
+    key: "SELECT d.department_name, e.first_name, e.last_name, e.salary FROM company_db.employees e JOIN company_db.departments d ON e.department_id = d.department_id WHERE e.salary = (SELECT MAX(salary) FROM company_db.employees WHERE department_id = e.department_id);",
+    detailedAnswer: "This scenario uses the company_db schema and a correlated subquery to find the top salary in each department without needing a second table.",
     evalHints: ["MAX", "subquery", "top salary", "department"]
   },
   {
     id: "sql5",
     topic: "SQL",
     difficulty: "hard",
-    q: "Scenario: Leadership wants a month-wise hiring trend for the last 12 months. Write a query against the company.employees schema to show the month and number of hires.",
-    key: "SELECT TO_CHAR(hire_date, 'YYYY-MM') AS hire_month, COUNT(*) AS hires FROM company.employees WHERE hire_date >= CURRENT_DATE - INTERVAL '12 months' GROUP BY TO_CHAR(hire_date, 'YYYY-MM') ORDER BY hire_month;",
-    detailedAnswer: "This scenario stays within the company.employees schema and demonstrates date-based aggregation for a business report.",
+    q: "Initial schema (company_db): employees(employee_id PK, first_name, last_name, department_id FK -> departments.department_id, salary, hire_date, status); departments(department_id PK, department_name, location); projects(project_id PK, project_name, department_id FK -> departments.department_id); employee_projects(employee_id FK -> employees.employee_id, project_id FK -> projects.project_id, role). Links: employees.department_id -> departments.department_id, projects.department_id -> departments.department_id, employee_projects.employee_id -> employees.employee_id, employee_projects.project_id -> projects.project_id. Scenario: Leadership wants a month-wise hiring trend for the last 12 months. Write a query to show the month and number of hires.",
+    key: "SELECT TO_CHAR(hire_date, 'YYYY-MM') AS hire_month, COUNT(*) AS hires FROM company_db.employees WHERE hire_date >= CURRENT_DATE - INTERVAL '12 months' GROUP BY TO_CHAR(hire_date, 'YYYY-MM') ORDER BY hire_month;",
+    detailedAnswer: "This scenario stays within the company_db schema and demonstrates date-based aggregation for a business report.",
     evalHints: ["date aggregation", "hire_date", "COUNT", "GROUP BY", "monthly trend"]
   },
 
@@ -455,22 +455,12 @@ export const QUESTION_BANK = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// Pick 5 questions from the requested mix: 1 TypeScript,
-// 2 Playwright Overview, 1 Functional Testing, and 1 SQL.
+// Pick 5 SQL questions only, using the shared schema described in each prompt.
 // ─────────────────────────────────────────────────────────────────
 export function pickSessionQuestions() {
-  const requiredMix = [
-    { topic: "TypeScript", count: 1 },
-    { topic: "Playwright", count: 2 },
-    { topic: "Functional Testing", count: 1 },
-    { topic: "SQL", count: 1 }
-  ];
-
-  const picked = requiredMix.flatMap(({ topic, count }) => {
-    const pool = QUESTION_BANK.filter(q => q.topic === topic);
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
-  });
+  const pool = QUESTION_BANK.filter(q => q.topic === "SQL");
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, 5);
 
   // Return only question text + id + topic — NO model answers
   return picked.map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
