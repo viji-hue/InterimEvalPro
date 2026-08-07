@@ -8,7 +8,7 @@ test('pickSessionQuestions returns five SQL questions only', () => {
   assert.equal(questions.length, 5);
   assert.ok(questions.every(q => typeof q.q === 'string' && q.q.length > 0));
   assert.ok(questions.every(q => q.topic === 'SQL'));
-  assert.ok(questions.every(q => q.q.includes('Initial schema')));
+  assert.ok(questions.every(q => q.q.includes('Schema diagram')));
 });
 
 test('SQL questions are scenario-based and use a shared schema with tables, columns, and links', () => {
