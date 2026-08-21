@@ -130,6 +130,47 @@ export const QUESTION_BANK = [
     evalHints: ["simultaneous", "without scripts", "intuition", "edge cases", "complement", "CI/CD", "new features"]
   },
 
+  {
+    id: "java_eval_oops",
+    topic: "Core Java",
+    difficulty: "medium",
+    q: "Explain the four OOP concepts in Java: encapsulation, inheritance, polymorphism, and abstraction. Give a simple testing or Selenium example for at least two of them.",
+    key: "Encapsulation keeps data private and exposes behavior through methods, for example a page object's private WebDriver and public login method. Inheritance allows a class to reuse or extend another class, such as LoginPage extends BasePage. Polymorphism allows a parent reference to refer to different child implementations, such as WebDriver driver referring to ChromeDriver or FirefoxDriver. Abstraction exposes essential behavior while hiding implementation details, such as a test calling login() without knowing the locator steps.",
+    evalHints: ["encapsulation", "private", "inheritance", "extends", "polymorphism", "WebDriver", "abstraction", "page object"]
+  },
+  {
+    id: "java_eval_program",
+    topic: "Core Java",
+    difficulty: "medium",
+    q: "Write a simple Java program to check whether a given number is prime. Explain the main logic and include handling for numbers less than 2.",
+    key: "A number less than 2 is not prime. For other numbers, test divisibility from 2 through the square root of the number; if any value divides it evenly, it is not prime, otherwise it is prime. Example: public static boolean isPrime(int number) { if (number < 2) return false; for (int divisor = 2; divisor * divisor <= number; divisor++) { if (number % divisor == 0) return false; } return true; } The main method can print the result for a sample input.",
+    evalHints: ["public static", "isPrime", "number < 2", "for loop", "%", "divisor", "return false", "return true"]
+  },
+  {
+    id: "ft_eval_design",
+    topic: "Functional Testing",
+    difficulty: "medium",
+    q: "A login form accepts a valid email and password and locks the account after three failed attempts. Explain how you would use equivalence partitioning, boundary value analysis, and a decision table to design moderate test coverage.",
+    key: "Equivalence partitions should include valid and invalid email/password combinations, blank values, and malformed email values. Boundary value analysis should test failed attempts at 0, 1, 2, 3, and 4, especially the transition from the third failure to the locked state. A decision table should combine valid credentials, invalid credentials, account state, and attempt count, with expected outcomes such as successful login, error message, or account lock. This provides meaningful coverage without testing every possible input.",
+    evalHints: ["equivalence partitioning", "valid", "invalid", "boundary", "0", "3", "4", "decision table", "locked"]
+  },
+  {
+    id: "ft_eval_functional",
+    topic: "Functional Testing",
+    difficulty: "medium",
+    q: "For a password-reset feature, describe the main functional test scenarios, including positive, negative, validation, and security-related cases. State the expected result for two cases.",
+    key: "Scenarios include a registered email receiving a reset link, an unregistered email showing a safe generic response, blank or malformed email validation, an expired or already-used link, mismatched or weak new passwords, and prevention of password reuse if required. A valid registered email should show confirmation and send a time-limited link. A blank email should show a required-field validation message and should not send an email. Security checks should avoid revealing whether an email is registered and should invalidate the link after use or expiry.",
+    evalHints: ["registered email", "reset link", "unregistered", "blank", "malformed", "expired", "mismatched", "security", "time-limited"]
+  },
+  {
+    id: "sel_eval_textbox",
+    topic: "Selenium",
+    difficulty: "medium",
+    q: "Given <input id=\"email\" name=\"userEmail\" type=\"text\">, show three ways to locate the textbox in Selenium Java and enter a value. Which locator would you prefer and why?",
+    key: "Examples: driver.findElement(By.id(\"email\")).sendKeys(\"user@test.com\"); driver.findElement(By.name(\"userEmail\")).sendKeys(\"user@test.com\"); and driver.findElement(By.cssSelector(\"input#email\")).sendKeys(\"user@test.com\"); XPath can also be used with //input[@id='email']. Prefer the unique ID because it is readable, fast, and usually stable. If the ID is dynamic or unavailable, use a stable name or CSS selector; avoid brittle absolute XPath.",
+    evalHints: ["By.id", "By.name", "By.cssSelector", "By.xpath", "sendKeys", "unique ID", "stable", "textbox"]
+  },
+
   // ── SQL ───────────────────────────────────────────────────────
   {
     id: "sql1",
@@ -457,13 +498,21 @@ export const QUESTION_BANK = [
 // ─────────────────────────────────────────────────────────────────
 // Pick 5 SQL questions only, using the shared schema described in each prompt.
 // ─────────────────────────────────────────────────────────────────
+const SESSION_QUESTION_IDS = [
+  "java_eval_oops",
+  "java_eval_program",
+  "ft_eval_design",
+  "ft_eval_functional",
+  "sel_eval_textbox",
+];
+
+// Pick the required Java, functional testing, and Selenium coverage for each session.
 export function pickSessionQuestions() {
-  const pool = QUESTION_BANK.filter(q => q.topic === "SQL");
+  const pool = SESSION_QUESTION_IDS.map(id => QUESTION_BANK.find(q => q.id === id)).filter(Boolean);
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const picked = shuffled.slice(0, 5);
 
   // Return only question text + id + topic — NO model answers
-  return picked.map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
+  return shuffled.map(({ id, topic, difficulty, q }) => ({ id, topic, difficulty, q }));
 }
 
 // Return full question with key — only used server-side for AI evaluation
