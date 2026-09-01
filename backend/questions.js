@@ -545,14 +545,14 @@ export const QUESTION_BANK = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// Pick 5 SQL questions only, using the shared schema described in each prompt.
+// Pick 5 Spring Core questions only
 // ─────────────────────────────────────────────────────────────────
 const SESSION_QUESTION_IDS = [
-  "java_eval_oops",
-  "java_eval_program",
-  "ft_eval_design",
-  "ft_eval_functional",
-  "sel_eval_textbox",
+  "sc1",
+  "sc2",
+  "sc3",
+  "sc4",
+  "sc5",
 ];
 
 // Pick the required Java, functional testing, and Selenium coverage for each session.
