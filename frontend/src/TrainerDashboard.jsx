@@ -19,7 +19,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 60000) => {
 
 function Spinner() { return <div className="spinner" />; }
 
-async function openHtmlReport(url, token, filename) {
+async function downloadHtmlReport(url, token, filename) {
   const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Unable to open report" }));
@@ -29,8 +29,6 @@ async function openHtmlReport(url, token, filename) {
   const reportUrl = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = reportUrl;
-  link.target = "_blank";
-  link.rel = "noopener";
   link.download = filename;
   document.body.appendChild(link);
   link.click();
@@ -61,7 +59,7 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
     if (!selectedCohort || openingCohort) return;
     setOpeningCohort(true);
     try {
-      await openHtmlReport(api.cohortHtmlReport(token, selectedCohort), token, `Cohort_Report_${selectedCohort}.html`);
+      await downloadHtmlReport(api.cohortHtmlReport(token, selectedCohort), token, `Cohort_Report_${selectedCohort}.html`);
     } catch (err) {
       alert(`Failed to open cohort report: ${err.message}`);
     } finally {
@@ -160,15 +158,14 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
   };
 
   const handleGenerateConsolidated = async () => {
-    if (!token || generatingConsolidated) return;
+    if (!token || !selectedCohort || generatingConsolidated) return;
     setGeneratingConsolidated(true);
     try {
-      const result = await api.generateConsolidatedReport(token);
-      alert(`✓ Consolidated report saved!\n\nFile: ${result.filename}\nLocation: Frontend folder`);
-      setGeneratingConsolidated(false);
+      await downloadHtmlReport(api.cohortHtmlReport(token, selectedCohort), token, `Cohort_Report_${selectedCohort}.html`);
     } catch (err) {
       console.error("Consolidated report generation failed:", err);
-      alert("Failed to generate consolidated report. Check console for details.");
+      alert(`Failed to save cohort report: ${err.message}`);
+    } finally {
       setGeneratingConsolidated(false);
     }
   };
@@ -222,14 +219,14 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 1.5rem", gap: "10px", flexWrap: "wrap" }}>
         <div className="section-title" style={{ margin: 0 }}>All trainees</div>
         <div style={{ display: "flex", gap: "10px" }}>
-          <button className="btn-approve" onClick={handleGenerateConsolidated} disabled={generatingConsolidated} style={{ fontSize: 12, padding: "8px 12px" }}>
-            {generatingConsolidated ? "⏳ Generating..." : "📄 Save Consolidated Report"}
-          </button>
           <select value={selectedCohort} onChange={e => setSelectedCohort(e.target.value)} aria-label="Select cohort code">
             <option value="">Select cohort code</option>
             {cohorts.map(cohort => <option key={cohort} value={cohort}>{cohort}</option>)}
           </select>
-          <button className="btn-approve" onClick={handleOpenCohort} disabled={!selectedCohort || openingCohort} style={{ fontSize: 12, padding: "8px 12px" }}>
+          <button className="btn-approve" onClick={handleGenerateConsolidated} disabled={!selectedCohort || generatingConsolidated} style={{ fontSize: 12, padding: "8px 12px" }}>
+            {generatingConsolidated ? "Saving..." : "Save Cohort HTML"}
+          </button>
+          <button className="btn-secondary" onClick={handleOpenCohort} disabled={!selectedCohort || openingCohort} style={{ fontSize: 12, padding: "8px 12px" }}>
             {openingCohort ? "Opening..." : "Open Cohort HTML"}
           </button>
         </div>
@@ -375,7 +372,7 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
   const handleDownloadHtml = async () => {
     if (!selectedName || !token) return;
     try {
-      await openHtmlReport(api.traineeHtmlReport(token, selectedName), token, `Trainee_Report_${selectedName.replace(/\s+/g, "_")}.html`);
+      await downloadHtmlReport(api.traineeHtmlReport(token, selectedName), token, `Trainee_Report_${selectedName.replace(/\s+/g, "_")}.html`);
     } catch (err) {
       console.error("HTML report opening failed:", err);
       alert(`Failed to open HTML report for ${selectedName}: ${err.message}`);
