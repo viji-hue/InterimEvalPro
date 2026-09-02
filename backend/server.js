@@ -15,6 +15,9 @@ import { pickSessionQuestions, getFullQuestion } from "./questions.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const reportsDir = path.join(__dirname, "reports");
+const cohortReportsDir = path.join(reportsDir, "cohorts");
+const traineeReportsDir = path.join(reportsDir, "trainees");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -49,6 +52,59 @@ const db = {
   approvals: {},      // sessionId → true/false
   activeSessions: {}, // token → { questions with keys, traineeInfo }
 };
+
+function ensureReportsDirs() {
+  fs.mkdirSync(cohortReportsDir, { recursive: true });
+  fs.mkdirSync(traineeReportsDir, { recursive: true });
+}
+
+function safeReportName(value) {
+  return String(value || "unknown")
+    .trim()
+    .replace(/[^a-z0-9_-]+/gi, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 100) || "unknown";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function reportShell(title, body) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><style>
+    :root{font-family:Arial,sans-serif;color:#20211d;background:#f5f5f0}body{max-width:1100px;margin:0 auto;padding:32px 20px}h1{font-size:26px;margin:0 0 6px}h2{font-size:19px;margin:28px 0 10px;color:#315f0b}.meta{color:#686960;font-size:13px;margin-bottom:24px}.summary{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}.metric{background:#fff;border:1px solid #deded5;padding:14px 18px;min-width:120px}.metric strong{display:block;font-size:22px;margin-top:4px}.session{background:#fff;border:1px solid #deded5;margin:18px 0;padding:20px}.session-head{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e5e5dd;padding-bottom:10px}.question{border-top:1px solid #eee;margin-top:14px;padding-top:14px}.label{font-size:11px;text-transform:uppercase;color:#777970;margin-top:9px}.answer{white-space:pre-wrap;background:#f7f7f3;padding:10px;margin-top:4px;line-height:1.5}.score{font-weight:bold;color:#315f0b;white-space:nowrap}.integrity{font-size:12px;color:#686960;margin-top:12px}@media(max-width:600px){body{padding:20px 12px}.session-head{display:block}.score{display:block;margin-top:8px}}
+  </style></head><body><h1>${escapeHtml(title)}</h1>${body}</body></html>`;
+}
+
+function renderSession(session) {
+  return `<section class="session"><div class="session-head"><div><strong>${escapeHtml(session.trainee)}</strong><div class="meta">${escapeHtml(session.cohort)} · ${escapeHtml(session.date)}</div></div><div class="score">${session.pct}% (${session.score}/50)</div></div>${session.results.map((result, index) => `<div class="question"><strong>Q${index + 1} · ${escapeHtml(result.topic)}</strong><div class="score">${escapeHtml(result.scoreLabel)} · ${result.score}/10</div><div class="label">Question</div><div>${escapeHtml(result.question)}</div><div class="label">Trainee answer</div><div class="answer">${escapeHtml(result.answer || "[Skipped]")}</div>${result.modelAnswer ? `<div class="label">Model answer</div><div class="answer">${escapeHtml(result.modelAnswer)}</div>` : ""}${result.detailedAnswer ? `<div class="label">Detailed explanation</div><div class="answer">${escapeHtml(result.detailedAnswer)}</div>` : ""}<div class="label">Evaluator feedback</div><div class="answer">${escapeHtml(result.feedback || "")}</div></div>`).join("")}<div class="integrity">Integrity: ${escapeHtml(session.suspicionLevel || "Clean")} · Tab switches: ${session.tabSwitches || 0} · Pastes: ${session.pastes || 0} · Copies: ${session.copies || 0}</div></section>`;
+}
+
+function generateTraineeHtmlReport(name, traineeSessions) {
+  const average = Math.round(traineeSessions.reduce((sum, session) => sum + session.pct, 0) / traineeSessions.length);
+  const body = `<div class="meta">Generated: ${escapeHtml(new Date().toLocaleString("en-IN"))}</div><div class="summary"><div class="metric">Sessions<strong>${traineeSessions.length}</strong></div><div class="metric">Average<strong>${average}%</strong></div></div>${traineeSessions.map(renderSession).join("")}`;
+  return reportShell(`Trainee Evaluation Report: ${name}`, body);
+}
+
+function generateCohortHtmlReport(cohort, sessions) {
+  const trainees = [...new Set(sessions.map(session => session.trainee))];
+  const average = Math.round(sessions.reduce((sum, session) => sum + session.pct, 0) / sessions.length);
+  const body = `<div class="meta">Cohort: ${escapeHtml(cohort)} · Generated: ${escapeHtml(new Date().toLocaleString("en-IN"))}</div><div class="summary"><div class="metric">Trainees<strong>${trainees.length}</strong></div><div class="metric">Sessions<strong>${sessions.length}</strong></div><div class="metric">Average<strong>${average}%</strong></div></div>${trainees.map(trainee => `<h2>${escapeHtml(trainee)}</h2>${sessions.filter(session => session.trainee === trainee).map(renderSession).join("")}`).join("")}`;
+  return reportShell(`Cohort Evaluation Report: ${cohort}`, body);
+}
+
+function saveHtmlReportsForSession(record) {
+  ensureReportsDirs();
+  const cohortSessions = db.sessions.filter(session => session.cohort.toLowerCase() === record.cohort.toLowerCase());
+  const traineeSessions = db.sessions.filter(session => session.trainee.toLowerCase() === record.trainee.toLowerCase());
+  fs.writeFileSync(path.join(cohortReportsDir, `${safeReportName(record.cohort)}.html`), generateCohortHtmlReport(record.cohort, cohortSessions));
+  fs.writeFileSync(path.join(traineeReportsDir, `${safeReportName(record.trainee)}.html`), generateTraineeHtmlReport(record.trainee, traineeSessions));
+}
 
 // ─── Auth middleware ───────────────────────────────────────────────
 function requireTrainer(req, res, next) {
@@ -229,6 +285,7 @@ app.post("/api/session/finish", (req, res) => {
   };
 
   db.sessions.push(record);
+  saveHtmlReportsForSession(record);
   delete db.activeSessions[sessionToken]; // clean up
   res.json({ ok: true, sessionId: record.id, pct, suspicionLevel });
 });
@@ -1072,6 +1129,38 @@ app.get("/api/trainer/trainee/:name/excel", requireTrainer, async (req, res) => 
     console.error("Excel report generation error:", err);
     res.status(500).json({ error: "Failed to generate Excel report", details: err.message });
   }
+});
+
+// GET /api/trainer/trainee/:name/html — open the persisted trainee dashboard report
+app.get("/api/trainer/trainee/:name/html", requireTrainer, (req, res) => {
+  const name = decodeURIComponent(req.params.name);
+  ensureReportsDirs();
+  const reportPath = path.join(traineeReportsDir, `${safeReportName(name)}.html`);
+  if (!fs.existsSync(reportPath)) {
+    const traineeSessions = db.sessions.filter(session => session.trainee.toLowerCase() === name.toLowerCase());
+    if (!traineeSessions.length) return res.status(404).json({ error: "No saved report found for this trainee" });
+    fs.writeFileSync(reportPath, generateTraineeHtmlReport(name, traineeSessions));
+  }
+  res.setHeader("Content-Disposition", `inline; filename="${safeReportName(name)}.html"`);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.sendFile(reportPath);
+});
+
+// GET /api/trainer/cohort/:code/html — open the persisted cohort report
+app.get("/api/trainer/cohort/:code/html", requireTrainer, (req, res) => {
+  const cohort = decodeURIComponent(req.params.code);
+  ensureReportsDirs();
+  const reportPath = path.join(cohortReportsDir, `${safeReportName(cohort)}.html`);
+  if (!fs.existsSync(reportPath)) {
+    const cohortSessions = db.sessions.filter(session => session.cohort.toLowerCase() === cohort.toLowerCase());
+    if (!cohortSessions.length) return res.status(404).json({ error: "No saved report found for this cohort" });
+    fs.writeFileSync(reportPath, generateCohortHtmlReport(cohort, cohortSessions));
+  }
+  res.setHeader("Content-Disposition", `inline; filename="${safeReportName(cohort)}.html"`);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.sendFile(reportPath);
 });
 
 // GET /api/trainer/reports/all/download — download all trainee reports as ZIP

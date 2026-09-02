@@ -16,6 +16,13 @@ cd frontend && npm install
 npm run dev   # http://localhost:5173
 ```
 
+### HTML reports
+Completed sessions automatically update persistent HTML reports under `backend/reports/`:
+- `backend/reports/cohorts/<cohort-code>.html` contains every trainee and session in that cohort.
+- `backend/reports/trainees/<trainee-name>.html` contains that trainee's dashboard-style report.
+
+Trainers can select a cohort code in the Overview tab to open its report, or select a trainee in the Individual tab to open the trainee report. The files remain on disk when the backend is stopped and are served only through trainer-authenticated routes.
+
 ## Security: What's hidden server-side
 - Trainer name + code → .env only
 - All question model answers → questions.js, never sent to browser

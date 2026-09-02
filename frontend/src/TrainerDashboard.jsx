@@ -19,6 +19,25 @@ const fetchWithTimeout = async (url, options = {}, timeout = 60000) => {
 
 function Spinner() { return <div className="spinner" />; }
 
+async function openHtmlReport(url, token, filename) {
+  const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Unable to open report" }));
+    throw new Error(error.error || `HTTP Error: ${response.status}`);
+  }
+  const blob = await response.blob();
+  const reportUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = reportUrl;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => window.URL.revokeObjectURL(reportUrl), 1000);
+}
+
 function ScorePill({ score, label }) {
   const cls = score >= 7 ? "pill-high" : score >= 4 ? "pill-mid" : "pill-low";
   const icons = { "Full marks": "🏆", "Good answer": "✓", "Surface answer": "📖", "Mostly wrong": "⚠", "Irrelevant": "✕" };
@@ -34,6 +53,21 @@ function ScorePill({ score, label }) {
 function OverviewTab({ sessions, onDelete, onQuickView, token }) {
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [generatingConsolidated, setGeneratingConsolidated] = useState(false);
+  const [selectedCohort, setSelectedCohort] = useState("");
+  const [openingCohort, setOpeningCohort] = useState(false);
+  const cohorts = [...new Set(sessions.map(session => session.cohort))].sort();
+
+  const handleOpenCohort = async () => {
+    if (!selectedCohort || openingCohort) return;
+    setOpeningCohort(true);
+    try {
+      await openHtmlReport(api.cohortHtmlReport(token, selectedCohort), token, `Cohort_Report_${selectedCohort}.html`);
+    } catch (err) {
+      alert(`Failed to open cohort report: ${err.message}`);
+    } finally {
+      setOpeningCohort(false);
+    }
+  };
 
   const handleBulkDownload = async () => {
     if (!token || downloadingAll) return;
@@ -191,8 +225,12 @@ function OverviewTab({ sessions, onDelete, onQuickView, token }) {
           <button className="btn-approve" onClick={handleGenerateConsolidated} disabled={generatingConsolidated} style={{ fontSize: 12, padding: "8px 12px" }}>
             {generatingConsolidated ? "⏳ Generating..." : "📄 Save Consolidated Report"}
           </button>
-          <button className="btn-approve" onClick={handleBulkDownload} disabled={downloadingAll} style={{ fontSize: 12, padding: "8px 12px" }}>
-            {downloadingAll ? "⏳ Generating..." : "� Download All Excel"}
+          <select value={selectedCohort} onChange={e => setSelectedCohort(e.target.value)} aria-label="Select cohort code">
+            <option value="">Select cohort code</option>
+            {cohorts.map(cohort => <option key={cohort} value={cohort}>{cohort}</option>)}
+          </select>
+          <button className="btn-approve" onClick={handleOpenCohort} disabled={!selectedCohort || openingCohort} style={{ fontSize: 12, padding: "8px 12px" }}>
+            {openingCohort ? "Opening..." : "Open Cohort HTML"}
           </button>
         </div>
       </div>
@@ -334,58 +372,13 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
     }
   };
 
-  const handleDownloadExcel = async () => {
+  const handleDownloadHtml = async () => {
     if (!selectedName || !token) return;
-    
-    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB limit per file
-    const TIMEOUT = 60000; // 1 minute timeout
-    
     try {
-      const url = `/api/trainer/trainee/${encodeURIComponent(selectedName)}/excel`;
-      const response = await fetchWithTimeout(url, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${token}` }
-      }, TIMEOUT);
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(error.error || `HTTP Error: ${response.status}`);
-      }
-
-      const contentLength = response.headers.get("content-length");
-      if (contentLength && parseInt(contentLength) > MAX_FILE_SIZE) {
-        throw new Error(`File too large (${(parseInt(contentLength) / 1024 / 1024).toFixed(2)}MB). Maximum: 100MB.`);
-      }
-
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) {
-        throw new Error("Failed to download Excel report: empty response");
-      }
-      if (blob.size > MAX_FILE_SIZE) {
-        throw new Error(`File too large (${(blob.size / 1024 / 1024).toFixed(2)}MB). Insufficient memory.`);
-      }
-
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = `Trainee_Report_${selectedName.replace(/\s+/g, "_")}_${new Date().getTime()}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        window.URL.revokeObjectURL(downloadUrl);
-        document.body.removeChild(a);
-      }, 100);
+      await openHtmlReport(api.traineeHtmlReport(token, selectedName), token, `Trainee_Report_${selectedName.replace(/\s+/g, "_")}.html`);
     } catch (err) {
-      console.error("Excel download failed:", err);
-      let errorMsg = `Failed to download Excel report for ${selectedName}`;
-      if (err.name === "AbortError") {
-        errorMsg = "Download timed out. Please try again.";
-      } else if (err.message.includes("too large")) {
-        errorMsg = err.message;
-      } else {
-        errorMsg = `Error: ${err.message}`;
-      }
-      alert(`❌ ${errorMsg}`);
+      console.error("HTML report opening failed:", err);
+      alert(`Failed to open HTML report for ${selectedName}: ${err.message}`);
     }
   };
 
@@ -461,7 +454,7 @@ function IndividualTab({ sessions, selectedName, onSelect, onDelete, token }) {
         {selectedName && <button className="btn-delete" onClick={() => onDelete(selectedName)}>✕ Delete</button>}
         {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownloadDashboard} style={{ fontSize: 12, padding: "8px 12px" }}>📊 Download Dashboard</button>}
         {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownload} style={{ fontSize: 12, padding: "8px 12px" }}>📄 Latest Report</button>}
-        {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownloadExcel} style={{ fontSize: 12, padding: "8px 12px" }}>📥 Download Excel</button>}
+        {selectedName && traineeSessions.length > 0 && <button className="btn-approve" onClick={handleDownloadHtml} style={{ fontSize: 12, padding: "8px 12px" }}>🌐 Open HTML Report</button>}
       </div>
       {selectedName && traineeSessions.length > 0 && (() => {
         const sess = traineeSessions;

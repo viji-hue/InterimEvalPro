@@ -25,5 +25,7 @@ export const api = {
   deleteTrainee: (token, name) => req("DELETE", `/trainer/trainee/${encodeURIComponent(name)}`, null, token),
   downloadAllReports: (token) => `/api/trainer/reports/all/download?auth=${token}`,
   downloadTraineeExcel: (token, name) => `/api/trainer/trainee/${encodeURIComponent(name)}/excel?auth=${token}`,
+  traineeHtmlReport: (token, name) => `/api/trainer/trainee/${encodeURIComponent(name)}/html`,
+  cohortHtmlReport: (token, cohort) => `/api/trainer/cohort/${encodeURIComponent(cohort)}/html`,
   generateConsolidatedReport: (token) => req("GET", "/trainer/consolidated-report", null, token),
 };
